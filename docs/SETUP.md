@@ -6,7 +6,7 @@ This document explains how to set up the LNMB website locally on Linux and Windo
 
 - Git
 - Node.js (recommended via nvm on Linux / Node installer on Windows)
-- npm (bundled with Node) or yarn/pnpm
+- pnpm (preferred package manager)
 
 ## Clone the repo
 
@@ -23,46 +23,61 @@ I set up with Node v22. Install Node via nvm so you can manage multiple versions
 
 ### Linux / macOS (nvm)
 
-1. Install or update nvm: https://github.com/nvm-sh/nvm
-2. Install Node v22 and use it:
+1. Install or update Node.js (recommended via nvm):
 
 ```bash
-# install Node v22 and set it for the current shell
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 nvm install 22
 nvm use 22
 ```
 
-3. Verify:
+2. Install pnpm (choose one):
+
+Option A: via npm
 
 ```bash
-node -v  # should start with v22
-npm -v
+npm install -g pnpm
 ```
+
+Option B: via pnpm standalone installer
+
+```bash
+curl -fsSL https://get.pnpm.io/install.sh | sh -
+```
+
+3. Verify installation:
+
+```bash
+node -v
+pnpm -v
+```
+
 
 ### Windows
 
-1. Install Node.js from https://nodejs.org/en/ (choose the v22 installer if available).
-2. Verify in PowerShell or CMD:
-3. I have never set up in windows, but you do you.
+1. Install Node.js from https://nodejs.org/en/
+ (choose the v22 installer if available).
 
-```powershell
+2. Install pnpm globally:
+
+ ```bash
+ npm install -g pnpm
+ ```
+3. Verify
+
+```bash
 node -v
-npm -v
+pnpm -v
 ```
 
 ## Install dependencies
 
-I am using yarn. 
+We use pnpm for dependency management:
 
 ```bash
-yarn install
+pnpm install
 ```
 
-OR
-
-```bash
-yarn
-```
 
 ## Environment variables
 
@@ -82,7 +97,7 @@ Then open `.env.local` and fill in values. Example Convex variables you may need
 ## Run the dev server
 
 ```bash
-yarn dev
+pnpm dev
 ```
 
 Open http://localhost:3000 in your browser.
@@ -93,8 +108,8 @@ Open http://localhost:3000 in your browser.
 - If you see TypeScript or lint errors, run the type checks or linter directly:
 
 ```bash
-yarn build
-yarn lint
+pnpm build
+pnpm lint
 ```
 
 ## Other

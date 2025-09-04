@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { MapPin, Phone, Mail, Clock, MessageSquare, Users, Calendar } from "lucide-react"
 
 export default function ContactPage() {
@@ -49,18 +50,19 @@ export default function ContactPage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="subject">Subject</Label>
-                    <select
-                      id="subject"
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      <option value="">Select a topic</option>
-                      <option value="registration">Event Registration</option>
-                      <option value="volunteer">Volunteer Opportunities</option>
-                      <option value="sponsorship">Sponsorship Inquiry</option>
-                      <option value="merchandise">Merchandise Question</option>
-                      <option value="media">Media Inquiry</option>
-                      <option value="general">General Question</option>
-                    </select>
+                    <Select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a topic" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="registration">Event Registration</SelectItem>
+                        <SelectItem value="volunteer">Volunteer Opportunities</SelectItem>
+                        <SelectItem value="sponsorship">Sponsorship Inquiry</SelectItem>
+                        <SelectItem value="merchandise">Merchandise Question</SelectItem>
+                        <SelectItem value="media">Media Inquiry</SelectItem>
+                        <SelectItem value="general">General Question</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div className="space-y-2">

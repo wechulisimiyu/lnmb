@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ArrowLeft, Upload, Save } from "lucide-react"
 import Link from "next/link"
 
@@ -95,20 +96,19 @@ export default function AddTeamMemberPage() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="year">Year *</Label>
-                      <select
-                        id="year"
-                        value={formData.year}
-                        onChange={(e) => setFormData({ ...formData, year: e.target.value })}
-                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                        required
-                      >
-                        <option value="2024">2024</option>
-                        <option value="2023">2023</option>
-                        <option value="2022">2022</option>
-                        <option value="2021">2021</option>
-                        <option value="2020">2020</option>
-                        <option value="2019">2019</option>
-                      </select>
+                      <Select value={formData.year} onValueChange={(value) => setFormData({ ...formData, year: value })}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select year" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="2024">2024</SelectItem>
+                          <SelectItem value="2023">2023</SelectItem>
+                          <SelectItem value="2022">2022</SelectItem>
+                          <SelectItem value="2021">2021</SelectItem>
+                          <SelectItem value="2020">2020</SelectItem>
+                          <SelectItem value="2019">2019</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
 
@@ -222,16 +222,16 @@ export default function AddTeamMemberPage() {
                 <CardContent>
                   <div className="space-y-2">
                     <Label htmlFor="status">Member Status</Label>
-                    <select
-                      id="status"
-                      value={formData.status}
-                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                    >
-                      <option value="Active">Active</option>
-                      <option value="Inactive">Inactive</option>
-                      <option value="Alumni">Alumni</option>
-                    </select>
+                    <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Active">Active</SelectItem>
+                        <SelectItem value="Inactive">Inactive</SelectItem>
+                        <SelectItem value="Alumni">Alumni</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </CardContent>
               </Card>

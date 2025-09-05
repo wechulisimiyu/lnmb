@@ -127,15 +127,15 @@ export function HomeSocial() {
   }
 
   return (
-    <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-slate-50 to-azure-50">
+    <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-secondary to-background">
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-8 sm:mb-12">
-          <Badge className="bg-azure-500 text-white mb-4 px-3 py-1 text-sm">SOCIAL UPDATES</Badge>
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 mb-4 sm:mb-6">
+          <Badge className="bg-brand-accent text-accent-foreground mb-4 px-3 py-1 text-sm">SOCIAL UPDATES</Badge>
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-4 sm:mb-6">
             Latest from Our Community
           </h2>
-          <p className="text-base sm:text-lg text-slate-600 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
             Stay connected with our latest updates, training sessions, and success stories from our social media
             channels.
           </p>
@@ -145,7 +145,7 @@ export function HomeSocial() {
         <div className="flex justify-center gap-4 mb-8 sm:mb-12">
           <Button
             variant="outline"
-            className="bg-transparent border-azure-500 text-azure-600 hover:bg-azure-50"
+            className="bg-transparent border-accent text-accent hover:bg-accent/10"
             asChild
           >
             <a href="https://x.com/AMSUNrunning" target="_blank" rel="noopener noreferrer">
@@ -153,7 +153,7 @@ export function HomeSocial() {
               Follow on X
             </a>
           </Button>
-          <Button variant="outline" className="bg-transparent border-pink-500 text-pink-600 hover:bg-pink-50" asChild>
+          <Button variant="outline" className="bg-transparent border-destructive text-destructive hover:bg-destructive/10" asChild>
             <a href="https://www.instagram.com/amsunrunning/" target="_blank" rel="noopener noreferrer">
               <Instagram className="w-4 h-4 mr-2" />
               Follow on Instagram
@@ -166,8 +166,8 @@ export function HomeSocial() {
           {socialPosts.map((post) => (
             <div
               key={post.id}
-              className={`group relative overflow-hidden rounded-2xl bg-white shadow-lg hover:shadow-2xl transition-all duration-300 ${
-                post.platform === "twitter" ? "border-t-4 border-t-azure-500" : "border-t-4 border-t-pink-500"
+              className={`group relative overflow-hidden rounded-2xl bg-background shadow-lg hover:shadow-2xl transition-all duration-300 ${
+                post.platform === "twitter" ? "border-t-4 border-t-accent" : "border-t-4 border-t-destructive"
               }`}
             >
               {/* Platform Header */}
@@ -176,32 +176,32 @@ export function HomeSocial() {
                   <div className="flex items-center space-x-3">
                     <div
                       className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                        post.platform === "twitter" ? "bg-azure-100" : "bg-pink-100"
+                        post.platform === "twitter" ? "bg-accent/10" : "bg-destructive/10"
                       }`}
                     >
                       {post.platform === "twitter" ? (
-                        <Twitter className="w-5 h-5 text-azure-600" />
+                        <Twitter className="w-5 h-5 text-accent" />
                       ) : (
-                        <Instagram className="w-5 h-5 text-pink-600" />
+                        <Instagram className="w-5 h-5 text-destructive" />
                       )}
                     </div>
                     <div>
                       <div className="flex items-center space-x-2">
-                        <span className="font-bold text-slate-900 text-sm">{post.username}</span>
+                        <span className="font-bold text-foreground text-sm">{post.username}</span>
                         {post.verified && (
                           <div
                             className={`w-4 h-4 rounded-full flex items-center justify-center ${
-                              post.platform === "twitter" ? "bg-azure-500" : "bg-pink-500"
+                              post.platform === "twitter" ? "bg-accent" : "bg-destructive"
                             }`}
                           >
                             <Verified className="w-2.5 h-2.5 text-white fill-current" />
                           </div>
                         )}
                       </div>
-                      <span className="text-slate-500 text-xs">{post.handle}</span>
+                      <span className="text-muted-foreground text-xs">{post.handle}</span>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-1 text-slate-400">
+                  <div className="flex items-center space-x-1 text-muted-foreground">
                     <Calendar className="w-3 h-3" />
                     <span className="text-xs">{formatTimeAgo(post.timestamp)}</span>
                   </div>
@@ -210,7 +210,7 @@ export function HomeSocial() {
 
               {/* Content */}
               <div className="px-4 pb-4">
-                <p className="text-slate-700 text-sm leading-relaxed mb-4">{post.content}</p>
+                <p className="text-foreground text-sm leading-relaxed mb-4">{post.content}</p>
 
                 {post.image && (
                   <div className="relative mb-4 rounded-xl overflow-hidden">
@@ -230,13 +230,13 @@ export function HomeSocial() {
                 {/* Engagement Stats - Medical Monitor Style */}
                 <div
                   className={`flex items-center justify-between p-3 rounded-lg ${
-                    post.platform === "twitter" ? "bg-azure-50" : "bg-pink-50"
+                    post.platform === "twitter" ? "bg-accent/10" : "bg-destructive/10"
                   }`}
                 >
                   <div className="flex items-center space-x-4 text-xs">
                     <div
                       className={`flex items-center space-x-1 ${
-                        post.platform === "twitter" ? "text-azure-600" : "text-pink-600"
+                        post.platform === "twitter" ? "text-accent" : "text-destructive"
                       }`}
                     >
                       <Heart className="w-3 h-3" />
@@ -244,17 +244,17 @@ export function HomeSocial() {
                     </div>
                     {post.platform === "twitter" ? (
                       <>
-                        <div className="flex items-center space-x-1 text-azure-600">
+                        <div className="flex items-center space-x-1 text-accent">
                           <Repeat2 className="w-3 h-3" />
                           <span className="font-semibold">{post.retweets}</span>
                         </div>
-                        <div className="flex items-center space-x-1 text-azure-600">
+                        <div className="flex items-center space-x-1 text-accent">
                           <MessageCircle className="w-3 h-3" />
                           <span className="font-semibold">{post.replies}</span>
                         </div>
                       </>
                     ) : (
-                      <div className="flex items-center space-x-1 text-pink-600">
+                      <div className="flex items-center space-x-1 text-destructive">
                         <MessageCircle className="w-3 h-3" />
                         <span className="font-semibold">{post.comments}</span>
                       </div>
@@ -265,8 +265,8 @@ export function HomeSocial() {
                     size="sm"
                     className={`text-xs p-1 h-auto hover:scale-110 transition-transform duration-300 ${
                       post.platform === "twitter"
-                        ? "text-azure-500 hover:text-azure-700"
-                        : "text-pink-500 hover:text-pink-700"
+                        ? "text-accent hover:text-accent/80"
+                        : "text-destructive hover:text-destructive/80"
                     }`}
                     asChild
                   >
@@ -295,7 +295,7 @@ export function HomeSocial() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
               variant="outline"
-              className="bg-transparent border-azure-500 text-azure-600 hover:bg-azure-50"
+              className="bg-transparent border-accent text-accent hover:bg-accent/10"
               asChild
             >
               <a href="https://x.com/AMSUNrunning" target="_blank" rel="noopener noreferrer">
@@ -303,7 +303,7 @@ export function HomeSocial() {
                 View More on X
               </a>
             </Button>
-            <Button variant="outline" className="bg-transparent border-pink-500 text-pink-600 hover:bg-pink-50" asChild>
+            <Button variant="outline" className="bg-transparent border-destructive text-destructive hover:bg-destructive/10" asChild>
               <a href="https://www.instagram.com/amsunrunning/" target="_blank" rel="noopener noreferrer">
                 <Instagram className="w-4 h-4 mr-2" />
                 View More on Instagram

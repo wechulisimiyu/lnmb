@@ -8,6 +8,45 @@ import Image from "next/image"
 export function TeamMembers() {
   const [expandedYear, setExpandedYear] = useState("2024")
 
+  // Map old colors to brand colors
+  const getBrandColor = (color: string, index: number) => {
+    const brandColors = ["primary", "accent", "destructive"];
+    return brandColors[index % 3];
+  }
+
+  const getBrandColorClasses = (brandColor: string) => {
+    switch (brandColor) {
+      case "primary":
+        return {
+          bg: "bg-primary/10",
+          bgSolid: "bg-primary",
+          text: "text-primary",
+          border: "border-primary"
+        };
+      case "accent":
+        return {
+          bg: "bg-accent/10", 
+          bgSolid: "bg-accent",
+          text: "text-accent",
+          border: "border-accent"
+        };
+      case "destructive":
+        return {
+          bg: "bg-destructive/10",
+          bgSolid: "bg-destructive", 
+          text: "text-destructive",
+          border: "border-destructive"
+        };
+      default:
+        return {
+          bg: "bg-primary/10",
+          bgSolid: "bg-primary",
+          text: "text-primary", 
+          border: "border-primary"
+        };
+    }
+  }
+
   const teamByYear = {
     "2024": [
       {
@@ -168,40 +207,18 @@ export function TeamMembers() {
           </div>
 
           <div className="grid gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {teamByYear[expandedYear as keyof typeof teamByYear].map((member, index) => (
+            {teamByYear[expandedYear as keyof typeof teamByYear].map((member, index) => {
+              const brandColor = getBrandColor(member.color, index);
+              const colorClasses = getBrandColorClasses(brandColor);
+              
+              return (
               <div
                 key={index}
-                className={`group relative overflow-hidden rounded-2xl ${
-                  member.color === "blue"
-                    ? "bg-blue-50"
-                    : member.color === "green"
-                      ? "bg-green-50"
-                      : member.color === "purple"
-                        ? "bg-purple-50"
-                        : member.color === "orange"
-                          ? "bg-orange-50"
-                          : member.color === "pink"
-                            ? "bg-pink-50"
-                            : "bg-teal-50"
-                } p-1 hover:shadow-2xl transition-all duration-300`}
+                className={`group relative overflow-hidden rounded-2xl ${colorClasses.bg} p-1 hover:shadow-2xl transition-all duration-300`}
               >
-                <div className="relative bg-white rounded-xl overflow-hidden h-full">
+                <div className="relative bg-background rounded-xl overflow-hidden h-full">
                   {/* Medical Chart Header */}
-                  <div
-                    className={`h-2 bg-gradient-to-r ${
-                      member.color === "blue"
-                        ? "from-blue-500 to-blue-600"
-                        : member.color === "green"
-                          ? "from-green-500 to-emerald-600"
-                          : member.color === "purple"
-                            ? "from-purple-500 to-violet-600"
-                            : member.color === "orange"
-                              ? "from-orange-500 to-orange-600"
-                              : member.color === "pink"
-                                ? "from-pink-500 to-pink-600"
-                                : "from-teal-500 to-teal-600"
-                    }`}
-                  ></div>
+                  <div className={`h-2 ${colorClasses.bgSolid}`}></div>
 
                   {/* Profile Image */}
                   <div className="relative">
@@ -219,21 +236,7 @@ export function TeamMembers() {
                     />
 
                     {/* Medical Badge */}
-                    <div
-                      className={`absolute top-4 left-4 px-3 py-1 rounded-full text-white text-xs font-bold ${
-                        member.color === "blue"
-                          ? "bg-blue-600"
-                          : member.color === "green"
-                            ? "bg-green-600"
-                            : member.color === "purple"
-                              ? "bg-purple-600"
-                              : member.color === "orange"
-                                ? "bg-orange-600"
-                                : member.color === "pink"
-                                  ? "bg-pink-600"
-                                  : "bg-teal-600"
-                      }`}
-                    >
+                    <div className={`absolute top-4 left-4 px-3 py-1 rounded-full text-white text-xs font-bold ${colorClasses.bgSolid}`}>
                       {member.title}
                     </div>
                   </div>
@@ -241,24 +244,10 @@ export function TeamMembers() {
                   <div className="p-4 sm:p-6">
                     <div className="space-y-4">
                       <div className="text-center">
-                        <h3 className="text-lg sm:text-xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                        <h3 className={`text-lg sm:text-xl font-bold text-foreground group-hover:${colorClasses.text} transition-colors`}>
                           {member.name}
                         </h3>
-                        <p
-                          className={`font-semibold text-sm sm:text-base ${
-                            member.color === "blue"
-                              ? "text-blue-600"
-                              : member.color === "green"
-                                ? "text-green-600"
-                                : member.color === "purple"
-                                  ? "text-purple-600"
-                                  : member.color === "orange"
-                                    ? "text-orange-600"
-                                    : member.color === "pink"
-                                      ? "text-pink-600"
-                                      : "text-teal-600"
-                          }`}
-                        >
+                        <p className={`font-semibold text-sm sm:text-base ${colorClasses.text}`}>
                           {member.role}
                         </p>
                       </div>

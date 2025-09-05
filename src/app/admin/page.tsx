@@ -60,16 +60,16 @@ export default function AdminPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-slate-50 py-4 sm:py-6 lg:py-8">
+    <div className="min-h-screen bg-secondary py-4 sm:py-6 lg:py-8">
       <div className="container mx-auto px-4">
         {/* Header - Mobile Optimized */}
         <div className="mb-6 sm:mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Admin Dashboard</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Admin Dashboard</h1>
               <p className="text-slate-600 text-sm sm:text-base">Medical Students Run Management</p>
             </div>
-            <Badge className="bg-green-600 text-white w-fit">SYSTEM ONLINE</Badge>
+            <Badge className="bg-brand-success text-white w-fit">SYSTEM ONLINE</Badge>
           </div>
         </div>
 
@@ -102,7 +102,7 @@ export default function AdminPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs sm:text-sm text-slate-600">Team Members</p>
-                      <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900">{stats.totalMembers}</p>
+                      <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">{stats.totalMembers}</p>
                     </div>
                     <Users className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600" />
                   </div>
@@ -114,7 +114,7 @@ export default function AdminPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs sm:text-sm text-slate-600">Highlights</p>
-                      <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900">
+                      <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
                         {stats.totalHighlights}
                       </p>
                     </div>
@@ -128,7 +128,7 @@ export default function AdminPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs sm:text-sm text-slate-600">Products</p>
-                      <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900">{stats.totalProducts}</p>
+                      <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">{stats.totalProducts}</p>
                     </div>
                     <ShoppingCart className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600" />
                   </div>
@@ -140,7 +140,7 @@ export default function AdminPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs sm:text-sm text-slate-600">Revenue</p>
-                      <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900">
+                      <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
                         ${stats.totalRevenue.toLocaleString()}
                       </p>
                     </div>
@@ -154,7 +154,7 @@ export default function AdminPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs sm:text-sm text-slate-600">Monthly Orders</p>
-                      <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900">{stats.monthlyOrders}</p>
+                      <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">{stats.monthlyOrders}</p>
                     </div>
                     <Calendar className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600" />
                   </div>
@@ -166,7 +166,7 @@ export default function AdminPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs sm:text-sm text-slate-600">Active Years</p>
-                      <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900">{stats.activeYears}</p>
+                      <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">{stats.activeYears}</p>
                     </div>
                     <GraduationCap className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600" />
                   </div>
@@ -182,19 +182,19 @@ export default function AdminPage() {
               <CardContent>
                 <div className="space-y-3 sm:space-y-4">
                   {recentActivity.map((activity, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                    <div key={index} className="flex items-center justify-between p-3 bg-secondary rounded-lg">
                       <div className="flex items-center space-x-3">
                         <div
                           className={`w-2 h-2 rounded-full ${
                             activity.type === "team"
-                              ? "bg-blue-600"
+                              ? "bg-primary"
                               : activity.type === "product"
                                 ? "bg-purple-600"
-                                : "bg-green-600"
+                                : "bg-brand-success"
                           }`}
                         ></div>
                         <div>
-                          <p className="font-medium text-slate-900 text-sm sm:text-base">{activity.action}</p>
+                          <p className="font-medium text-foreground text-sm sm:text-base">{activity.action}</p>
                           <p className="text-xs sm:text-sm text-slate-600">by {activity.user}</p>
                         </div>
                       </div>
@@ -209,8 +209,8 @@ export default function AdminPage() {
           {/* Team Management Tab */}
           <TabsContent value="team" className="space-y-4 sm:space-y-6">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-              <h2 className="text-xl sm:text-2xl font-bold text-slate-900">Team Management</h2>
-              <Button className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
+              <h2 className="text-xl sm:text-2xl font-bold text-foreground">Team Management</h2>
+              <Button className="bg-primary hover:bg-primary/90 w-full sm:w-auto">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Team Member
               </Button>
@@ -220,7 +220,7 @@ export default function AdminPage() {
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="bg-slate-50">
+                    <thead className="bg-secondary">
                       <tr>
                         <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">Name</th>
                         <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">Role</th>
@@ -279,8 +279,8 @@ export default function AdminPage() {
           {/* Highlights Management Tab */}
           <TabsContent value="highlights" className="space-y-4 sm:space-y-6">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-              <h2 className="text-xl sm:text-2xl font-bold text-slate-900">Highlights Management</h2>
-              <Button className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
+              <h2 className="text-xl sm:text-2xl font-bold text-foreground">Highlights Management</h2>
+              <Button className="bg-primary hover:bg-primary/90 w-full sm:w-auto">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Highlight
               </Button>
@@ -290,7 +290,7 @@ export default function AdminPage() {
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="bg-slate-50">
+                    <thead className="bg-secondary">
                       <tr>
                         <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">Title</th>
                         <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">Year</th>
@@ -343,8 +343,8 @@ export default function AdminPage() {
           {/* Products Management Tab */}
           <TabsContent value="products" className="space-y-4 sm:space-y-6">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-              <h2 className="text-xl sm:text-2xl font-bold text-slate-900">Products Management</h2>
-              <Button className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
+              <h2 className="text-xl sm:text-2xl font-bold text-foreground">Products Management</h2>
+              <Button className="bg-primary hover:bg-primary/90 w-full sm:w-auto">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Product
               </Button>
@@ -354,7 +354,7 @@ export default function AdminPage() {
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="bg-slate-50">
+                    <thead className="bg-secondary">
                       <tr>
                         <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">Product Name</th>
                         <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">Price</th>

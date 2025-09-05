@@ -35,7 +35,7 @@ export default function AddTeamMemberPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-8">
+    <div className="min-h-screen bg-secondary py-8">
       <div className="container mx-auto px-4 max-w-4xl">
         {/* Header */}
         <div className="mb-8">
@@ -46,9 +46,9 @@ export default function AddTeamMemberPage() {
                 Back to Admin
               </Button>
             </Link>
-            <Badge className="bg-red-600 text-white">PERSONNEL FILE</Badge>
+            <Badge className="bg-destructive text-white">PERSONNEL FILE</Badge>
           </div>
-          <h1 className="text-3xl font-bold text-slate-900">Add Team Member</h1>
+          <h1 className="text-3xl font-bold text-foreground">Add Team Member</h1>
           <p className="text-slate-600">Create a new personnel record for the command roster</p>
         </div>
 
@@ -241,7 +241,7 @@ export default function AddTeamMemberPage() {
                   <CardTitle>Actions</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <Button type="submit" className="w-full bg-red-600 hover:bg-red-700">
+                  <Button type="submit" className="w-full bg-destructive hover:bg-destructive/90">
                     <Save className="w-4 h-4 mr-2" />
                     Save Team Member
                   </Button>

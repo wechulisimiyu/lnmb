@@ -13,8 +13,8 @@ interface HeroBackgroundProps {
 
 export function HeroBackground({
   imageUrl = "/medical-students-charity-event.png",
-  fallbackGradient = "from-blue-500 via-blue-600 to-blue-800",
-  overlay = "from-blue-900/80 via-blue-800/70 to-blue-700/60",
+  fallbackGradient = "from-primary via-primary/90 to-primary/80",
+  overlay = "from-primary/80 via-primary/70 to-primary/60",
   children,
 }: HeroBackgroundProps) {
   const [imageLoaded, setImageLoaded] = useState(false)

@@ -5,49 +5,7 @@ import { Twitter, Instagram, ExternalLink, Heart, MessageCircle, Repeat2, Calend
 import Image from "next/image"
 import { useState, useEffect } from "react"
 
-/*
-SOCIAL MEDIA INTEGRATION SETUP:
-
-For Twitter/X API Integration:
-1. Create a Twitter Developer Account at https://developer.twitter.com/
-2. Create a new app and get your API keys
-3. Install twitter-api-v2: npm install twitter-api-v2
-4. Use the following environment variables:
-   - TWITTER_API_KEY
-   - TWITTER_API_SECRET
-   - TWITTER_ACCESS_TOKEN
-   - TWITTER_ACCESS_TOKEN_SECRET
-5. Create an API route to fetch tweets from @AMSUNrunning
-
-For Instagram Basic Display API:
-1. Create a Facebook Developer Account at https://developers.facebook.com/
-2. Create a new app and add Instagram Basic Display product
-3. Get your Instagram App ID and App Secret
-4. Install instagram-basic-display: npm install instagram-basic-display
-5. Use the following environment variables:
-   - INSTAGRAM_APP_ID
-   - INSTAGRAM_APP_SECRET
-   - INSTAGRAM_ACCESS_TOKEN
-6. Create an API route to fetch posts from @amsunrunning
-
-Alternative: Use third-party services like:
-- Embedsocial.com
-- Juicer.io
-- Taggbox.com
-- These services provide embeddable widgets that are easier to implement
-
-Example API Route Structure:
-// app/api/social-feed/route.ts
-export async function GET() {
-  // Fetch from Twitter API
-  // Fetch from Instagram API
-  // Combine and return posts
-}
-
-For now, using placeholder data below.
-*/
-
-export function SocialMediaFeed() {
+export function HomeSocial() {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -357,3 +315,5 @@ export function SocialMediaFeed() {
     </section>
   )
 }
+
+export default HomeSocial

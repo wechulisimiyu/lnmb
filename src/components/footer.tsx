@@ -8,7 +8,7 @@ export function Footer() {
       <div className="container mx-auto px-4">
         <div className="grid gap-8 sm:gap-12 md:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-4 sm:space-y-6 md:col-span-2 lg:col-span-1">
-            <div className="flex items-center space-x-3">
+            {/* <div className="flex items-center space-x-3">
               <Image
                 src="/logo-lnmb.png"
                 alt="Leave No Medic Behind Logo"
@@ -16,7 +16,7 @@ export function Footer() {
                 height={75}
                 className="h-12 w-auto"
               />
-            </div>
+            </div> */}
             <p className="text-slate-400 leading-relaxed text-sm sm:text-base">
               Supporting medical students through community-driven charity runs, scholarships, and educational
               resources. Every step counts towards building tomorrow&apos;s healthcare heroes.
@@ -65,12 +65,12 @@ export function Footer() {
               >
                 Our Team
               </Link>
-              <Link
+              {/* <Link
                 href="/highlights"
                 className="block text-slate-400 hover:text-white transition-colors text-sm sm:text-base"
               >
                 Past Highlights
-              </Link>
+              </Link> */}
               <Link
                 href="/contact"
                 className="block text-slate-400 hover:text-white transition-colors text-sm sm:text-base"
@@ -83,26 +83,25 @@ export function Footer() {
           <div className="space-y-4">
             <h3 className="font-bold text-blue-400 text-sm sm:text-base">GET INVOLVED</h3>
             <div className="space-y-2 sm:space-y-3">
+              {/* TODO: update to /volunteer when volunteer page is ready */}
               <Link
-                href="/shop"
-                className="block text-slate-400 hover:text-white transition-colors text-sm sm:text-base"
-              >
-                Register to Run
-              </Link>
-              <Link
-                href="/volunteer"
+                href="/"
                 className="block text-slate-400 hover:text-white transition-colors text-sm sm:text-base"
               >
                 Volunteer
               </Link>
+
+              {/* TODO: update to /shop when shop/merch page is available */}
               <Link
-                href="/shop"
+                href="/"
                 className="block text-slate-400 hover:text-white transition-colors text-sm sm:text-base"
               >
                 Shop Merchandise
               </Link>
+
+              {/* TODO: update to /partners when partnership signup page is ready */}
               <Link
-                href="/partners"
+                href="/"
                 className="block text-slate-400 hover:text-white transition-colors text-sm sm:text-base"
               >
                 Become a Partner
@@ -135,9 +134,9 @@ export function Footer() {
 
         <div className="border-t border-slate-700 mt-8 sm:mt-12 pt-6 sm:pt-8 text-center">
           <p className="text-slate-400 text-sm sm:text-base">
-            &copy; {new Date().getFullYear()} Hassan Saidi Fund. All rights reserved.
+            &copy; {new Date().getFullYear()} Prof Hassan Saidi Fund. All rights reserved.
           </p>
-          <p className="text-slate-500 text-xs sm:text-sm mt-2">Leave No Medic Behind • Supporting Healthcare Heroes</p>
+          <p className="text-slate-500 text-xs sm:text-sm mt-2">Leave No Medic Behind</p>
         </div>
       </div>
     </footer>

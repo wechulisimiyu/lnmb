@@ -16,12 +16,15 @@ export default function ContactPage() {
 
           <div className="space-y-8">
             <ContactInfo />
-            <ContactDepartments />
-            <ContactFAQ />
           </div>
         </div>
 
-        <ContactEmergency />
+        {/* FAQ has its own full-width section */}
+        <section className="mt-12">
+          <ContactFAQ />
+        </section>
+
+        {/* <ContactEmergency /> */}
       </div>
     </div>
   )

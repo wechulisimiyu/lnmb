@@ -1,67 +1,53 @@
+"use client"
+
+import { useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { MessageSquare } from "lucide-react"
 
 export function ContactForm() {
+  useEffect(() => {
+    const d = document
+    const w = "https://tally.so/widgets/embed.js"
+    const v = () => {
+      // If Tally is already available, initialise; otherwise set iframe src from data attribute
+      if (typeof (window as any).Tally !== "undefined") {
+        ;(window as any).Tally.loadEmbeds()
+      } else {
+        d.querySelectorAll('iframe[data-tally-src]:not([src])').forEach((e) => {
+          const iframe = e as HTMLIFrameElement
+          iframe.src = iframe.dataset.tallySrc || ""
+        })
+      }
+    }
+
+    if (typeof (window as any).Tally !== "undefined") v()
+    else if (d.querySelector('script[src="' + w + '"]') == null) {
+      const s = d.createElement("script")
+      s.src = w
+      s.async = true
+      s.onload = v
+      s.onerror = v
+      d.body.appendChild(s)
+    }
+  }, [])
+
   return (
     <div>
       <Card className="p-8">
         <CardContent className="space-y-6">
           <h2 className="text-2xl font-bold text-slate-900 mb-6">Send us a Message</h2>
 
-          <form className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">First Name</Label>
-                <Input id="firstName" placeholder="John" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name</Label>
-                <Input id="lastName" placeholder="Doe" />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="john@example.com" />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone (Optional)</Label>
-              <Input id="phone" type="tel" placeholder="+254 123 456 789" />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="subject">Subject</Label>
-              <Select>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a topic" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="registration">Event Registration</SelectItem>
-                  <SelectItem value="volunteer">Volunteer Opportunities</SelectItem>
-                  <SelectItem value="sponsorship">Sponsorship Inquiry</SelectItem>
-                  <SelectItem value="merchandise">Merchandise Question</SelectItem>
-                  <SelectItem value="media">Media Inquiry</SelectItem>
-                  <SelectItem value="general">General Question</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="message">Message</Label>
-              <Textarea id="message" placeholder="Tell us how we can help you..." rows={5} />
-            </div>
-
-            <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-600">
-              <MessageSquare className="w-4 h-4 mr-2" />
-              Send Message
-            </Button>
-          </form>
+          <div>
+            <iframe
+              data-tally-src="https://tally.so/embed/woJ22M?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1&formEventsForwarding=1"
+              loading="lazy"
+              width="100%"
+              height="276"
+              frameBorder={0}
+              marginHeight={0}
+              marginWidth={0}
+              title="Contact form"
+            />
+          </div>
         </CardContent>
       </Card>
     </div>

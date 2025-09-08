@@ -13,10 +13,10 @@ export function Navigation() {
     { href: "/", label: "Home" },
     { href: "/story", label: "Our Story" },
     { href: "/team", label: "Team" },
-    { href: "/highlights", label: "Highlights" },
-    { href: "/partners", label: "Partners" },
-    { href: "/vendors", label: "Vendors" },
-    { href: "/shop", label: "Shop" }, // Updated href from "/tshirts" to "/shop"
+    // { href: "/highlights", label: "Highlights" },
+    // { href: "/partners", label: "Partners" },
+    // { href: "/vendors", label: "Vendors" },
+    // { href: "/shop", label: "Shop" }, 
     { href: "/contact", label: "Contact" },
   ]
 

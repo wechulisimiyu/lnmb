@@ -7,19 +7,27 @@ export function ContactForm() {
   useEffect(() => {
     const d = document
     const w = "https://tally.so/widgets/embed.js"
+
+    interface WindowWithTally extends Window {
+      Tally?: { loadEmbeds: () => void }
+    }
+
+    const win = window as WindowWithTally
+
     const v = () => {
       // If Tally is already available, initialise; otherwise set iframe src from data attribute
-      if (typeof (window as any).Tally !== "undefined") {
-        ;(window as any).Tally.loadEmbeds()
+      if (typeof win.Tally !== "undefined") {
+        win.Tally!.loadEmbeds()
       } else {
-        d.querySelectorAll('iframe[data-tally-src]:not([src])').forEach((e) => {
+        const nodes = d.querySelectorAll('iframe[data-tally-src]:not([src])')
+        nodes.forEach((e) => {
           const iframe = e as HTMLIFrameElement
           iframe.src = iframe.dataset.tallySrc || ""
         })
       }
     }
 
-    if (typeof (window as any).Tally !== "undefined") v()
+    if (typeof win.Tally !== "undefined") v()
     else if (d.querySelector('script[src="' + w + '"]') == null) {
       const s = d.createElement("script")
       s.src = w

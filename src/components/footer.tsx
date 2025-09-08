@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { Facebook, Twitter, Instagram, Mail, MapPin, Phone } from "lucide-react"
-import Image from "next/image"
+// import Image from "next/image"
 
 export function Footer() {
   return (
@@ -22,31 +22,32 @@ export function Footer() {
               resources. Every step counts towards building tomorrow&apos;s healthcare heroes.
             </p>
             <div className="flex space-x-4">
-              <a
+              <Link
                 href="https://x.com/AMSUNrunning"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-slate-400 hover:text-white cursor-pointer transition-colors"
               >
                 <Twitter className="w-5 h-5 sm:w-6 sm:h-6" />
-              </a>
-              <a
+              </Link>
+
+              <Link
                 href="https://www.instagram.com/amsunrunning/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-slate-400 hover:text-white cursor-pointer transition-colors"
               >
                 <Instagram className="w-5 h-5 sm:w-6 sm:h-6" />
-              </a>
-              {/* Facebook icon remains as it is */}
-              <a
+              </Link>
+
+              <Link
                 href="https://www.facebook.com/amsunrunning/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-slate-400 hover:text-white cursor-pointer transition-colors"
               >
                 <Facebook className="w-5 h-5 sm:w-6 sm:h-6" />
-              </a>
+              </Link>
             </div>
           </div>
 

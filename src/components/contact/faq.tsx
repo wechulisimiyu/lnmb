@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion"
 
 export function ContactFAQ() {
@@ -32,15 +33,15 @@ export function ContactFAQ() {
         <AccordionItem value="who">
           <AccordionTrigger>Who is invited for the run?</AccordionTrigger>
           <AccordionContent>
-            <p>Everyone is invited — tell your friends and family and invite them to come.</p>
+            <p>Everyone is invited &mdash; tell your friends and family and invite them to come.</p>
           </AccordionContent>
         </AccordionItem>
 
         <AccordionItem value="signup">
           <AccordionTrigger>How do I sign up for the run?</AccordionTrigger>
           <AccordionContent>
-            <p>
-              You can sign up by visiting our <a href="/" className="underline font-medium">page</a>.
+              <p>
+              You can sign up by visiting our <Link href="/" className="underline font-medium">page</Link>.
               All you need to do to attend the run is buy a LNMB t-shirt and show up on race day wearing the t-shirt.
             </p>
           </AccordionContent>
@@ -114,11 +115,11 @@ export function ContactFAQ() {
         </AccordionItem>
 
         <AccordionItem value="oldshirt">
-          <AccordionTrigger>Can I wear my t-shirt from last year to this year's run?</AccordionTrigger>
+          <AccordionTrigger>Can I wear my t-shirt from last year to this year&apos;s run?</AccordionTrigger>
           <AccordionContent>
             <p>
-              We wouldn't advise you to wear last year's t-shirt to this year's run because the 2024 design will be fresh and new and
-              you may prefer to buy the new t-shirt. Furthermore, t-shirt sales are the main source of income for the fund — buying a new t-shirt supports a needy medical student.
+              We wouldn&apos;t advise you to wear last year&apos;s t-shirt to this year&apos;s run because the 2024 design will be fresh and new and
+              you may prefer to buy the new t-shirt. Furthermore, t-shirt sales are the main source of income for the fund &mdash; buying a new t-shirt supports a needy medical student.
             </p>
           </AccordionContent>
         </AccordionItem>
@@ -134,8 +135,8 @@ export function ContactFAQ() {
               ACC NO: <b>0170280594893</b><br />
               ACC NAME: <b>PROF HASSAN SAIDI EDUCATION MEMORIAL FUND</b>
             </p>
-            <p className="mt-2">
-              You can also rent a booth at a fee to be a vendor at the charity run. Visit <a href="/vendors" className="underline font-medium">here</a> to sign up to be a vendor.
+              <p className="mt-2">
+              You can also rent a booth at a fee to be a vendor at the charity run. Visit <Link href="/vendors" className="underline font-medium">here</Link> to sign up to be a vendor.
             </p>
           </AccordionContent>
         </AccordionItem>
@@ -154,8 +155,8 @@ export function ContactFAQ() {
         <AccordionItem value="not-available">
           <AccordionTrigger>What happens if I am not available to attend the run?</AccordionTrigger>
           <AccordionContent>
-            <p>
-              No problem — you can still support the funds drive by buying the t-shirt. Visit our <a href="/buy-tshirt" className="underline font-medium">page</a> to buy a t-shirt or <a href="/donate" className="underline font-medium">donate</a> to the fund.
+              <p>
+              No problem — you can still support the funds drive by buying the t-shirt. Visit our <Link href="/buy-tshirt" className="underline font-medium">page</Link> to buy a t-shirt or <Link href="/donate" className="underline font-medium">donate</Link> to the fund.
             </p>
             <p className="mt-2">
               LIPA NA MPESA PAYBILL: <b>247247</b><br />

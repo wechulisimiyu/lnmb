@@ -1,9 +1,9 @@
 import ContactHero from "@/components/contact/hero"
 import ContactForm from "@/components/contact/form"
 import ContactInfo from "@/components/contact/info"
-import ContactDepartments from "@/components/contact/departments"
+// import ContactDepartments from "@/components/contact/departments"
 import ContactFAQ from "@/components/contact/faq"
-import ContactEmergency from "@/components/contact/emergency"
+// import ContactEmergency from "@/components/contact/emergency"
 
 export default function ContactPage() {
   return (

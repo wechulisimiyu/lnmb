@@ -58,8 +58,8 @@ export function HomeHero() {
   <div className="absolute inset-0 z-10 bg-gradient-to-br from-black/30 via-black/20 to-black/30" />
 
       {/* Content container */}
-  <div className="relative z-20 container mx-auto px-6 py-16 lg:py-28 flex items-center">
-        <div className="w-full max-w-4xl text-center lg:text-left text-white">
+  <div className="relative z-20 container mx-auto px-6 py-16 lg:py-28 flex items-center justify-center">
+  <div className="w-full max-w-4xl text-center text-white">
           {/* <Badge className="bg-blue-800/90 text-white px-3 py-1 text-sm sm:px-4 sm:py-2">SUPPORTING MEDICAL STUDENTS</Badge> */}
 
           <h1 className="mt-6 text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight">
@@ -67,14 +67,14 @@ export function HomeHero() {
             <span className="block text-blue-500">Medic Behind</span>
           </h1>
 
-          <p className="mt-4 text-lg sm:text-xl text-white max-w-2xl">
+          <p className="mt-4 text-lg sm:text-xl text-white max-w-2xl mx-auto lg:max-w-xl">
             Join our annual charity run to support medical students with resources. Every step helps build tomorrow&apos;s healthcare heroes.
           </p>
 
-          <div className="mt-8 flex flex-col items-center sm:flex-row sm:items-center sm:justify-start gap-3">
+          <div className="mt-8 flex flex-col items-center sm:flex-row sm:items-center sm:justify-center gap-3">
             <Button
               size="lg"
-              className="bg-blue-800/90 hover:bg-blue-800/95 text-white font-semibold text-sm sm:text-base px-3 py-2 sm:px-6 sm:py-3 w-[90%] max-w-xs sm:w-auto mx-auto"
+              className="bg-blue-800/90 hover:bg-blue-800/95 text-white font-semibold text-sm sm:text-base px-3 py-2 sm:px-6 sm:py-3 w-44 mx-auto"
               onClick={() => scrollToSection("#join")}
             >
               <ArrowRight className="w-4 h-4 mr-2" />
@@ -84,7 +84,7 @@ export function HomeHero() {
             <Button
               size="lg"
               variant="outline"
-              className="border-blue-800/60 text-blue-800/90 hover:bg-white/5 text-sm sm:text-base px-3 py-2 sm:px-6 sm:py-3 w-[90%] max-w-xs sm:w-auto mx-auto"
+              className="border-blue-800/60 text-blue-800/90 hover:bg-white/5 text-sm sm:text-base px-3 py-2 sm:px-6 sm:py-3 w-44 mx-auto"
               onClick={() => scrollToSection("#story")}
             >
               Read Our Story

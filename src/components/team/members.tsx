@@ -201,123 +201,126 @@ export function TeamMembers() {
         <div className="space-y-6 sm:space-y-8 mb-16">
           <div className="text-center mb-6 sm:mb-8">
             <h2 className="text-xl sm:text-2xl font-bold text-slate-900">{expandedYear} Team Members</h2>
-            <p className="text-slate-600 text-sm sm:text-base">
-              {teamByYear[expandedYear as keyof typeof teamByYear].length} Active Team Members
-            </p>
+            <p className="text-slate-600 text-sm sm:text-base">team members coming soon</p>
           </div>
 
-          <div className="grid gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {teamByYear[expandedYear as keyof typeof teamByYear].map((member, index) => {
-              const brandColor = getBrandColor(member.color, index);
-              const colorClasses = getBrandColorClasses(brandColor);
-              
-              return (
-              <div
-                key={index}
-                className={`group relative overflow-hidden rounded-2xl ${colorClasses.bg} p-1 hover:shadow-2xl transition-all duration-300`}
-              >
-                <div className="relative bg-background rounded-xl overflow-hidden h-full">
-                  {/* Medical Chart Header */}
-                  <div className={`h-2 ${colorClasses.bgSolid}`}></div>
+          {false && (
+            <div className="grid gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3">
+              {teamByYear[expandedYear as keyof typeof teamByYear].map((member, index) => {
+                const brandColor = getBrandColor(member.color, index);
+                const colorClasses = getBrandColorClasses(brandColor);
 
-                  {/* Profile Image */}
-                  <div className="relative">
-                    <Image
-                      src={
-                        member.image ||
-                        "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/AMSUN-2023-06138.jpg-qPix2GTYuTijAGV7JuUPSN300TGari.jpeg" ||
-                        "/placeholder.svg" ||
-                        "/placeholder.svg"
-                      }
-                      alt={member.name}
-                      width={300}
-                      height={300}
-                      className="w-full h-48 sm:h-56 lg:h-64 object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
+                return (
+                  <div
+                    key={index}
+                    className={`group relative overflow-hidden rounded-2xl ${colorClasses.bg} p-1 hover:shadow-2xl transition-all duration-300`}
+                  >
+                    <div className="relative bg-background rounded-xl overflow-hidden h-full">
+                      {/* Medical Chart Header */}
+                      <div className={`h-2 ${colorClasses.bgSolid}`}></div>
 
-                    {/* Medical Badge */}
-                    <div className={`absolute top-4 left-4 px-3 py-1 rounded-full text-white text-xs font-bold ${colorClasses.bgSolid}`}>
-                      {member.title}
-                    </div>
-                  </div>
+                      {/* Profile Image */}
+                      <div className="relative">
+                        <Image
+                          src={
+                            member.image ||
+                            "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/AMSUN-2023-06138.jpg-qPix2GTYuTijAGV7JuUPSN300TGari.jpeg" ||
+                            "/placeholder.svg" ||
+                            "/placeholder.svg"
+                          }
+                          alt={member.name}
+                          width={300}
+                          height={300}
+                          className="w-full h-48 sm:h-56 lg:h-64 object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
 
-                  <div className="p-4 sm:p-6">
-                    <div className="space-y-4">
-                      <div className="text-center">
-                        <h3 className={`text-lg sm:text-xl font-bold text-foreground group-hover:${colorClasses.text} transition-colors`}>
-                          {member.name}
-                        </h3>
-                        <p className={`font-semibold text-sm sm:text-base ${colorClasses.text}`}>
-                          {member.role}
-                        </p>
+                        {/* Medical Badge */}
+                        <div className={`absolute top-4 left-4 px-3 py-1 rounded-full text-white text-xs font-bold ${colorClasses.bgSolid}`}>
+                          {member.title}
+                        </div>
                       </div>
 
-                      {/* Contact Actions */}
-                      <div className="flex justify-center space-x-4 pt-4 border-t border-slate-200">
-                        <a
-                          href={`mailto:${member.email}`}
-                          className={`p-2 rounded-lg transition-colors ${
-                            member.color === "blue"
-                              ? "text-slate-400 hover:text-blue-600 hover:bg-blue-50"
-                              : member.color === "green"
-                                ? "text-slate-400 hover:text-green-600 hover:bg-green-50"
-                                : member.color === "purple"
-                                  ? "text-slate-400 hover:text-purple-600 hover:bg-purple-50"
-                                  : member.color === "orange"
-                                    ? "text-slate-400 hover:text-orange-600 hover:bg-orange-50"
-                                    : member.color === "pink"
-                                      ? "text-slate-400 hover:text-pink-600 hover:bg-pink-50"
-                                      : "text-slate-400 hover:text-teal-600 hover:bg-teal-50"
-                          }`}
-                          aria-label="Email"
-                        >
-                          <Mail className="w-4 h-4 sm:w-5 sm:h-5" />
-                        </a>
-                        <a
-                          href={member.linkedin}
-                          className={`p-2 rounded-lg transition-colors ${
-                            member.color === "blue"
-                              ? "text-slate-400 hover:text-blue-600 hover:bg-blue-50"
-                              : member.color === "green"
-                                ? "text-slate-400 hover:text-green-600 hover:bg-green-50"
-                                : member.color === "purple"
-                                  ? "text-slate-400 hover:text-purple-600 hover:bg-purple-50"
-                                  : member.color === "orange"
-                                    ? "text-slate-400 hover:text-orange-600 hover:bg-orange-50"
-                                    : member.color === "pink"
-                                      ? "text-slate-400 hover:text-pink-600 hover:bg-pink-50"
-                                      : "text-slate-400 hover:text-teal-600 hover:bg-teal-50"
-                          }`}
-                          aria-label="LinkedIn"
-                        >
-                          <Linkedin className="w-4 h-4 sm:w-5 sm:h-5" />
-                        </a>
-                        <a
-                          href={member.twitter}
-                          className={`p-2 rounded-lg transition-colors ${
-                            member.color === "blue"
-                              ? "text-slate-400 hover:text-blue-600 hover:bg-blue-50"
-                              : member.color === "green"
-                                ? "text-slate-400 hover:text-green-600 hover:bg-green-50"
-                                : member.color === "purple"
-                                  ? "text-slate-400 hover:text-purple-600 hover:bg-purple-50"
-                                  : member.color === "orange"
-                                    ? "text-slate-400 hover:text-orange-600 hover:bg-orange-50"
-                                    : member.color === "pink"
-                                      ? "text-slate-400 hover:text-pink-600 hover:bg-pink-50"
-                                      : "text-slate-400 hover:text-teal-600 hover:bg-teal-50"
-                          }`}
-                          aria-label="Twitter"
-                        >
-                          <Twitter className="w-4 h-4 sm:w-5 sm:h-5" />
-                        </a>
+                      <div className="p-4 sm:p-6">
+                        <div className="space-y-4">
+                          <div className="text-center">
+                            <h3 className={`text-lg sm:text-xl font-bold text-foreground group-hover:${colorClasses.text} transition-colors`}>
+                              {member.name}
+                            </h3>
+                            <p className={`font-semibold text-sm sm:text-base ${colorClasses.text}`}>
+                              {member.role}
+                            </p>
+                          </div>
+
+                          {/* Contact Actions */}
+                          <div className="flex justify-center space-x-4 pt-4 border-t border-slate-200">
+                            <a
+                              href={`mailto:${member.email}`}
+                              className={`p-2 rounded-lg transition-colors ${
+                                member.color === "blue"
+                                  ? "text-slate-400 hover:text-blue-600 hover:bg-blue-50"
+                                  : member.color === "green"
+                                    ? "text-slate-400 hover:text-green-600 hover:bg-green-50"
+                                    : member.color === "purple"
+                                      ? "text-slate-400 hover:text-purple-600 hover:bg-purple-50"
+                                      : member.color === "orange"
+                                        ? "text-slate-400 hover:text-orange-600 hover:bg-orange-50"
+                                        : member.color === "pink"
+                                          ? "text-slate-400 hover:text-pink-600 hover:bg-pink-50"
+                                          : "text-slate-400 hover:text-teal-600 hover:bg-teal-50"
+                              }`}
+                              aria-label="Email"
+                            >
+                              <Mail className="w-4 h-4 sm:w-5 sm:h-5" />
+                            </a>
+                            <a
+                              href={member.linkedin}
+                              className={`p-2 rounded-lg transition-colors ${
+                                member.color === "blue"
+                                  ? "text-slate-400 hover:text-blue-600 hover:bg-blue-50"
+                                  : member.color === "green"
+                                    ? "text-slate-400 hover:text-green-600 hover:bg-green-50"
+                                    : member.color === "purple"
+                                      ? "text-slate-400 hover:text-purple-600 hover:bg-purple-50"
+                                      : member.color === "orange"
+                                        ? "text-slate-400 hover:text-orange-600 hover:bg-orange-50"
+                                        : member.color === "pink"
+                                          ? "text-slate-400 hover:text-pink-600 hover:bg-pink-50"
+                                          : "text-slate-400 hover:text-teal-600 hover:bg-teal-50"
+                              }`}
+                              aria-label="LinkedIn"
+                            >
+                              <Linkedin className="w-4 h-4 sm:w-5 sm:h-5" />
+                            </a>
+                            <a
+                              href={member.twitter}
+                              className={`p-2 rounded-lg transition-colors ${
+                                member.color === "blue"
+                                  ? "text-slate-400 hover:text-blue-600 hover:bg-blue-50"
+                                  : member.color === "green"
+                                    ? "text-slate-400 hover:text-green-600 hover:bg-green-50"
+                                    : member.color === "purple"
+                                      ? "text-slate-400 hover:text-purple-600 hover:bg-purple-50"
+                                      : member.color === "orange"
+                                        ? "text-slate-400 hover:text-orange-600 hover:bg-orange-50"
+                                        : member.color === "pink"
+                                          ? "text-slate-400 hover:text-pink-600 hover:bg-pink-50"
+                                          : "text-slate-400 hover:text-teal-600 hover:bg-teal-50"
+                              }`}
+                              aria-label="Twitter"
+                            >
+                              <Twitter className="w-4 h-4 sm:w-5 sm:h-5" />
+                            </a>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
-            ))}
-          </div>
+                )
+              })}
+            </div>
+          )}
+
+          {/* Team member profiles will be added from Sanity later. */}
         </div>
       )}
     </>

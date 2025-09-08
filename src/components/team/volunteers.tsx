@@ -15,11 +15,11 @@ export function TeamVolunteers() {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 text-center">
         <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 sm:p-6">
-          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-green-500 rounded-2xl flex items-center justify-center mx-auto mb-3">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-3">
             <Star className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
           </div>
-          <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-green-300 mb-1">150+</div>
-          <div className="text-blue-200 text-xs sm:text-sm">Active Volunteers</div>
+          <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-blue-300 mb-1">100+</div>
+          <div className="text-blue-200 text-xs sm:text-sm">Active Volunteers every year</div>
         </div>
         <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 sm:p-6">
           <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-3">
@@ -29,17 +29,17 @@ export function TeamVolunteers() {
           <div className="text-blue-200 text-xs sm:text-sm">Service Hours</div>
         </div>
         <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 sm:p-6">
-          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-3">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-3">
             <Award className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
           </div>
-          <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-purple-300 mb-1">15</div>
-          <div className="text-blue-200 text-xs sm:text-sm">Support Programs</div>
+          <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-blue-300 mb-1">10+</div>
+          <div className="text-blue-200 text-xs sm:text-sm">Departments</div>
         </div>
         <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 sm:p-6">
-          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-yellow-500 rounded-2xl flex items-center justify-center mx-auto mb-3">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-3">
             <Star className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
           </div>
-          <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-yellow-300 mb-1">100%</div>
+          <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-blue-300 mb-1">100%</div>
           <div className="text-blue-200 text-xs sm:text-sm">Satisfaction</div>
         </div>
       </div>

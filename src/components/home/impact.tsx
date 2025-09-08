@@ -11,7 +11,7 @@ export function HomeImpact() {
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
-          <div className="group relative overflow-hidden rounded-2xl bg-primary p-6 text-primary-foreground hover:shadow-2xl transition-all duration-300">
+          <div className="group relative overflow-hidden rounded-2xl bg-blue-800 p-6 text-white hover:shadow-2xl transition-all duration-300">
             <div className="absolute top-2 right-2 w-6 h-6 opacity-20">
               <Heart className="w-full h-full" />
             </div>
@@ -23,7 +23,7 @@ export function HomeImpact() {
             </div>
           </div>
 
-          <div className="group relative overflow-hidden rounded-2xl bg-accent p-6 text-accent-foreground hover:shadow-2xl transition-all duration-300">
+          <div className="group relative overflow-hidden rounded-2xl bg-blue-500 p-6 text-white hover:shadow-2xl transition-all duration-300">
             <div className="absolute top-2 right-2 w-6 h-6 opacity-20">
               <GraduationCap className="w-full h-full" />
             </div>
@@ -33,7 +33,7 @@ export function HomeImpact() {
             </div>
           </div>
 
-          <div className="group relative overflow-hidden rounded-2xl bg-brand-success p-6 text-white hover:shadow-2xl transition-all duration-300">
+          <div className="group relative overflow-hidden rounded-2xl bg-blue-800 p-6 text-white hover:shadow-2xl transition-all duration-300">
             <div className="absolute top-2 right-2 w-6 h-6 opacity-20">
               <Users className="w-full h-full" />
             </div>
@@ -43,7 +43,7 @@ export function HomeImpact() {
             </div>
           </div>
 
-          <div className="group relative overflow-hidden rounded-2xl bg-destructive p-6 text-destructive-foreground hover:shadow-2xl transition-all duration-300">
+          <div className="group relative overflow-hidden rounded-2xl bg-blue-500 p-6 text-white hover:shadow-2xl transition-all duration-300">
             <div className="absolute top-2 right-2 w-6 h-6 opacity-20">
               <Award className="w-full h-full" />
             </div>

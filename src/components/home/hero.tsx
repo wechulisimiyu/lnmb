@@ -1,81 +1,129 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { ArrowRight, Play } from "lucide-react"
+import { ArrowRight } from "lucide-react"
+import { useEffect, useState } from "react"
 import Image from "next/image"
-import { HeroBackground } from "./hero-background"
 
 export function HomeHero() {
-  return (
-    <HeroBackground
-      imageUrl="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/AMSUN-2023-06138.jpg-qPix2GTYuTijAGV7JuUPSN300TGari.jpeg"
-      overlay="from-blue-900/80 via-blue-800/70 to-blue-700/60"
-    >
-      <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center w-full">
-        <div className="space-y-6 lg:space-y-8 text-center lg:text-left">
-          <div className="space-y-4">
-            <Badge className="bg-blue-800/90 hover:bg-blue-900/90 text-white px-3 py-1 text-sm sm:px-4 sm:py-2 backdrop-blur-sm">
-              SUPPORTING MEDICAL STUDENTS
-            </Badge>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold leading-tight drop-shadow-lg">
-              Leave No
-              <span className="block text-blue-300">Medic Behind</span>
-            </h1>
-            <p className="text-lg sm:text-xl lg:text-2xl text-blue-100 leading-relaxed max-w-2xl mx-auto lg:mx-0 drop-shadow-md">
-              Join our annual charity run to support medical students with scholarships, textbooks, and educational
-              resources. Every step helps build tomorrow&apos;s healthcare heroes.
-            </p>
-          </div>
+  const [currentSlide, setCurrentSlide] = useState(0)
 
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start">
+  const slides = [
+    { image: "/images/home/hero-one.webp", alt: "Group of runners in motion" },
+    { image: "/images/home/hero-two.webp", alt: "Female runner with motion blur" },
+    { image: "/images/home/hero-three.webp", alt: "Male runner leading group" },
+  ]
+
+  const [imageLoaded, setImageLoaded] = useState(false)
+
+  const nextSlide = () => setCurrentSlide((s) => (s + 1) % slides.length)
+  const prevSlide = () => setCurrentSlide((s) => (s - 1 + slides.length) % slides.length)
+
+  useEffect(() => {
+    // mark not loaded when slide changes so we can fade in new image
+    setImageLoaded(false)
+  }, [currentSlide])
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setCurrentSlide((s) => (s + 1) % slides.length)
+    }, 5000)
+
+    return () => clearInterval(id)
+  }, [slides.length])
+
+  const scrollToSection = (href: string) => {
+    const el = document.querySelector(href)
+    if (el) el.scrollIntoView({ behavior: "smooth" })
+  }
+
+  return (
+    <section id="hero" className="relative min-h-[80vh] lg:min-h-[90vh] w-full overflow-hidden bg-black">
+      {/* Background */}
+      <div className="absolute inset-0 z-0">
+        <Image
+          src={slides[currentSlide].image}
+          alt={slides[currentSlide].alt}
+          fill
+          sizes="(max-width: 1024px) 100vw, 1920px"
+          className={`object-cover transition-opacity duration-700 ease-in-out ${
+            imageLoaded ? "opacity-100" : "opacity-0"
+          }`}
+          onLoadingComplete={() => setImageLoaded(true)}
+          priority
+        />
+      </div>
+  {/* Overlay for readability */}
+  <div className="absolute inset-0 z-10 bg-gradient-to-br from-black/30 via-black/20 to-black/30" />
+
+      {/* Content container */}
+  <div className="relative z-20 container mx-auto px-6 py-16 lg:py-28 flex items-center justify-center">
+  <div className="w-full max-w-4xl text-center text-white">
+          {/* <Badge className="bg-blue-800/90 text-white px-3 py-1 text-sm sm:px-4 sm:py-2">SUPPORTING MEDICAL STUDENTS</Badge> */}
+
+          <h1 className="mt-6 text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight">
+            Leave No
+            <span className="block text-blue-500">Medic Behind</span>
+          </h1>
+
+          <p className="mt-4 text-lg sm:text-xl text-white max-w-2xl mx-auto lg:max-w-xl">
+            Join our annual charity run to support medical students with resources. Every step helps build tomorrow&apos;s healthcare heroes.
+          </p>
+
+          <div className="mt-8 flex flex-col items-center sm:flex-row sm:items-center sm:justify-center gap-3">
             <Button
               size="lg"
-              className="bg-blue-500/90 hover:bg-blue-600/90 text-white font-semibold px-6 py-3 text-base sm:px-8 backdrop-blur-sm shadow-lg"
+              className="bg-blue-800/90 hover:bg-blue-800/95 text-white font-semibold text-sm sm:text-base px-3 py-2 sm:px-6 sm:py-3 w-44 mx-auto"
+              onClick={() => scrollToSection("#join")}
             >
-              <ArrowRight className="w-5 h-5 mr-2" />
+              <ArrowRight className="w-4 h-4 mr-2" />
               Register Now
             </Button>
+
             <Button
               size="lg"
               variant="outline"
-              className="border-blue-200/80 text-blue-100 hover:bg-blue-700/50 hover:text-white bg-transparent/20 backdrop-blur-sm px-6 py-3 text-base sm:px-8 shadow-lg"
+              className="border-blue-800/60 text-blue-800/90 hover:bg-white/5 text-sm sm:text-base px-3 py-2 sm:px-6 sm:py-3 w-44 mx-auto"
+              onClick={() => scrollToSection("#story")}
             >
-              <Play className="w-5 h-5 mr-2" />
-              Watch Story
+              Read Our Story
             </Button>
           </div>
-
-          <div className="grid grid-cols-3 gap-4 pt-6 sm:pt-8 border-t border-blue-400/50">
-            <div className="text-center">
-              <div className="text-2xl sm:text-3xl font-bold text-blue-300 drop-shadow-md">KES 675K+</div>
-              <div className="text-blue-200 text-xs sm:text-sm drop-shadow-sm">RAISED</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl sm:text-3xl font-bold text-blue-300 drop-shadow-md">138</div>
-              <div className="text-blue-200 text-xs sm:text-sm drop-shadow-sm">MEDICS HELPED</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl sm:text-3xl font-bold text-blue-300 drop-shadow-md">6,600+</div>
-              <div className="text-blue-200 text-xs sm:text-sm drop-shadow-sm">PARTICIPANTS</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="relative mt-8 lg:mt-0 hidden lg:block">
-          <div className="relative z-10">
-            <Image
-              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/AMSUN-2023-06138.jpg-qPix2GTYuTijAGV7JuUPSN300TGari.jpeg"
-              alt="Medical students and healthcare workers"
-              width={500}
-              height={600}
-              className="rounded-lg shadow-2xl w-full max-w-md mx-auto lg:max-w-none backdrop-blur-sm bg-white/10 p-2"
-            />
-          </div>
-          <div className="absolute -top-2 -right-2 sm:-top-4 sm:-right-4 w-full h-full bg-blue-500/30 rounded-lg backdrop-blur-sm"></div>
         </div>
       </div>
-    </HeroBackground>
+
+      {/* Slider controls & indicators */}
+      <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-20 flex items-center space-x-4">
+        <button
+          onClick={prevSlide}
+          className="text-white/90 hover:text-white p-2 bg-black/30 rounded-full"
+          aria-label="Previous slide"
+        >
+          ‹
+        </button>
+
+        <div className="flex space-x-2">
+          {slides.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrentSlide(i)}
+              className={`w-3 h-3 rounded-full transition-all duration-200 ${
+                currentSlide === i ? "bg-white" : "bg-white/40"
+              }`}
+              aria-label={`Go to slide ${i + 1}`}
+            />
+          ))}
+        </div>
+
+        <button
+          onClick={nextSlide}
+          className="text-white/90 hover:text-white p-2 bg-black/30 rounded-full"
+          aria-label="Next slide"
+        >
+          ›
+        </button>
+      </div>
+    </section>
   )
 }
 

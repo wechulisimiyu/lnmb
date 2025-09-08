@@ -9,11 +9,11 @@ export default function HomePage() {
   return (
     <div className="flex flex-col min-h-screen">
       <HomeHero />
-      <HomeMission />
+      {/* <HomeMission /> */}
       <HomeSocial />
-      <HomeImpact />
-      <HomeCTA />
-      <HomeHighlights />
+      {/* <HomeImpact /> */}
+      {/* <HomeCTA /> */}
+      {/* <HomeHighlights /> */}
     </div>
   )
 }

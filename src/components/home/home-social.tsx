@@ -126,6 +126,11 @@ export function HomeSocial() {
     })
   }
 
+  // Pick the single latest post across platforms
+  const latestPost = socialPosts.length
+    ? socialPosts.reduce((a, b) => (new Date(a.timestamp) > new Date(b.timestamp) ? a : b))
+    : null
+
   return (
     <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-secondary to-background">
       <div className="container mx-auto px-4">
@@ -161,13 +166,13 @@ export function HomeSocial() {
           </Button>
         </div>
 
-        {/* Social Media Feed Grid - Medical Chart Style */}
-        <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-7xl mx-auto">
-          {socialPosts.map((post) => (
+        {/* Social Media Feed - single latest post */}
+        <div className="max-w-3xl mx-auto">
+          {latestPost && (
             <div
-              key={post.id}
+              key={latestPost.id}
               className={`group relative overflow-hidden rounded-2xl bg-background shadow-lg hover:shadow-2xl transition-all duration-300 ${
-                post.platform === "twitter" ? "border-t-4 border-t-accent" : "border-t-4 border-t-destructive"
+                latestPost.platform === "twitter" ? "border-t-4 border-t-accent" : "border-t-4 border-t-destructive"
               }`}
             >
               {/* Platform Header */}
@@ -176,10 +181,10 @@ export function HomeSocial() {
                   <div className="flex items-center space-x-3">
                     <div
                       className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                        post.platform === "twitter" ? "bg-accent/10" : "bg-destructive/10"
+                        latestPost.platform === "twitter" ? "bg-accent/10" : "bg-destructive/10"
                       }`}
                     >
-                      {post.platform === "twitter" ? (
+                      {latestPost.platform === "twitter" ? (
                         <Twitter className="w-5 h-5 text-accent" />
                       ) : (
                         <Instagram className="w-5 h-5 text-destructive" />
@@ -187,41 +192,41 @@ export function HomeSocial() {
                     </div>
                     <div>
                       <div className="flex items-center space-x-2">
-                        <span className="font-bold text-foreground text-sm">{post.username}</span>
-                        {post.verified && (
+                        <span className="font-bold text-foreground text-sm">{latestPost.username}</span>
+                        {latestPost.verified && (
                           <div
                             className={`w-4 h-4 rounded-full flex items-center justify-center ${
-                              post.platform === "twitter" ? "bg-accent" : "bg-destructive"
+                              latestPost.platform === "twitter" ? "bg-accent" : "bg-destructive"
                             }`}
                           >
                             <Verified className="w-2.5 h-2.5 text-white fill-current" />
                           </div>
                         )}
                       </div>
-                      <span className="text-muted-foreground text-xs">{post.handle}</span>
+                      <span className="text-muted-foreground text-xs">{latestPost.handle}</span>
                     </div>
                   </div>
                   <div className="flex items-center space-x-1 text-muted-foreground">
                     <Calendar className="w-3 h-3" />
-                    <span className="text-xs">{formatTimeAgo(post.timestamp)}</span>
+                    <span className="text-xs">{formatTimeAgo(latestPost.timestamp)}</span>
                   </div>
                 </div>
               </div>
 
               {/* Content */}
               <div className="px-4 pb-4">
-                <p className="text-foreground text-sm leading-relaxed mb-4">{post.content}</p>
+                <p className="text-foreground text-sm leading-relaxed mb-4">{latestPost.content}</p>
 
-                {post.image && (
+                {latestPost.image && (
                   <div className="relative mb-4 rounded-xl overflow-hidden">
                     <Image
                       src={
-                        post.image ||
+                        latestPost.image ||
                         "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/AMSUN-2023-06138.jpg-qPix2GTYuTijAGV7JuUPSN300TGari.jpeg"
                       }
                       alt="Social media post image"
                       width={400}
-                      height={post.platform === "instagram" ? 400 : 300}
+                      height={latestPost.platform === "instagram" ? 400 : 300}
                       className="w-full h-40 sm:h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   </div>
@@ -230,33 +235,33 @@ export function HomeSocial() {
                 {/* Engagement Stats - Medical Monitor Style */}
                 <div
                   className={`flex items-center justify-between p-3 rounded-lg ${
-                    post.platform === "twitter" ? "bg-accent/10" : "bg-destructive/10"
+                    latestPost.platform === "twitter" ? "bg-accent/10" : "bg-destructive/10"
                   }`}
                 >
                   <div className="flex items-center space-x-4 text-xs">
                     <div
                       className={`flex items-center space-x-1 ${
-                        post.platform === "twitter" ? "text-accent" : "text-destructive"
+                        latestPost.platform === "twitter" ? "text-accent" : "text-destructive"
                       }`}
                     >
                       <Heart className="w-3 h-3" />
-                      <span className="font-semibold">{post.likes}</span>
+                      <span className="font-semibold">{latestPost.likes}</span>
                     </div>
-                    {post.platform === "twitter" ? (
+                    {latestPost.platform === "twitter" ? (
                       <>
                         <div className="flex items-center space-x-1 text-accent">
                           <Repeat2 className="w-3 h-3" />
-                          <span className="font-semibold">{post.retweets}</span>
+                          <span className="font-semibold">{latestPost.retweets}</span>
                         </div>
                         <div className="flex items-center space-x-1 text-accent">
                           <MessageCircle className="w-3 h-3" />
-                          <span className="font-semibold">{post.replies}</span>
+                          <span className="font-semibold">{latestPost.replies}</span>
                         </div>
                       </>
                     ) : (
                       <div className="flex items-center space-x-1 text-destructive">
                         <MessageCircle className="w-3 h-3" />
-                        <span className="font-semibold">{post.comments}</span>
+                        <span className="font-semibold">{latestPost.comments}</span>
                       </div>
                     )}
                   </div>
@@ -264,7 +269,7 @@ export function HomeSocial() {
                     variant="ghost"
                     size="sm"
                     className={`text-xs p-1 h-auto hover:scale-110 transition-transform duration-300 ${
-                      post.platform === "twitter"
+                      latestPost.platform === "twitter"
                         ? "text-accent hover:text-accent/80"
                         : "text-destructive hover:text-destructive/80"
                     }`}
@@ -272,14 +277,14 @@ export function HomeSocial() {
                   >
                     <a
                       href={
-                        post.platform === "twitter"
-                          ? `https://x.com/AMSUNrunning/status/${post.id}`
-                          : `https://www.instagram.com/p/${post.id}/`
+                        latestPost.platform === "twitter"
+                          ? `https://x.com/AMSUNrunning/status/${latestPost.id}`
+                          : `https://www.instagram.com/p/${latestPost.id}/`
                       }
                       target="_blank"
                       rel="noopener noreferrer"
-                      aria-label={`View this post on ${post.platform}`}
-                      title={`View this post on ${post.platform}`}
+                      aria-label={`View this post on ${latestPost.platform}`}
+                      title={`View this post on ${latestPost.platform}`}
                     >
                       <ExternalLink className="w-3 h-3" />
                     </a>
@@ -287,7 +292,7 @@ export function HomeSocial() {
                 </div>
               </div>
             </div>
-          ))}
+          )}
         </div>
 
         {/* View More Button */}

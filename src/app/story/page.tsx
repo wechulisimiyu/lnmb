@@ -11,8 +11,6 @@ export default function StoryPage() {
         <StoryHero />
         <StoryOrigin />
         <StoryTimeline />
-        <StoryValues />
-        <StoryFuture />
       </div>
     </div>
   )

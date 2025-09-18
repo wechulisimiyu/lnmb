@@ -1,262 +1,226 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Smartphone } from "lucide-react";
+import { Loader2, CreditCard, Smartphone, ArrowLeft, CheckCircle } from "lucide-react";
 import { useMutation, useQuery, useAction } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 
-interface CheckoutFormData {
-  phoneNumber: string;
-  amount: number;
+interface OrderData {
+  student: string;
+  university?: string;
+  yearOfStudy?: string;
+  regNumber?: string;
+  attending: string;
+  tshirtType: string;
+  tshirtSize: string;
+  quantity: number;
+  totalAmount: number;
+  name: string;
+  email: string;
+  phone: string;
+  nameOfKin: string;
+  kinNumber: string;
+  medicalCondition: string;
+  pickUp?: string;
+  confirm: string;
+  orderReference: string;
+  paid: boolean;
+}
+
+interface PaymentFormData {
+  token: string;
+  merchantCode: string;
+  currency: string;
+  orderAmount: number;
+  orderReference: string;
+  productType: string;
+  productDescription: string;
+  paymentTimeLimit: string;
   customerFirstName: string;
   customerLastName: string;
-  customerEmail: string;
+  customerPostalCodeZip: string;
   customerAddress: string;
-  productDescription: string;
+  customerEmail: string;
+  customerPhone: string;
+  callbackUrl: string;
+  countryCode: string;
+  secondaryReference: string;
 }
 
 export default function CheckoutPage() {
-  const [formData, setFormData] = useState<CheckoutFormData>({
-    phoneNumber: "",
-    amount: 0,
-    customerFirstName: "",
-    customerLastName: "",
-    customerEmail: "",
-    customerAddress: "",
-    productDescription: "",
-  });
-  
-  const [isLoading, setIsLoading] = useState(false);
-  const [orderReference, setOrderReference] = useState<string | null>(null);
+  const router = useRouter();
+  const [orderData, setOrderData] = useState<OrderData | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [paymentFormData, setPaymentFormData] = useState<PaymentFormData | null>(null);
 
-  const createPaymentRecord = useMutation(api.checkout.createPaymentRecord);
-  const triggerSTKPush = useAction(api.checkout.triggerSTKPush);
+  const createOrder = useMutation(api.orders.createOrder);
+  const createPaymentRecord = useAction(api.orders.createPaymentRecord);
   const paymentStatus = useQuery(
-    api.checkout.getPaymentStatus,
-    orderReference ? { reference: orderReference } : "skip"
+    api.orders.getPaymentStatus,
+    orderData?.orderReference ? { reference: orderData.orderReference } : "skip"
   );
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    const newValue = name === "amount" ? parseFloat(value) || 0 : value;
-    
-    setFormData((prev) => {
-      const updated = {
-        ...prev,
-        [name]: newValue,
-      };
-      console.log(`📝 Form field updated: ${name} = ${newValue}`, updated);
-      return updated;
-    });
-  };
-
-  const formatPhoneNumber = (phone: string): string => {
-    // Remove any non-digit characters
-    const cleaned = phone.replace(/\D/g, "");
-    
-    // If starts with 0, replace with 254
-    if (cleaned.startsWith("0")) {
-      return "254" + cleaned.substring(1);
-    }
-    
-    // If starts with 254, keep as is
-    if (cleaned.startsWith("254")) {
-      return cleaned;
-    }
-    
-    // If starts with 7, add 254
-    if (cleaned.startsWith("7")) {
-      return "254" + cleaned;
-    }
-    
-    return cleaned;
-  };
-
-  const validateForm = (): boolean => {
-    console.log("🔍 Validating form data:", formData);
-    
-    if (!formData.phoneNumber || !formData.amount || !formData.customerFirstName || 
-        !formData.customerLastName || !formData.customerEmail) {
-      console.error("❌ Missing required fields:", {
-        phoneNumber: !!formData.phoneNumber,
-        amount: !!formData.amount,
-        customerFirstName: !!formData.customerFirstName,
-        customerLastName: !!formData.customerLastName,
-        customerEmail: !!formData.customerEmail
-      });
-      setError("Please fill in all required fields");
-      return false;
-    }
-
-    const phoneRegex = /^254[17]\d{8}$/;
-    const formattedPhone = formatPhoneNumber(formData.phoneNumber);
-    
-    if (!phoneRegex.test(formattedPhone)) {
-      setError("Please enter a valid Kenyan phone number (e.g., +254797838201)");
-      return false;
-    }
-
-    if (formData.amount < 1) {
-      setError("Amount must be at least KES 1");
-      return false;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.customerEmail)) {
-      setError("Please enter a valid email address");
-      return false;
-    }
-
-    console.log("✅ Form validation passed");
-    return true;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    
-    if (!validateForm()) return;
-
-    setIsLoading(true);
-    
-    try {
-      const formattedPhone = formatPhoneNumber(formData.phoneNumber);
-      
-      // Generate unique order reference
-      const generatedOrderReference = `ORD${Date.now()}${Math.floor(Math.random() * 1000)}`;
-      
-      console.log("🚀 Starting checkout with data:", {
-        orderReference: generatedOrderReference,
-        customerName: `${formData.customerFirstName} ${formData.customerLastName}`,
-        phone: formattedPhone,
-        email: formData.customerEmail,
-        amount: formData.amount
-      });
-      
-      // Step 1: Create payment record FIRST
-      const paymentRecord = await createPaymentRecord({
-        ...formData,
-        phoneNumber: formattedPhone,
-        orderReference: generatedOrderReference,
-        status: "pending", // Start as pending
-      });
-
-      console.log("✅ Payment record created:", paymentRecord);
-
-      if (paymentRecord) {
-        // Ensure we have all required customer data before calling STK push
-        const customerData = {
-          phoneNumber: formattedPhone,
-          amount: formData.amount,
-          orderReference: generatedOrderReference,
-          customerFirstName: formData.customerFirstName || "Customer",
-          customerLastName: formData.customerLastName || "User", 
-          customerEmail: formData.customerEmail || "customer@example.com",
-          customerAddress: formData.customerAddress || "",
-          productDescription: formData.productDescription || "",
-        };
-
-        console.log("📋 Customer data being sent to STK push:", customerData);
-
-        // Step 2: Trigger STK Push with ALL customer data (not dummy data)
-        const stkResult = await triggerSTKPush(customerData);
-
-        console.log("✅ STK Push result:", stkResult);
-
-        if (stkResult.status === "initiated") {
-          // STK Push successful
-          setOrderReference(generatedOrderReference);
-        } else {
-          setError(stkResult.message || "STK Push failed. Please try again.");
-        }
-      } else {
-        setError("Failed to create payment record");
+  useEffect(() => {
+    // Get order data from localStorage
+    const savedOrder = localStorage.getItem("pendingOrder");
+    if (savedOrder) {
+      try {
+        const parsed = JSON.parse(savedOrder);
+        setOrderData(parsed);
+      } catch (error) {
+        console.error("Error parsing order data:", error);
+        router.push("/shop");
       }
-    } catch (err) {
-      console.error("❌ Checkout error:", err);
-      setError("An error occurred while processing your payment. Please try again.");
+    } else {
+      router.push("/shop");
+    }
+  }, [router]);
+
+  const handleProcessPayment = async () => {
+    if (!orderData) return;
+
+    setIsProcessing(true);
+    setError(null);
+
+    try {
+      // Create order in database
+      await createOrder({
+        student: orderData.student,
+        university: orderData.university,
+        yearOfStudy: orderData.yearOfStudy,
+        regNumber: orderData.regNumber,
+        attending: orderData.attending,
+        tshirtType: orderData.tshirtType,
+        tshirtSize: orderData.tshirtSize,
+        quantity: orderData.quantity,
+        totalAmount: orderData.totalAmount,
+        name: orderData.name,
+        email: orderData.email,
+        phone: orderData.phone,
+        nameOfKin: orderData.nameOfKin,
+        kinNumber: orderData.kinNumber,
+        medicalCondition: orderData.medicalCondition,
+        pickUp: orderData.pickUp,
+        confirm: orderData.confirm,
+        orderReference: orderData.orderReference,
+      });
+
+      // Create payment record and get Jenga PGW form data
+      const [firstName, ...lastNameParts] = orderData.name.split(" ");
+      const lastName = lastNameParts.join(" ") || firstName;
+      
+      // Sanitize product description for Jenga PGW (only allow alphanumeric, hyphen, quotation mark, forward slash, back slash, underscore, space)
+      const rawDescription = `${orderData.tshirtType} T-shirt ${orderData.tshirtSize} x${orderData.quantity} - Leave No Medic Behind Charity Run`;
+      const productDescription = rawDescription.replace(/[^a-zA-Z0-9\-"\/\\_\s]/g, '');
+      
+      const paymentRecord = await createPaymentRecord({
+        orderReference: orderData.orderReference,
+        orderAmount: orderData.totalAmount,
+        customerFirstName: firstName,
+        customerLastName: lastName,
+        customerEmail: orderData.email,
+        customerPhone: `254${orderData.phone}`,
+        customerAddress: "Nairobi, Kenya",
+        productDescription,
+      });
+
+      // Set payment form data for submission to Jenga PGW
+      setPaymentFormData(paymentRecord.paymentData);
+      
+      // Clear localStorage
+      localStorage.removeItem("pendingOrder");
+
+    } catch (error) {
+      console.error("Error processing payment:", error);
+      setError("Failed to process payment. Please try again.");
     } finally {
-      setIsLoading(false);
+      setIsProcessing(false);
     }
   };
 
-  if (orderReference && paymentStatus) {
+  const submitToJengaPGW = () => {
+    if (!paymentFormData) return;
+
+    // Create a form and submit to Jenga PGW
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = "https://v3-uat.jengapgw.io/processPayment";
+
+    // Add all the required hidden fields
+    const fields = {
+      token: paymentFormData.token,
+      merchantCode: paymentFormData.merchantCode,
+      currency: paymentFormData.currency,
+      orderAmount: String(paymentFormData.orderAmount),
+      orderReference: paymentFormData.orderReference,
+      productType: paymentFormData.productType,
+      productDescription: paymentFormData.productDescription,
+      paymentTimeLimit: paymentFormData.paymentTimeLimit,
+      customerFirstName: paymentFormData.customerFirstName,
+      customerLastName: paymentFormData.customerLastName,
+      customerPostalCodeZip: paymentFormData.customerPostalCodeZip,
+      customerAddress: paymentFormData.customerAddress,
+      customerEmail: paymentFormData.customerEmail,
+      customerPhone: paymentFormData.customerPhone,
+      callbackUrl: paymentFormData.callbackUrl,
+      countryCode: paymentFormData.countryCode,
+      secondaryReference: paymentFormData.secondaryReference,
+    };
+
+    Object.entries(fields).forEach(([name, value]) => {
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = name;
+      input.value = String(value);
+      form.appendChild(input);
+    });
+
+    document.body.appendChild(form);
+    form.submit();
+  };
+
+  const getTshirtTypeDisplay = (type: string) => {
+    return type === "polo" ? "Polo Neck" : "Round Neck";
+  };
+
+  const getSizeDisplay = (size: string) => {
+    return size.split("-").map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(" ");
+  };
+
+  if (!orderData) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-2xl">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-center">Payment Status</CardTitle>
-            <CardDescription className="text-center">
-              Order Reference: {orderReference}
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p>Loading checkout...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Check if payment is already successful
+  if (paymentStatus?.status === "paid") {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <Card className="max-w-md w-full mx-4">
+          <CardHeader className="text-center">
+            <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
+            <CardTitle className="text-2xl text-green-600">Payment Successful!</CardTitle>
+            <CardDescription>
+              Your order has been confirmed. You will receive an email confirmation shortly.
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4 text-center">
-              <div className="text-lg font-medium">
-                Status: <span className="capitalize">{paymentStatus.status}</span>
-              </div>
-              
-              {paymentStatus.status === "initiated" && (
-                <Alert>
-                  <Smartphone className="h-4 w-4" />
-                  <AlertDescription>
-                    STK Push sent! Please check your phone for the M-Pesa payment prompt and enter your PIN to complete the payment.
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              {paymentStatus.status === "pending" && (
-                <Alert>
-                  <Smartphone className="h-4 w-4" />
-                  <AlertDescription>
-                    Payment is being processed. Please wait...
-                  </AlertDescription>
-                </Alert>
-              )}
-              
-              {paymentStatus.status === "paid" && (
-                <Alert className="border-green-200 bg-green-50">
-                  <AlertDescription className="text-green-800">
-                    Payment successful! Thank you for your purchase.
-                  </AlertDescription>
-                </Alert>
-              )}
-              
-              {paymentStatus.status === "failed" && (
-                <Alert className="border-red-200 bg-red-50">
-                  <AlertDescription className="text-red-800">
-                    Payment failed. Please try again or contact support.
-                  </AlertDescription>
-                </Alert>
-              )}
-              
-              <Button 
-                onClick={() => {
-                  setOrderReference(null);
-                  setFormData({
-                    phoneNumber: "",
-                    amount: 0,
-                    customerFirstName: "",
-                    customerLastName: "",
-                    customerEmail: "",
-                    customerAddress: "",
-                    productDescription: "",
-                  });
-                }}
-                variant="outline"
-              >
-                Make Another Payment
-              </Button>
-            </div>
+          <CardContent className="text-center">
+            <Button onClick={() => router.push("/")} className="w-full">
+              Return to Home
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -264,152 +228,199 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-2xl">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Smartphone className="h-5 w-5" />
-            Checkout
-          </CardTitle>
-          <CardDescription>
-            Complete your payment using M-Pesa
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {error && (
-              <Alert className="border-red-200 bg-red-50">
-                <AlertDescription className="text-red-800">
-                  {error}
-                </AlertDescription>
-              </Alert>
-            )}
+    <div className="min-h-screen bg-slate-50 py-8">
+      <div className="container mx-auto px-4 max-w-4xl">
+        <div className="mb-8">
+          <Button
+            variant="ghost"
+            onClick={() => router.back()}
+            className="mb-4"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Shop
+          </Button>
+          
+          <h1 className="text-3xl font-bold text-gray-900">Checkout</h1>
+          <p className="text-gray-600 mt-2">Review your order and complete payment</p>
+        </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="customerFirstName">
-                  First Name <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="customerFirstName"
-                  name="customerFirstName"
-                  value={formData.customerFirstName}
-                  onChange={handleInputChange}
-                  placeholder="Enter your first name"
-                  required
-                />
+        <div className="grid lg:grid-cols-2 gap-8">
+          {/* Order Summary */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Order Summary</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="border-b pb-4">
+                <h3 className="font-semibold text-lg mb-2">T-shirt Details</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span>Type:</span>
+                    <span>{getTshirtTypeDisplay(orderData.tshirtType)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Size:</span>
+                    <span>{getSizeDisplay(orderData.tshirtSize)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Quantity:</span>
+                    <span>{orderData.quantity}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Will attend run:</span>
+                    <span>{orderData.attending === "attending" ? "Yes" : "No"}</span>
+                  </div>
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="customerLastName">
-                  Last Name <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="customerLastName"
-                  name="customerLastName"
-                  value={formData.customerLastName}
-                  onChange={handleInputChange}
-                  placeholder="Enter your last name"
-                  required
-                />
+              <div className="border-b pb-4">
+                <h3 className="font-semibold text-lg mb-2">Customer Details</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span>Name:</span>
+                    <span>{orderData.name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Email:</span>
+                    <span>{orderData.email}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Phone:</span>
+                    <span>+254{orderData.phone}</span>
+                  </div>
+                  {orderData.student === "yes" && (
+                    <>
+                      <div className="flex justify-between">
+                        <span>University:</span>
+                        <span>{orderData.university}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Year of Study:</span>
+                        <span>{orderData.yearOfStudy}</span>
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="customerEmail">
-                Email Address <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="customerEmail"
-                name="customerEmail"
-                type="email"
-                value={formData.customerEmail}
-                onChange={handleInputChange}
-                placeholder="Enter your email address"
-                required
-              />
-            </div>
+              <div className="pt-4">
+                <div className="flex justify-between items-center text-lg font-bold">
+                  <span>Total Amount:</span>
+                  <span className="text-blue-600">KES {orderData.totalAmount.toLocaleString()}</span>
+                </div>
+                <p className="text-sm text-gray-600 mt-2">
+                  Order Reference: {orderData.orderReference}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
 
-            <div className="space-y-2">
-              <Label htmlFor="phoneNumber">
-                Phone Number <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="phoneNumber"
-                name="phoneNumber"
-                value={formData.phoneNumber}
-                onChange={handleInputChange}
-                placeholder="+254797838201"
-                required
-              />
-              <p className="text-sm text-gray-600">
-                Enter your M-Pesa registered phone number (e.g., +254797838201)
-              </p>
-            </div>
+          {/* Payment Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Payment</CardTitle>
+              <CardDescription>
+                Complete your payment using M-PESA or card
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {!paymentFormData ? (
+                <>
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <div className="flex items-center space-x-3 mb-3">
+                      <Smartphone className="h-6 w-6 text-blue-600" />
+                      <span className="font-semibold">M-PESA Payment</span>
+                    </div>
+                    <p className="text-sm text-gray-700">
+                      You can pay using M-PESA STK Push or other supported payment methods.
+                    </p>
+                  </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="amount">
-                Amount (KES) <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="amount"
-                name="amount"
-                type="number"
-                min="1"
-                step="0.01"
-                value={formData.amount || ""}
-                onChange={handleInputChange}
-                placeholder="Enter amount"
-                required
-              />
-            </div>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="flex items-center space-x-3 mb-3">
+                      <CreditCard className="h-6 w-6 text-gray-600" />
+                      <span className="font-semibold">Card Payment</span>
+                    </div>
+                    <p className="text-sm text-gray-700">
+                      Visa, Mastercard, and other supported card payments are available.
+                    </p>
+                  </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="customerAddress">Address</Label>
-              <Input
-                id="customerAddress"
-                name="customerAddress"
-                value={formData.customerAddress}
-                onChange={handleInputChange}
-                placeholder="Enter your address (optional)"
-              />
-            </div>
+                  {error && (
+                    <Alert variant="destructive">
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  )}
 
-            <div className="space-y-2">
-              <Label htmlFor="productDescription">Description</Label>
-              <Textarea
-                id="productDescription"
-                name="productDescription"
-                value={formData.productDescription}
-                onChange={handleInputChange}
-                placeholder="Brief description of what you're paying for (optional)"
-                rows={3}
-              />
-            </div>
+                  <Button
+                    onClick={handleProcessPayment}
+                    disabled={isProcessing}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6"
+                  >
+                    {isProcessing ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        Processing Payment...
+                      </>
+                    ) : (
+                      <>
+                        <CreditCard className="w-5 h-5 mr-2" />
+                        Proceed to Payment
+                      </>
+                    )}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Alert>
+                    <AlertDescription>
+                      Your payment has been prepared. Click the button below to complete your payment 
+                      securely through Jenga Payment Gateway.
+                    </AlertDescription>
+                  </Alert>
 
-            <div className="space-y-4">
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isLoading}
-                size="lg"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing STK Push...
-                  </>
-                ) : (
-                  <>
-                    <Smartphone className="mr-2 h-4 w-4" />
-                    Proceed to Pay (M-Pesa)
-                  </>
-                )}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+                  <Button
+                    onClick={submitToJengaPGW}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white py-6"
+                  >
+                    <CreditCard className="w-5 h-5 mr-2" />
+                    Complete Payment
+                  </Button>
+
+                  <p className="text-xs text-gray-500 text-center">
+                    You will be redirected to a secure payment page
+                  </p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Payment Status */}
+        {paymentStatus && paymentStatus.status !== "pending" && (
+          <Card className="mt-8">
+            <CardHeader>
+              <CardTitle>Payment Status</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center space-x-2">
+                <div className={`w-3 h-3 rounded-full ${
+                  paymentStatus.status === "paid" ? "bg-green-500" : 
+                  paymentStatus.status === "processing" ? "bg-yellow-500" : "bg-red-500"
+                }`} />
+                <span className="capitalize font-semibold">
+                  {paymentStatus.status}
+                </span>
+              </div>
+              {paymentStatus.transactionId && (
+                <p className="text-sm text-gray-600 mt-2">
+                  Transaction ID: {paymentStatus.transactionId}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 }

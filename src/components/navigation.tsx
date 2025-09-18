@@ -16,7 +16,7 @@ export function Navigation() {
     // { href: "/highlights", label: "Highlights" },
     // { href: "/partners", label: "Partners" },
     // { href: "/vendors", label: "Vendors" },
-    // { href: "/shop", label: "Shop" }, 
+    { href: "/shop", label: "Shop" }, 
     { href: "/contact", label: "Contact" },
   ]
 

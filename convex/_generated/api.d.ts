@@ -14,6 +14,7 @@ import type {
   FunctionReference,
 } from "convex/server";
 import type * as checkout from "../checkout.js";
+import type * as orders from "../orders.js";
 import type * as utils_generateAccessToken from "../utils/generateAccessToken.js";
 
 /**
@@ -26,6 +27,7 @@ import type * as utils_generateAccessToken from "../utils/generateAccessToken.js
  */
 declare const fullApi: ApiFromModules<{
   checkout: typeof checkout;
+  orders: typeof orders;
   "utils/generateAccessToken": typeof utils_generateAccessToken;
 }>;
 export declare const api: FilterApi<

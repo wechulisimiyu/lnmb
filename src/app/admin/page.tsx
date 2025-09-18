@@ -1,6 +1,8 @@
 "use client"
 
 import { useState } from "react"
+import { useQuery } from "convex/react"
+import { api } from "../../../convex/_generated/api"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -17,27 +19,67 @@ import {
   DollarSign,
   Calendar,
   GraduationCap,
+  Package,
+  CreditCard,
 } from "lucide-react"
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState("dashboard")
+  
+  // Fetch data from Convex
+  const orders = useQuery(api.orders.getAllOrders) || []
+  const payments = useQuery(api.orders.getAllPayments) || []
+  const orderStats = useQuery(api.orders.getOrderStats)
 
-  // Mock data
+  // Mock data for other sections
   const stats = {
     totalMembers: 24,
     totalHighlights: 15,
     totalProducts: 8,
-    totalRevenue: 45250,
-    monthlyOrders: 156,
+    totalRevenue: orderStats?.totalRevenue || 45250,
+    monthlyOrders: orderStats?.monthlyOrders || 156,
     activeYears: 5,
   }
 
-  const recentActivity = [
-    { action: "New team member added", user: "Admin", time: "2 hours ago", type: "team" },
-    { action: "Product updated", user: "Admin", time: "4 hours ago", type: "product" },
-    { action: "Highlight published", user: "Admin", time: "1 day ago", type: "highlight" },
-    { action: "Team member edited", user: "Admin", time: "2 days ago", type: "team" },
-  ]
+  // Generate recent activity from orders and payments
+  const generateRecentActivity = () => {
+    const activities = []
+    
+    // Add recent orders
+    const recentOrders = orders.slice(0, 2)
+    recentOrders.forEach(order => {
+      const timeAgo = Math.floor((Date.now() - order.createdAt) / (1000 * 60 * 60)) // hours ago
+      activities.push({
+        action: `New order for ${order.tshirtType} (${order.quantity}x)`,
+        user: order.name,
+        time: timeAgo < 1 ? "Just now" : `${timeAgo} hours ago`,
+        type: "order"
+      })
+    })
+    
+    // Add recent payments
+    const recentPayments = payments.slice(0, 2)
+    recentPayments.forEach(payment => {
+      const timeAgo = Math.floor((Date.now() - payment.createdAt) / (1000 * 60 * 60)) // hours ago
+      const amount = payment.orderAmount || payment.amount || 0;
+      activities.push({
+        action: `Payment ${payment.status} - KES ${amount.toLocaleString()}`,
+        user: `${payment.customerFirstName || 'Unknown'} ${payment.customerLastName || 'User'}`,
+        time: timeAgo < 1 ? "Just now" : `${timeAgo} hours ago`,
+        type: payment.status === "paid" ? "payment-success" : "payment-pending"
+      })
+    })
+    
+    // Add some mock activities for other sections
+    activities.push(
+      { action: "New team member added", user: "Admin", time: "2 hours ago", type: "team" },
+      { action: "Product updated", user: "Admin", time: "4 hours ago", type: "product" },
+    )
+    
+    return activities.slice(0, 6) // Show only 6 recent activities
+  }
+
+  const recentActivity = generateRecentActivity()
 
   const teamMembers = [
     { id: 1, name: "Dr. Sarah Martinez", role: "Founder & Director", year: "2024", status: "Active" },
@@ -74,10 +116,18 @@ export default function AdminPage() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 lg:w-fit gap-1">
+          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 lg:w-fit gap-1">
             <TabsTrigger value="dashboard" className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm">
               <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4" />
               <span>Dashboard</span>
+            </TabsTrigger>
+            <TabsTrigger value="orders" className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm">
+              <Package className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span>Orders</span>
+            </TabsTrigger>
+            <TabsTrigger value="payments" className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm">
+              <CreditCard className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span>Payments</span>
             </TabsTrigger>
             <TabsTrigger value="team" className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm">
               <Users className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -141,7 +191,7 @@ export default function AdminPage() {
                     <div>
                       <p className="text-xs sm:text-sm text-slate-600">Revenue</p>
                       <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
-                        ${stats.totalRevenue.toLocaleString()}
+                        KES {stats.totalRevenue.toLocaleString()}
                       </p>
                     </div>
                     <DollarSign className="w-6 h-6 sm:w-8 sm:h-8 text-green-600" />
@@ -174,6 +224,65 @@ export default function AdminPage() {
               </Card>
             </div>
 
+            {/* Order Stats Grid */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+              <Card>
+                <CardContent className="p-3 sm:p-4 lg:p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs sm:text-sm text-slate-600">Total Orders</p>
+                      <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
+                        {orderStats?.totalOrders || 0}
+                      </p>
+                    </div>
+                    <Package className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-3 sm:p-4 lg:p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs sm:text-sm text-slate-600">Paid Orders</p>
+                      <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
+                        {orderStats?.paidOrders || 0}
+                      </p>
+                    </div>
+                    <Package className="w-6 h-6 sm:w-8 sm:h-8 text-green-600" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-3 sm:p-4 lg:p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs sm:text-sm text-slate-600">Successful Payments</p>
+                      <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
+                        {orderStats?.successfulPayments || 0}
+                      </p>
+                    </div>
+                    <CreditCard className="w-6 h-6 sm:w-8 sm:h-8 text-green-600" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-3 sm:p-4 lg:p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs sm:text-sm text-slate-600">Pending Payments</p>
+                      <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
+                        {orderStats?.pendingPayments || 0}
+                      </p>
+                    </div>
+                    <CreditCard className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-600" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
             {/* Recent Activity - Mobile Optimized */}
             <Card>
               <CardHeader className="pb-3">
@@ -190,7 +299,13 @@ export default function AdminPage() {
                               ? "bg-primary"
                               : activity.type === "product"
                                 ? "bg-purple-600"
-                                : "bg-brand-success"
+                                : activity.type === "order"
+                                  ? "bg-blue-600"
+                                  : activity.type === "payment-success"
+                                    ? "bg-green-600"
+                                    : activity.type === "payment-pending"
+                                      ? "bg-yellow-600"
+                                      : "bg-brand-success"
                           }`}
                         ></div>
                         <div>
@@ -201,6 +316,194 @@ export default function AdminPage() {
                       <span className="text-xs sm:text-sm text-slate-500">{activity.time}</span>
                     </div>
                   ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Orders Tab */}
+          <TabsContent value="orders" className="space-y-4 sm:space-y-6">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+              <h2 className="text-xl sm:text-2xl font-bold text-foreground">Order Management</h2>
+              <div className="flex gap-2">
+                <Badge variant="outline">{orderStats?.totalOrders || 0} Total Orders</Badge>
+                <Badge variant="outline" className="bg-green-50 text-green-700">{orderStats?.paidOrders || 0} Paid</Badge>
+              </div>
+            </div>
+
+            <Card>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-secondary">
+                      <tr>
+                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">Order Ref</th>
+                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">Customer</th>
+                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">T-Shirt</th>
+                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">Amount</th>
+                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">Status</th>
+                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">Date</th>
+                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {orders.map((order) => (
+                        <tr key={order._id} className="border-t">
+                          <td className="p-3 sm:p-4">
+                            <code className="text-xs bg-gray-100 px-2 py-1 rounded">
+                              {order.orderReference}
+                            </code>
+                          </td>
+                          <td className="p-3 sm:p-4">
+                            <div>
+                              <p className="font-medium text-sm sm:text-base">{order.name}</p>
+                              <p className="text-xs text-slate-600">{order.email}</p>
+                              <p className="text-xs text-slate-600">{order.phone}</p>
+                            </div>
+                          </td>
+                          <td className="p-3 sm:p-4">
+                            <div>
+                              <p className="text-sm">{order.tshirtType}</p>
+                              <p className="text-xs text-slate-600">Size: {order.tshirtSize}</p>
+                              <p className="text-xs text-slate-600">Qty: {order.quantity}</p>
+                            </div>
+                          </td>
+                          <td className="p-3 sm:p-4">
+                            <span className="font-semibold">KES {order.totalAmount.toLocaleString()}</span>
+                          </td>
+                          <td className="p-3 sm:p-4">
+                            <Badge 
+                              variant={order.paid ? "default" : "outline"}
+                              className={order.paid ? "bg-green-600 text-white" : "bg-yellow-100 text-yellow-800"}
+                            >
+                              {order.paid ? "Paid" : "Pending"}
+                            </Badge>
+                          </td>
+                          <td className="p-3 sm:p-4">
+                            <p className="text-sm">
+                              {new Date(order.createdAt).toLocaleDateString()}
+                            </p>
+                            <p className="text-xs text-slate-600">
+                              {new Date(order.createdAt).toLocaleTimeString()}
+                            </p>
+                          </td>
+                          <td className="p-3 sm:p-4">
+                            <div className="flex space-x-1">
+                              <Button variant="outline" size="sm">
+                                <Eye className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {orders.length === 0 && (
+                    <div className="p-8 text-center text-slate-500">
+                      <Package className="w-12 h-12 mx-auto mb-4 text-slate-300" />
+                      <p>No orders found</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Payments Tab */}
+          <TabsContent value="payments" className="space-y-4 sm:space-y-6">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+              <h2 className="text-xl sm:text-2xl font-bold text-foreground">Payment Management</h2>
+              <div className="flex gap-2">
+                <Badge variant="outline">{orderStats?.successfulPayments || 0} Successful</Badge>
+                <Badge variant="outline" className="bg-yellow-50 text-yellow-700">{orderStats?.pendingPayments || 0} Pending</Badge>
+              </div>
+            </div>
+
+            <Card>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-secondary">
+                      <tr>
+                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">Order Ref</th>
+                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">Customer</th>
+                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">Amount</th>
+                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">Status</th>
+                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">Transaction ID</th>
+                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">Date</th>
+                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {payments.map((payment) => (
+                        <tr key={payment._id} className="border-t">
+                          <td className="p-3 sm:p-4">
+                            <code className="text-xs bg-gray-100 px-2 py-1 rounded">
+                              {payment.orderReference}
+                            </code>
+                          </td>
+                          <td className="p-3 sm:p-4">
+                            <div>
+                              <p className="font-medium text-sm sm:text-base">
+                                {payment.customerFirstName || 'Unknown'} {payment.customerLastName || 'User'}
+                              </p>
+                              <p className="text-xs text-slate-600">{payment.customerEmail || payment.phoneNumber || 'No email'}</p>
+                              <p className="text-xs text-slate-600">{payment.customerPhone || payment.phoneNumber || 'No phone'}</p>
+                            </div>
+                          </td>
+                          <td className="p-3 sm:p-4">
+                            <span className="font-semibold">
+                              {payment.currency || 'KES'} {(payment.orderAmount || payment.amount || 0).toLocaleString()}
+                            </span>
+                          </td>
+                          <td className="p-3 sm:p-4">
+                            <Badge 
+                              variant="outline"
+                              className={
+                                payment.status === "paid" 
+                                  ? "bg-green-100 text-green-800" 
+                                  : payment.status === "pending"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : "bg-red-100 text-red-800"
+                              }
+                            >
+                              {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
+                            </Badge>
+                          </td>
+                          <td className="p-3 sm:p-4">
+                            {payment.transactionId ? (
+                              <code className="text-xs bg-gray-100 px-2 py-1 rounded">
+                                {payment.transactionId}
+                              </code>
+                            ) : (
+                              <span className="text-xs text-slate-400">-</span>
+                            )}
+                          </td>
+                          <td className="p-3 sm:p-4">
+                            <p className="text-sm">
+                              {new Date(payment.createdAt).toLocaleDateString()}
+                            </p>
+                            <p className="text-xs text-slate-600">
+                              {new Date(payment.createdAt).toLocaleTimeString()}
+                            </p>
+                          </td>
+                          <td className="p-3 sm:p-4">
+                            <div className="flex space-x-1">
+                              <Button variant="outline" size="sm">
+                                <Eye className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {payments.length === 0 && (
+                    <div className="p-8 text-center text-slate-500">
+                      <CreditCard className="w-12 h-12 mx-auto mb-4 text-slate-300" />
+                      <p>No payments found</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

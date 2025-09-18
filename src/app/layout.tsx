@@ -5,6 +5,7 @@ import "./globals.css"
 import { Navigation } from "@/components/navigation"
 import { Footer } from "@/components/footer"
 import { ConvexClientProvider } from "@/components/convex-client-provider"
+import { Analytics } from '@vercel/analytics/next';
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -24,6 +25,7 @@ export default function RootLayout({
         <ConvexClientProvider>
           <Navigation />
           <main>{children}</main>
+          <Analytics />
           <Footer />
         </ConvexClientProvider>
       </body>

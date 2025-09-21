@@ -13,7 +13,7 @@ export default function HomePage() {
       <HomeSocial />
       {/* <HomeImpact /> */}
       {/* <HomeCTA /> */}
-      <HomeHighlights />
+      {/* <HomeHighlights /> */}
     </div>
   )
 }

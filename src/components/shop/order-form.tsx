@@ -327,7 +327,7 @@ export default function OrderForm() {
                                 {u}
                               </CommandItem>
                             ))}
-                            <CommandItem value="__manual__" onSelect={() => handleSelectUniversity("__manual__")}>My university isn't listed</CommandItem>
+                            <CommandItem value="__manual__" onSelect={() => handleSelectUniversity("__manual__")}>My university isn&apos;t listed</CommandItem>
                           </CommandGroup>
                         </CommandList>
                       </Command>

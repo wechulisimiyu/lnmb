@@ -2,13 +2,23 @@
 
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ShoppingCart, Star } from "lucide-react"
+import { ShoppingCart } from "lucide-react"
 import Image from "next/image"
 import React, { useState, useEffect } from "react"
 import { useCart } from "./cart-context"
 import { Input } from "@/components/ui/input"
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 import { Command, CommandInput, CommandList, CommandGroup, CommandItem, CommandEmpty } from "@/components/ui/command"
+
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  studentPrice: number;
+  image: string;
+  description: string;
+  sizes: string[];
+}
 
 export function ShopProducts() {
   const cart = useCart();
@@ -18,6 +28,7 @@ export function ShopProducts() {
       id: "polo",
       name: "Polo Neck T-Shirt",
       price: 1500,
+      studentPrice: 1000,
       image: "/images/shop/lnmb-tshirt-2025.webp",
       description: "Classic polo neck with embroidered logo",
       sizes: ["S", "M", "L", "XL"],
@@ -26,6 +37,7 @@ export function ShopProducts() {
       id: "round",
       name: "Round Neck T-Shirt",
       price: 1200,
+      studentPrice: 600,
       image: "/images/shop/lnmb-tshirt-2025.webp",
       description: "Comfortable round neck tee",
       sizes: ["S", "M", "L", "XL"],
@@ -58,35 +70,98 @@ export function ShopProducts() {
     return () => { mounted = false; };
   }, [isStudent]);
 
-  const handleAdd = (product: any) => {
+  const handleAdd = (product: Product) => {
+    // Validation: if student is selected, university must be selected
+    if (isStudent && !selectedUniversity) {
+      alert('Please select your university before adding items to cart.');
+      return;
+    }
+    
     const size = selectedSize[product.id] || product.sizes[0];
     const qty = quantity[product.id] || 1;
     const studentFlag = isStudent || false;
-    const unitPrice = studentFlag ? (product.id === 'polo' ? 1000 : 600) : product.price;
-    cart.addItem({ id: product.id, name: product.name, price: unitPrice, image: product.image, size, quantity: qty, student: studentFlag, university: selectedUniversity || undefined });
+    const unitPrice = getProductPrice(product);
+    
+    // Prepare university data for cart item
+    const universityData = selectedUniversity ? (showManualUniversity ? `Other: ${selectedUniversity}` : selectedUniversity) : undefined;
+    
+    cart.addItem({ 
+      id: product.id, 
+      name: product.name, 
+      price: unitPrice, 
+      image: product.image, 
+      size, 
+      quantity: qty, 
+      student: studentFlag, 
+      university: universityData 
+    });
     setQuantity((s) => ({ ...s, [product.id]: 1 }));
+  };
+
+  // Reset university selection when student status changes
+  useEffect(() => {
+    if (!isStudent) {
+      setSelectedUniversity("");
+      setShowManualUniversity(false);
+    }
+  }, [isStudent]);
+
+  // Helper function to get the current price based on student status
+  const getProductPrice = (product: Product) => {
+    return isStudent ? product.studentPrice : product.price;
+  };
+
+  // Helper function to format price display
+  const formatPriceDisplay = (product: Product) => {
+    const currentPrice = getProductPrice(product);
+    const originalPrice = product.price;
+    
+    if (isStudent && currentPrice < originalPrice) {
+      return (
+        <div className="flex items-center space-x-2">
+          <span className="text-2xl font-bold text-blue-600">KES {currentPrice}</span>
+          <span className="text-lg text-slate-400 line-through">KES {originalPrice}</span>
+          <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">Student Discount</Badge>
+        </div>
+      );
+    }
+    
+    return (
+      <span className="text-2xl font-bold text-blue-600">KES {currentPrice}</span>
+    );
   };
 
   return (
     <div>
       <div className="mb-6 p-4 bg-white rounded shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center md:gap-6">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col gap-2">
             <label className="inline-flex items-center">
               <input type="checkbox" checked={isStudent} onChange={(e) => setIsStudent(e.target.checked)} className="mr-2" />
               <span className="font-medium">I am a student</span>
             </label>
+            {isStudent && (
+              <p className="text-sm text-green-600">
+                🎓 Student discount applied! Save up to KES 900 per item.
+              </p>
+            )}
           </div>
           <div className="flex-1 mt-3 md:mt-0">
             {isStudent && (
               <div>
                 {!universities ? (
-                  <div>Loading universities...</div>
+                  <div className="text-sm text-gray-500">Loading universities...</div>
                 ) : (
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-full text-left">
-                        {selectedUniversity ? selectedUniversity : (showManualUniversity ? 'Manual entry' : 'Select your university')}
+                      <Button variant="outline" className="w-full text-left justify-start">
+                        {selectedUniversity ? (
+                          showManualUniversity ? 
+                            `${selectedUniversity} (Manual entry)` : 
+                            selectedUniversity
+                        ) : (
+                          'Select your university *'
+                        )}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-full p-0">
@@ -96,11 +171,19 @@ export function ShopProducts() {
                           <CommandEmpty>No university found.</CommandEmpty>
                           <CommandGroup>
                             {universities.filter(u => !uniQuery || u.toLowerCase().includes(uniQuery.toLowerCase())).slice(0,50).map(u => (
-                              <CommandItem key={u} value={u} onSelect={() => { setSelectedUniversity(u); setShowManualUniversity(false); setUniQuery(''); }}>
+                              <CommandItem key={u} value={u} onSelect={() => { 
+                                setSelectedUniversity(u); 
+                                setShowManualUniversity(false); 
+                                setUniQuery(''); 
+                              }}>
                                 {u}
                               </CommandItem>
                             ))}
-                            <CommandItem value="__manual__" onSelect={() => { setShowManualUniversity(true); setSelectedUniversity(''); setUniQuery(''); }}>My university isn't listed</CommandItem>
+                            <CommandItem value="__manual__" onSelect={() => { 
+                              setShowManualUniversity(true); 
+                              setSelectedUniversity(''); 
+                              setUniQuery(''); 
+                            }}>My university isn&apos;t listed</CommandItem>
                           </CommandGroup>
                         </CommandList>
                       </Command>
@@ -110,7 +193,13 @@ export function ShopProducts() {
 
                 {showManualUniversity && (
                   <div className="mt-2">
-                    <Input placeholder="Type your university" value={selectedUniversity} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSelectedUniversity(e.target.value)} />
+                    <Input 
+                      placeholder="Type your university" 
+                      value={selectedUniversity} 
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                        setSelectedUniversity(e.target.value);
+                      }} 
+                    />
                   </div>
                 )}
               </div>
@@ -145,8 +234,13 @@ export function ShopProducts() {
                 </div>
 
                 <div className="flex items-center justify-between pt-4 border-t border-slate-200">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-2xl font-bold text-blue-600">KES {product.price}</span>
+                  <div className="flex flex-col">
+                    {formatPriceDisplay(product)}
+                    {isStudent && (
+                      <span className="text-xs text-green-600 mt-1">
+                        Save KES {product.price - product.studentPrice}!
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <input aria-label={`quantity-${product.id}`} type="number" min={1} value={quantity[product.id] || 1} onChange={(e) => setQuantity((s) => ({ ...s, [product.id]: Math.max(1, parseInt(e.target.value || '1')) }))} className="w-20 p-1 border rounded" />

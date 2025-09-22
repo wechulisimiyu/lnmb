@@ -11,11 +11,17 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, AlertTriangle, Info } from "lucide-react";
+import { matchUniversity } from "@/lib/normalizeUniversity";
+import * as React from "react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Check } from "lucide-react";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 
 interface OrderFormData {
   student: string;
   university?: string;
-  yearOfStudy?: string;
+  universityUserEntered?: boolean;
+  graduationYear?: string;
   regNumber?: string;
   attending: string;
   tshirtType: string;
@@ -36,7 +42,8 @@ export default function OrderForm() {
   const [formData, setFormData] = useState<OrderFormData>({
     student: "",
     university: "",
-    yearOfStudy: "",
+    universityUserEntered: false,
+    graduationYear: "",
     regNumber: "",
     attending: "",
     tshirtType: "",
@@ -54,6 +61,10 @@ export default function OrderForm() {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [universities, setUniversities] = useState<string[] | null>(null);
+  const [uniQuery, setUniQuery] = useState("");
+  const [uniPopoverOpen, setUniPopoverOpen] = useState(false);
+  const [showManualUniversity, setShowManualUniversity] = useState(false);
 
   // T-shirt pricing
   const POLO_PRICE = 1500;
@@ -92,7 +103,7 @@ export default function OrderForm() {
     // Student-specific validation
     if (formData.student === "yes") {
       if (!formData.university) newErrors.university = "Please select your university";
-      if (!formData.yearOfStudy) newErrors.yearOfStudy = "Please select your year of study";
+      if (!formData.graduationYear) newErrors.graduationYear = "Please select your graduation year";
     }
 
     // Email validation
@@ -114,6 +125,45 @@ export default function OrderForm() {
     return Object.keys(newErrors).length === 0;
   };
 
+  // Lazy-load universities JSON when student toggle is enabled
+  React.useEffect(() => {
+    let mounted = true;
+    if (formData.student === "yes" && universities === null) {
+      import("@/data/universities.json")
+        .then((mod) => {
+          if (!mounted) return;
+          const list = Array.isArray(mod.default || mod) ? (mod.default || mod) : [];
+          setUniversities(list as string[]);
+        })
+        .catch((err) => {
+          console.error("Failed to load universities list", err);
+          setUniversities([]);
+        });
+    }
+    return () => {
+      mounted = false;
+    };
+  }, [formData.student, universities]);
+
+  const filteredUniversities = React.useMemo(() => {
+    if (!universities) return [];
+    const q = uniQuery.trim().toLowerCase();
+    if (!q) return universities.slice(0, 50);
+    return universities.filter((u) => u.toLowerCase().includes(q)).slice(0, 50);
+  }, [universities, uniQuery]);
+
+  const handleSelectUniversity = (value: string) => {
+    if (value === "__manual__") {
+      setShowManualUniversity(true);
+      setFormData((prev) => ({ ...prev, university: "", universityUserEntered: true }));
+    } else {
+      setShowManualUniversity(false);
+      setFormData((prev) => ({ ...prev, university: value, universityUserEntered: false }));
+    }
+    setUniQuery("");
+    setUniPopoverOpen(false);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -130,9 +180,25 @@ export default function OrderForm() {
       // Create order reference
       const orderReference = `LNMB${Date.now()}${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
       
+      // Try to normalize university client-side if we have the canonical list
+      let universityToSave = formData.university;
+      let userEntered = !!formData.universityUserEntered;
+      if (universities && formData.university) {
+        const match = matchUniversity(formData.university, universities);
+        if (match) {
+          universityToSave = match;
+          userEntered = false;
+        } else {
+          universityToSave = `Other: ${formData.university}`;
+          userEntered = true;
+        }
+      }
+
       // Prepare order data
       const orderData = {
         ...formData,
+        university: universityToSave,
+        universityUserEntered: userEntered,
         totalAmount,
         orderReference,
         paid: false,
@@ -207,37 +273,21 @@ export default function OrderForm() {
             {formData.student === "yes" && (
               <div className="space-y-4 border-l-4 border-blue-200 pl-4">
                 <div className="space-y-2">
-                  <Label htmlFor="university">University *</Label>
-                  <Select value={formData.university} onValueChange={(value) => handleInputChange("university", value)}>
+                  <Label htmlFor="graduationYear">Graduation Year *</Label>
+                  <Select value={formData.graduationYear} onValueChange={(value) => handleInputChange("graduationYear", value)}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select your university" />
+                      <SelectValue placeholder="Select your graduation year" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="uon">University of Nairobi</SelectItem>
-                      <SelectItem value="partner">KU, Egerton, JKUAT, MKU</SelectItem>
-                      <SelectItem value="other">Other Universities</SelectItem>
+                      <SelectItem value="2025">2025</SelectItem>
+                      <SelectItem value="2026">2026</SelectItem>
+                      <SelectItem value="2027">2027</SelectItem>
+                      <SelectItem value="2028">2028</SelectItem>
+                      <SelectItem value="2029">2029</SelectItem>
+                      <SelectItem value="2030">2030</SelectItem>
                     </SelectContent>
                   </Select>
-                  {errors.university && <p className="text-red-500 text-sm">{errors.university}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="yearOfStudy">Year of Study *</Label>
-                  <Select value={formData.yearOfStudy} onValueChange={(value) => handleInputChange("yearOfStudy", value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select your year of study" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="I">First year</SelectItem>
-                      <SelectItem value="II">Second year</SelectItem>
-                      <SelectItem value="III">Third year</SelectItem>
-                      <SelectItem value="IV">Fourth year in session</SelectItem>
-                      <SelectItem value="IVs">Incoming fifth year</SelectItem>
-                      <SelectItem value="V">Fifth year</SelectItem>
-                      <SelectItem value="VI">Sixth year</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {errors.yearOfStudy && <p className="text-red-500 text-sm">{errors.yearOfStudy}</p>}
+                  {errors.graduationYear && <p className="text-red-500 text-sm">{errors.graduationYear}</p>}
                 </div>
 
                 <div className="space-y-2">
@@ -249,6 +299,48 @@ export default function OrderForm() {
                     placeholder="e.g., H31/12345/2010"
                   />
                 </div>
+              </div>
+            )}
+
+            {/* University combobox (lazy-loaded) */}
+            {formData.student === "yes" && (
+              <div className="space-y-4">
+                <Label htmlFor="university">University *</Label>
+                {!universities ? (
+                  <div>Loading universities...</div>
+                ) : (
+                  <Popover open={uniPopoverOpen} onOpenChange={setUniPopoverOpen}>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" role="combobox" aria-expanded={uniPopoverOpen} className="w-full justify-between">
+                          <span className="truncate">{formData.university ? formData.university : "Search or select your university..."}</span>
+                          {formData.university && !showManualUniversity ? <Check className="ml-2 h-4 w-4 text-green-600" /> : null}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0">
+                      <Command>
+                          <CommandInput placeholder="Search university..." value={uniQuery} onValueChange={(v: string) => setUniQuery(v)} />
+                        <CommandList>
+                          <CommandEmpty>No university found.</CommandEmpty>
+                          <CommandGroup>
+                            {filteredUniversities.map((u) => (
+                              <CommandItem key={u} value={u} onSelect={() => handleSelectUniversity(u)}>
+                                {u}
+                              </CommandItem>
+                            ))}
+                            <CommandItem value="__manual__" onSelect={() => handleSelectUniversity("__manual__")}>My university isn't listed</CommandItem>
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                )}
+
+                {showManualUniversity && (
+                  <div className="space-y-2">
+                    <Input id="manualUniversity" placeholder="Type your university" value={formData.university} onChange={(e) => handleInputChange("university", e.target.value)} />
+                  </div>
+                )}
+                {errors.university && <p className="text-red-500 text-sm">{errors.university}</p>}
               </div>
             )}
 

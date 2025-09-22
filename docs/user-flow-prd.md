@@ -310,11 +310,11 @@ This section is a lightweight delivery tracker and developer handoff for the wor
 | Task | Owner | ETA | Status | Acceptance Criteria (AC) |
 |---|---:|---:|---|---|
 | Canonical universities JSON (`src/data/universities.json`) | you | — | Done | File contains curated list incl. KMTC; lazy-loadable |
-| Combobox UI in `order-form.tsx` (shadcn Command + Popover) |  |  | Not started | Loads lazily; typeahead matches; selecting sets `university` and `universityUserEntered=false`; manual fallback sets `universityUserEntered=true` |
-| Student toggle & pricing in `products.tsx` & `cart-context.tsx` |  |  | Not started | Student toggle updates price real-time; cart stores student flag per item |
-| Persist order to Convex with `university` normalization |  |  | Not started | Server re-normalizes incoming university; stores canonical or `Other: <text>` |
-| Graduation year & registration number in `order-form.tsx` |  |  | Not started | Graduation year required when student=yes; saved to `graduationYear` |
-| Review page & checkout integration (`/shop/review` + `/checkout`) |  |  | Not started | Creates pending Convex order before redirect; return + webhook reconcile status |
+| Combobox UI in `order-form.tsx` (shadcn Command + Popover) |  |  | Done | Loads lazily; typeahead matches; selecting sets `university` and `universityUserEntered=false`; manual fallback sets `universityUserEntered=true` |
+| Student toggle & pricing in `products.tsx` & `cart-context.tsx` |  |  | Done | Student toggle updates price real-time; cart stores student flag per item |
+| Persist order to Convex with `university` normalization |  |  | Done | Server re-normalizes incoming university; stores canonical or `Other: <text>` |
+| Graduation year & registration number in `order-form.tsx` |  |  | Done | Graduation year required when student=yes; saved to `graduationYear` |
+| Review page & checkout integration (`/shop/review` + `/checkout`) |  |  | Existing | Creates pending Convex order before redirect; return + webhook reconcile status |
 | Admin reconciliation UI |  |  | Not started | Lists `Other:` values and allows mapping to canonical names |
 
 Notes:

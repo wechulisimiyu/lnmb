@@ -10,6 +10,8 @@ export type CartItem = {
   image?: string;
   size?: string;
   quantity: number;
+  student?: boolean;
+  university?: string;
 };
 
 type CartContextType = {

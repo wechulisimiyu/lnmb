@@ -8,7 +8,8 @@ export const createOrder = mutation({
   args: {
     student: v.string(),
     university: v.optional(v.string()),
-    yearOfStudy: v.optional(v.string()),
+    universityUserEntered: v.optional(v.boolean()),
+    graduationYear: v.optional(v.string()),
     regNumber: v.optional(v.string()),
     attending: v.string(),
     tshirtType: v.string(),
@@ -27,13 +28,53 @@ export const createOrder = mutation({
   },
   handler: async (ctx, args) => {
     const now = Date.now();
-    
-    const orderId = await ctx.db.insert("orders", {
+    // Server-side normalization: attempt to map incoming university to canonical names
+    const canonical = [
+      "University of Nairobi",
+      "Moi University",
+      "Kenyatta University",
+      "Egerton University",
+      "Kenya Methodist University",
+      "Maseno University",
+      "Jomo Kenyatta University of Agriculture and Technology",
+      "Mount Kenya University",
+      "Uzima University",
+      "Masinde Muliro University of Science and Technology",
+      "Kisii University",
+      "The Aga Khan University",
+      "Pwani University",
+      "Technical University of Mombasa",
+      "Technical University of Kenya",
+      "Kenya Medical Training College",
+      "Kabarak University",
+      "United States International University-Africa",
+    ];
+
+    function normalize(s?: string) {
+      if (!s) return "";
+      return s.toLowerCase().trim().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()']/g, "").replace(/\s+/g, " ");
+    }
+
+    let normalizedUniversity = args.university;
+    if (args.university) {
+      const n = normalize(args.university);
+      const match = canonical.find((c) => normalize(c) === n || normalize(c).includes(n) || n.includes(normalize(c)));
+      if (match) {
+        normalizedUniversity = match;
+      } else if (args.universityUserEntered) {
+        normalizedUniversity = `Other: ${args.university}`;
+      }
+    }
+
+    const orderRecord = {
       ...args,
+      university: normalizedUniversity,
       paid: false,
       createdAt: now,
       updatedAt: now,
-    });
+    };
+
+    const orderId = await ctx.db.insert("orders", orderRecord);
 
     return orderId;
   },

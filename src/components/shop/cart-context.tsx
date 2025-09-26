@@ -39,7 +39,7 @@ export const useCart = () => {
 };
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
+  // router intentionally unused in this provider; navigation handled by consumers
   const [items, setItems] = useState<CartItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -47,7 +47,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     try {
       const raw = localStorage.getItem(LOCAL_KEY);
       if (raw) setItems(JSON.parse(raw));
-    } catch (e) {
+    } catch {
       // ignore
     }
   }, []);
@@ -55,7 +55,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try {
       localStorage.setItem(LOCAL_KEY, JSON.stringify(items));
-    } catch (e) {
+    } catch {
       // ignore
     }
   }, [items]);

@@ -27,4 +27,6 @@ export function matchUniversity(
   return null;
 }
 
-export default { normalizeString, matchUniversity };
+const Normalizer = { normalizeString, matchUniversity };
+
+export default Normalizer;

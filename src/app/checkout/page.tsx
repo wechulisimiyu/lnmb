@@ -25,6 +25,7 @@ interface OrderData {
   student: string;
   university?: string;
   yearOfStudy?: string;
+  graduationYear?: string;
   regNumber?: string;
   attending: string;
   tshirtType: string;
@@ -107,7 +108,7 @@ export default function CheckoutPage() {
       await createOrder({
         student: orderData.student,
         university: orderData.university,
-        yearOfStudy: orderData.yearOfStudy,
+        graduationYear: orderData.graduationYear,
         regNumber: orderData.regNumber,
         attending: orderData.attending,
         tshirtType: orderData.tshirtType,
@@ -161,15 +162,14 @@ export default function CheckoutPage() {
   };
 
   const submitToJengaPGW = () => {
-    if (!paymentFormData) return;
+    if (!paymentFormData || !orderData) return;
 
     // Create a form and submit to Jenga PGW
     const form = document.createElement("form");
     form.method = "POST";
     form.action = "https://v3-uat.jengapgw.io/processPayment";
 
-    // Add all the required hidden fields
-    const fields = {
+    const fields: Record<string, string> = {
       token: paymentFormData.token,
       merchantCode: paymentFormData.merchantCode,
       currency: paymentFormData.currency,
@@ -180,13 +180,13 @@ export default function CheckoutPage() {
       paymentTimeLimit: paymentFormData.paymentTimeLimit,
       customerFirstName: paymentFormData.customerFirstName,
       customerLastName: paymentFormData.customerLastName,
-      customerPostalCodeZip: paymentFormData.customerPostalCodeZip,
-      customerAddress: paymentFormData.customerAddress,
+      customerPostalCodeZip: paymentFormData.customerPostalCodeZip || "",
+      customerAddress: paymentFormData.customerAddress || "",
       customerEmail: paymentFormData.customerEmail,
       customerPhone: paymentFormData.customerPhone,
       callbackUrl: paymentFormData.callbackUrl,
-      countryCode: paymentFormData.countryCode,
-      secondaryReference: paymentFormData.secondaryReference,
+      countryCode: paymentFormData.countryCode || "",
+      secondaryReference: paymentFormData.secondaryReference || "",
     };
 
     Object.entries(fields).forEach(([name, value]) => {

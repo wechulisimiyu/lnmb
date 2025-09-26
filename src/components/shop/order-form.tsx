@@ -22,7 +22,13 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, AlertTriangle, Info, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  ShoppingCart,
+  AlertTriangle,
+  Info,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { matchUniversity } from "@/lib/normalizeUniversity";
 import * as React from "react";
 import {
@@ -51,7 +57,7 @@ interface OrderFormData {
   universityUserEntered?: boolean;
   unitPrice: number;
   totalAmount: number;
-  
+
   // Step 2: Personal & Registration Details
   graduationYear?: string;
   regNumber?: string;
@@ -62,7 +68,7 @@ interface OrderFormData {
   kinNumber: string;
   medicalCondition: string;
   pickUp?: string;
-  
+
   // Step 3: Attendance & Liability
   attending: string;
   confirm: string;
@@ -83,14 +89,15 @@ const STEPS = {
 
 const STEP_TITLES = {
   [STEPS.PRODUCT_SELECTION]: "Choose Your T-shirt",
-  [STEPS.PERSONAL_DETAILS]: "Personal Information", 
+  [STEPS.PERSONAL_DETAILS]: "Personal Information",
   [STEPS.ATTENDANCE_LIABILITY]: "Event & Liability",
   [STEPS.REVIEW]: "Review & Confirm",
 } as const;
 
 export default function OrderForm() {
   const router = useRouter();
-  const [currentStep, setCurrentStep] = useState(STEPS.PRODUCT_SELECTION);
+  type Step = (typeof STEPS)[keyof typeof STEPS];
+  const [currentStep, setCurrentStep] = useState<Step>(STEPS.PRODUCT_SELECTION);
   const [formData, setFormData] = useState<OrderFormData>({
     // Step 1: Product Selection
     tshirtType: "",
@@ -101,7 +108,7 @@ export default function OrderForm() {
     universityUserEntered: false,
     unitPrice: 0,
     totalAmount: 0,
-    
+
     // Step 2: Personal & Registration Details
     graduationYear: "",
     regNumber: "",
@@ -112,7 +119,7 @@ export default function OrderForm() {
     kinNumber: "",
     medicalCondition: "",
     pickUp: "",
-    
+
     // Step 3: Attendance & Liability
     attending: "",
     confirm: "",
@@ -138,11 +145,11 @@ export default function OrderForm() {
     const isStudent = formData.student === "yes";
     const unitPrice = getUnitPrice(formData.tshirtType, isStudent);
     const totalAmount = unitPrice * formData.quantity;
-    
-    setFormData(prev => ({
+
+    setFormData((prev) => ({
       ...prev,
       unitPrice,
-      totalAmount
+      totalAmount,
     }));
   }, [formData.tshirtType, formData.student, formData.quantity]);
 
@@ -178,28 +185,37 @@ export default function OrderForm() {
   };
 
   // Step-specific validation
-  const validateStep = (step: number): boolean => {
+  const validateStep = (step: Step): boolean => {
     const newErrors: Record<string, string> = {};
 
     switch (step) {
       case STEPS.PRODUCT_SELECTION:
-        if (!formData.tshirtType) newErrors.tshirtType = "Please select t-shirt type";
-        if (!formData.tshirtSize) newErrors.tshirtSize = "Please select t-shirt size";
-        if (formData.quantity < 1 || formData.quantity > 3) newErrors.quantity = "Quantity must be between 1 and 3";
-        if (!formData.student) newErrors.student = "Please select if you are a student";
-        
+        if (!formData.tshirtType)
+          newErrors.tshirtType = "Please select t-shirt type";
+        if (!formData.tshirtSize)
+          newErrors.tshirtSize = "Please select t-shirt size";
+        if (formData.quantity < 1 || formData.quantity > 3)
+          newErrors.quantity = "Quantity must be between 1 and 3";
+        if (!formData.student)
+          newErrors.student = "Please select if you are a student";
+
         if (formData.student === "yes") {
-          if (!formData.university) newErrors.university = "Please select your university";
+          if (!formData.university)
+            newErrors.university = "Please select your university";
         }
         break;
 
       case STEPS.PERSONAL_DETAILS:
         if (!formData.name.trim()) newErrors.name = "Name is required";
         if (!formData.email.trim()) newErrors.email = "Email is required";
-        if (!formData.phone.trim()) newErrors.phone = "Phone number is required";
-        if (!formData.nameOfKin.trim()) newErrors.nameOfKin = "Next of kin name is required";
-        if (!formData.kinNumber.trim()) newErrors.kinNumber = "Next of kin phone number is required";
-        if (!formData.medicalCondition.trim()) newErrors.medicalCondition = "Medical condition field is required";
+        if (!formData.phone.trim())
+          newErrors.phone = "Phone number is required";
+        if (!formData.nameOfKin.trim())
+          newErrors.nameOfKin = "Next of kin name is required";
+        if (!formData.kinNumber.trim())
+          newErrors.kinNumber = "Next of kin phone number is required";
+        if (!formData.medicalCondition.trim())
+          newErrors.medicalCondition = "Medical condition field is required";
 
         // Email validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -210,21 +226,26 @@ export default function OrderForm() {
         // Phone validation (Kenyan format)
         const phoneRegex = /^[7][0-9]{8}$/;
         if (formData.phone && !phoneRegex.test(formData.phone)) {
-          newErrors.phone = "Please enter a valid phone number (format: 7XXXXXXXX)";
+          newErrors.phone =
+            "Please enter a valid phone number (format: 7XXXXXXXX)";
         }
         if (formData.kinNumber && !phoneRegex.test(formData.kinNumber)) {
-          newErrors.kinNumber = "Please enter a valid phone number (format: 7XXXXXXXX)";
+          newErrors.kinNumber =
+            "Please enter a valid phone number (format: 7XXXXXXXX)";
         }
 
         // Student-specific validation
         if (formData.student === "yes") {
-          if (!formData.graduationYear) newErrors.graduationYear = "Please select your graduation year";
+          if (!formData.graduationYear)
+            newErrors.graduationYear = "Please select your graduation year";
         }
         break;
 
       case STEPS.ATTENDANCE_LIABILITY:
-        if (!formData.attending) newErrors.attending = "Please select if you will attend the run";
-        if (!formData.confirm) newErrors.confirm = "Please confirm the terms and conditions";
+        if (!formData.attending)
+          newErrors.attending = "Please select if you will attend the run";
+        if (!formData.confirm)
+          newErrors.confirm = "Please confirm the terms and conditions";
         break;
     }
 
@@ -235,14 +256,14 @@ export default function OrderForm() {
   const nextStep = () => {
     if (validateStep(currentStep)) {
       if (currentStep < STEPS.REVIEW) {
-        setCurrentStep(currentStep + 1);
+        setCurrentStep((s) => ((s + 1) as Step));
       }
     }
   };
 
   const prevStep = () => {
     if (currentStep > STEPS.PRODUCT_SELECTION) {
-      setCurrentStep(currentStep - 1);
+      setCurrentStep((s) => ((s - 1) as Step));
     }
   };
 
@@ -266,7 +287,7 @@ export default function OrderForm() {
     return () => {
       mounted = false;
     };
-  }, [formData.student]);
+  }, [formData.student, universities]);
 
   const filteredUniversities = React.useMemo(() => {
     if (!universities) return [];
@@ -331,7 +352,7 @@ export default function OrderForm() {
 
       // Store as pendingOrder for checkout page
       localStorage.setItem("pendingOrder", JSON.stringify(orderData));
-      
+
       // Clear draft
       localStorage.removeItem("orderFormDraft");
 
@@ -409,7 +430,10 @@ export default function OrderForm() {
               )}
             </div>
             {isStudent && pricing.regular > currentPrice && (
-              <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">
+              <Badge
+                variant="secondary"
+                className="text-xs bg-green-100 text-green-800"
+              >
                 Student Discount
               </Badge>
             )}
@@ -568,7 +592,9 @@ export default function OrderForm() {
               <Input
                 placeholder="Type your university"
                 value={formData.university}
-                onChange={(e) => handleInputChange("university", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("university", e.target.value)
+                }
               />
             </div>
           )}
@@ -623,7 +649,12 @@ export default function OrderForm() {
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => handleInputChange("quantity", Math.max(1, formData.quantity - 1))}
+                onClick={() =>
+                  handleInputChange(
+                    "quantity",
+                    Math.max(1, formData.quantity - 1),
+                  )
+                }
                 disabled={formData.quantity <= 1}
               >
                 -
@@ -633,14 +664,21 @@ export default function OrderForm() {
                 min={1}
                 max={3}
                 value={formData.quantity}
-                onChange={(e) => handleInputChange("quantity", parseInt(e.target.value) || 1)}
+                onChange={(e) =>
+                  handleInputChange("quantity", parseInt(e.target.value) || 1)
+                }
                 className="w-20 text-center"
               />
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => handleInputChange("quantity", Math.min(3, formData.quantity + 1))}
+                onClick={() =>
+                  handleInputChange(
+                    "quantity",
+                    Math.min(3, formData.quantity + 1),
+                  )
+                }
                 disabled={formData.quantity >= 3}
               >
                 +
@@ -660,10 +698,14 @@ export default function OrderForm() {
             <div>
               <p className="font-semibold">Order Summary</p>
               <p className="text-sm text-gray-600">
-                {formData.quantity}x {formData.tshirtType === "polo" ? "Polo" : "Round"} Neck T-shirt ({formData.tshirtSize})
+                {formData.quantity}x{" "}
+                {formData.tshirtType === "polo" ? "Polo" : "Round"} Neck T-shirt
+                ({formData.tshirtSize})
               </p>
               {formData.student === "yes" && (
-                <p className="text-sm text-green-600">Student discount applied</p>
+                <p className="text-sm text-green-600">
+                  Student discount applied
+                </p>
               )}
             </div>
             <div className="text-right">
@@ -692,7 +734,9 @@ export default function OrderForm() {
             <Label htmlFor="graduationYear">Graduation Year *</Label>
             <Select
               value={formData.graduationYear}
-              onValueChange={(value) => handleInputChange("graduationYear", value)}
+              onValueChange={(value) =>
+                handleInputChange("graduationYear", value)
+              }
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select your graduation year" />
@@ -819,7 +863,9 @@ export default function OrderForm() {
         <Input
           id="medicalCondition"
           value={formData.medicalCondition}
-          onChange={(e) => handleInputChange("medicalCondition", e.target.value)}
+          onChange={(e) =>
+            handleInputChange("medicalCondition", e.target.value)
+          }
           placeholder="Enter any medical conditions or 'None'"
         />
         {errors.medicalCondition && (
@@ -859,7 +905,9 @@ export default function OrderForm() {
         </Label>
         <RadioGroup
           value={formData.attending}
-          onValueChange={(value: string) => handleInputChange("attending", value)}
+          onValueChange={(value: string) =>
+            handleInputChange("attending", value)
+          }
           className="flex gap-6"
         >
           <div className="flex items-center space-x-2">
@@ -910,7 +958,8 @@ export default function OrderForm() {
       <Alert>
         <Info className="h-4 w-4" />
         <AlertDescription>
-          Please review your order details below. You can go back to make changes or proceed to payment.
+          Please review your order details below. You can go back to make
+          changes or proceed to payment.
         </AlertDescription>
       </Alert>
 
@@ -919,27 +968,63 @@ export default function OrderForm() {
         <h4 className="font-semibold text-lg">Order Summary</h4>
         <div className="grid md:grid-cols-2 gap-6">
           <div>
-            <h5 className="font-semibold text-gray-800 mb-2">Product Details</h5>
+            <h5 className="font-semibold text-gray-800 mb-2">
+              Product Details
+            </h5>
             <div className="space-y-1 text-sm">
-              <p><strong>T-shirt:</strong> {formData.tshirtType === "polo" ? "Polo" : "Round"} Neck</p>
-              <p><strong>Size:</strong> {formData.tshirtSize?.charAt(0).toUpperCase() + formData.tshirtSize?.slice(1)}</p>
-              <p><strong>Quantity:</strong> {formData.quantity}</p>
-              <p><strong>Student:</strong> {formData.student === "yes" ? "Yes" : "No"}</p>
+              <p>
+                <strong>T-shirt:</strong>{" "}
+                {formData.tshirtType === "polo" ? "Polo" : "Round"} Neck
+              </p>
+              <p>
+                <strong>Size:</strong>{" "}
+                {formData.tshirtSize?.charAt(0).toUpperCase() +
+                  formData.tshirtSize?.slice(1)}
+              </p>
+              <p>
+                <strong>Quantity:</strong> {formData.quantity}
+              </p>
+              <p>
+                <strong>Student:</strong>{" "}
+                {formData.student === "yes" ? "Yes" : "No"}
+              </p>
               {formData.student === "yes" && formData.university && (
-                <p><strong>University:</strong> {formData.university}</p>
+                <p>
+                  <strong>University:</strong> {formData.university}
+                </p>
               )}
             </div>
           </div>
-          
+
           <div>
-            <h5 className="font-semibold text-gray-800 mb-2">Contact Information</h5>
+            <h5 className="font-semibold text-gray-800 mb-2">
+              Contact Information
+            </h5>
             <div className="space-y-1 text-sm">
-              <p><strong>Name:</strong> {formData.name}</p>
-              <p><strong>Email:</strong> {formData.email}</p>
-              <p><strong>Phone:</strong> +254{formData.phone}</p>
-              <p><strong>Next of Kin:</strong> {formData.nameOfKin} (+254{formData.kinNumber})</p>
-              <p><strong>Medical Condition:</strong> {formData.medicalCondition}</p>
-              {formData.pickUp && <p><strong>Pickup:</strong> {formData.pickUp.replace("-", " ").replace(/\b\w/g, l => l.toUpperCase())}</p>}
+              <p>
+                <strong>Name:</strong> {formData.name}
+              </p>
+              <p>
+                <strong>Email:</strong> {formData.email}
+              </p>
+              <p>
+                <strong>Phone:</strong> +254{formData.phone}
+              </p>
+              <p>
+                <strong>Next of Kin:</strong> {formData.nameOfKin} (+254
+                {formData.kinNumber})
+              </p>
+              <p>
+                <strong>Medical Condition:</strong> {formData.medicalCondition}
+              </p>
+              {formData.pickUp && (
+                <p>
+                  <strong>Pickup:</strong>{" "}
+                  {formData.pickUp
+                    .replace("-", " ")
+                    .replace(/\b\w/g, (l) => l.toUpperCase())}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -951,9 +1036,20 @@ export default function OrderForm() {
           <div>
             <h5 className="font-semibold text-lg">Total Amount</h5>
             <div className="text-sm text-gray-600">
-              <p>{formData.quantity}x {formData.tshirtType === "polo" ? "Polo" : "Round"} Neck @ KES {formData.unitPrice.toLocaleString()} each</p>
-              {formData.student === "yes" && <p className="text-green-600">Student discount applied</p>}
-              <p><strong>Attendance:</strong> {formData.attending === "attending" ? "Will attend" : "T-shirt only"}</p>
+              <p>
+                {formData.quantity}x{" "}
+                {formData.tshirtType === "polo" ? "Polo" : "Round"} Neck @ KES{" "}
+                {formData.unitPrice.toLocaleString()} each
+              </p>
+              {formData.student === "yes" && (
+                <p className="text-green-600">Student discount applied</p>
+              )}
+              <p>
+                <strong>Attendance:</strong>{" "}
+                {formData.attending === "attending"
+                  ? "Will attend"
+                  : "T-shirt only"}
+              </p>
             </div>
           </div>
           <div className="text-right">
@@ -977,23 +1073,27 @@ export default function OrderForm() {
   return (
     <div className="max-w-4xl mx-auto">
       {renderStepIndicator()}
-      
+
       <Card className="shadow-xl">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold text-blue-600">
             {STEP_TITLES[currentStep]}
           </CardTitle>
           <CardDescription>
-            {currentStep === STEPS.PRODUCT_SELECTION && "Choose your t-shirt design, size, and student status"}
-            {currentStep === STEPS.PERSONAL_DETAILS && "Fill in your personal details and emergency contact"}
-            {currentStep === STEPS.ATTENDANCE_LIABILITY && "Confirm your participation and accept terms"}
-            {currentStep === STEPS.REVIEW && "Review your order before proceeding to payment"}
+            {currentStep === STEPS.PRODUCT_SELECTION &&
+              "Choose your t-shirt design, size, and student status"}
+            {currentStep === STEPS.PERSONAL_DETAILS &&
+              "Fill in your personal details and emergency contact"}
+            {currentStep === STEPS.ATTENDANCE_LIABILITY &&
+              "Confirm your participation and accept terms"}
+            {currentStep === STEPS.REVIEW &&
+              "Review your order before proceeding to payment"}
           </CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-6">{renderStepContent()}</CardContent>
       </Card>
-      
+
       {renderNavigation()}
     </div>
   );

@@ -1,7 +1,4 @@
-const {
-  matchUniversity,
-  normalizeString,
-} = require("../normalizeUniversity.ts");
+import { matchUniversity, normalizeString } from "../normalizeUniversity";
 
 const canonical = [
   "University of Nairobi",

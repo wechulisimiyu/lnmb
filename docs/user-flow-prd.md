@@ -145,7 +145,7 @@ External (Jenga PGW): unchanged — continue to use the same integration.
 
 ### Phase 1 — Multi-step OrderForm (priority)
 
-- [X] Use `OrderForm` as the canonical flow on `/shop` (rendered in the page)
+- [x] Use `OrderForm` as the canonical flow on `/shop` (rendered in the page)
 - [ ] Implement Step 1: Visual product selection with images, size pills, quantity steppers, and live pricing
 - [ ] Implement Step 2: Personal & registration fields (mobile-optimized)
 - [ ] Implement Step 3: Attendance & liability with modal for full terms

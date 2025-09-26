@@ -83,7 +83,7 @@ export function ShopProducts() {
     return () => {
       mounted = false;
     };
-  }, [isStudent]);
+  }, [isStudent, universities]);
 
   const handleAdd = (product: Product) => {
     // Validation: if student is selected, university must be selected

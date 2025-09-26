@@ -1,16 +1,25 @@
-"use client"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Twitter, Instagram, ExternalLink, Heart, MessageCircle, Repeat2, Calendar, Verified } from "lucide-react"
-import Image from "next/image"
-import { useState, useEffect } from "react"
+"use client";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Twitter,
+  Instagram,
+  ExternalLink,
+  Heart,
+  MessageCircle,
+  Repeat2,
+  Calendar,
+  Verified,
+} from "lucide-react";
+import Image from "next/image";
+import { useState, useEffect } from "react";
 
 export function HomeSocial() {
-  const [mounted, setMounted] = useState(false)
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    setMounted(true);
+  }, []);
 
   // Placeholder data - replace with actual API calls
   const socialPosts = [
@@ -100,49 +109,55 @@ export function HomeSocial() {
         "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/AMSUN-2023-06138.jpg-qPix2GTYuTijAGV7JuUPSN300TGari.jpeg",
       verified: true,
     },
-  ]
+  ];
 
   const formatTimeAgo = (timestamp: string) => {
     // Return a static format during SSR to prevent hydration mismatch
     if (!mounted) {
-      const postTime = new Date(timestamp)
+      const postTime = new Date(timestamp);
       // Use ISO date string format to ensure consistency
-      return postTime.toISOString().split('T')[0] // Returns YYYY-MM-DD format
+      return postTime.toISOString().split("T")[0]; // Returns YYYY-MM-DD format
     }
 
-    const now = new Date()
-    const postTime = new Date(timestamp)
-    const diffInHours = Math.floor((now.getTime() - postTime.getTime()) / (1000 * 60 * 60))
+    const now = new Date();
+    const postTime = new Date(timestamp);
+    const diffInHours = Math.floor(
+      (now.getTime() - postTime.getTime()) / (1000 * 60 * 60),
+    );
 
-    if (diffInHours < 1) return "Just now"
-    if (diffInHours < 24) return `${diffInHours}h ago`
-    const diffInDays = Math.floor(diffInHours / 24)
-    if (diffInDays < 7) return `${diffInDays}d ago`
+    if (diffInHours < 1) return "Just now";
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 7) return `${diffInDays}d ago`;
     // Use a consistent date format
-    return postTime.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'numeric', 
-      day: 'numeric' 
-    })
-  }
+    return postTime.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+    });
+  };
 
   // Pick the single latest post across platforms
   const latestPost = socialPosts.length
-    ? socialPosts.reduce((a, b) => (new Date(a.timestamp) > new Date(b.timestamp) ? a : b))
-    : null
+    ? socialPosts.reduce((a, b) =>
+        new Date(a.timestamp) > new Date(b.timestamp) ? a : b,
+      )
+    : null;
 
   return (
     <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-secondary to-background">
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-8 sm:mb-12">
-          <Badge className="bg-brand-accent text-accent-foreground mb-4 px-3 py-1 text-sm">SOCIAL UPDATES</Badge>
+          <Badge className="bg-brand-accent text-accent-foreground mb-4 px-3 py-1 text-sm">
+            SOCIAL UPDATES
+          </Badge>
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-4 sm:mb-6">
             Latest from Our Community
           </h2>
           <p className="text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Stay connected with our latest updates, training sessions, and success stories from our social media
-            channels.
+            Stay connected with our latest updates, training sessions, and
+            success stories from our social media channels.
           </p>
         </div>
 
@@ -153,13 +168,25 @@ export function HomeSocial() {
             className="bg-transparent border-accent text-accent hover:bg-accent/10"
             asChild
           >
-            <a href="https://x.com/AMSUNrunning" target="_blank" rel="noopener noreferrer">
+            <a
+              href="https://x.com/AMSUNrunning"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <Twitter className="w-4 h-4 mr-2" />
               Follow on X
             </a>
           </Button>
-          <Button variant="outline" className="bg-transparent border-destructive text-destructive hover:bg-destructive/10" asChild>
-            <a href="https://www.instagram.com/amsunrunning/" target="_blank" rel="noopener noreferrer">
+          <Button
+            variant="outline"
+            className="bg-transparent border-destructive text-destructive hover:bg-destructive/10"
+            asChild
+          >
+            <a
+              href="https://www.instagram.com/amsunrunning/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <Instagram className="w-4 h-4 mr-2" />
               Follow on Instagram
             </a>
@@ -172,7 +199,9 @@ export function HomeSocial() {
             <div
               key={latestPost.id}
               className={`group relative overflow-hidden rounded-2xl bg-background shadow-lg hover:shadow-2xl transition-all duration-300 ${
-                latestPost.platform === "twitter" ? "border-t-4 border-t-accent" : "border-t-4 border-t-destructive"
+                latestPost.platform === "twitter"
+                  ? "border-t-4 border-t-accent"
+                  : "border-t-4 border-t-destructive"
               }`}
             >
               {/* Platform Header */}
@@ -181,7 +210,9 @@ export function HomeSocial() {
                   <div className="flex items-center space-x-3">
                     <div
                       className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                        latestPost.platform === "twitter" ? "bg-accent/10" : "bg-destructive/10"
+                        latestPost.platform === "twitter"
+                          ? "bg-accent/10"
+                          : "bg-destructive/10"
                       }`}
                     >
                       {latestPost.platform === "twitter" ? (
@@ -192,30 +223,40 @@ export function HomeSocial() {
                     </div>
                     <div>
                       <div className="flex items-center space-x-2">
-                        <span className="font-bold text-foreground text-sm">{latestPost.username}</span>
+                        <span className="font-bold text-foreground text-sm">
+                          {latestPost.username}
+                        </span>
                         {latestPost.verified && (
                           <div
                             className={`w-4 h-4 rounded-full flex items-center justify-center ${
-                              latestPost.platform === "twitter" ? "bg-accent" : "bg-destructive"
+                              latestPost.platform === "twitter"
+                                ? "bg-accent"
+                                : "bg-destructive"
                             }`}
                           >
                             <Verified className="w-2.5 h-2.5 text-white fill-current" />
                           </div>
                         )}
                       </div>
-                      <span className="text-muted-foreground text-xs">{latestPost.handle}</span>
+                      <span className="text-muted-foreground text-xs">
+                        {latestPost.handle}
+                      </span>
                     </div>
                   </div>
                   <div className="flex items-center space-x-1 text-muted-foreground">
                     <Calendar className="w-3 h-3" />
-                    <span className="text-xs">{formatTimeAgo(latestPost.timestamp)}</span>
+                    <span className="text-xs">
+                      {formatTimeAgo(latestPost.timestamp)}
+                    </span>
                   </div>
                 </div>
               </div>
 
               {/* Content */}
               <div className="px-4 pb-4">
-                <p className="text-foreground text-sm leading-relaxed mb-4">{latestPost.content}</p>
+                <p className="text-foreground text-sm leading-relaxed mb-4">
+                  {latestPost.content}
+                </p>
 
                 {latestPost.image && (
                   <div className="relative mb-4 rounded-xl overflow-hidden">
@@ -235,13 +276,17 @@ export function HomeSocial() {
                 {/* Engagement Stats - Medical Monitor Style */}
                 <div
                   className={`flex items-center justify-between p-3 rounded-lg ${
-                    latestPost.platform === "twitter" ? "bg-accent/10" : "bg-destructive/10"
+                    latestPost.platform === "twitter"
+                      ? "bg-accent/10"
+                      : "bg-destructive/10"
                   }`}
                 >
                   <div className="flex items-center space-x-4 text-xs">
                     <div
                       className={`flex items-center space-x-1 ${
-                        latestPost.platform === "twitter" ? "text-accent" : "text-destructive"
+                        latestPost.platform === "twitter"
+                          ? "text-accent"
+                          : "text-destructive"
                       }`}
                     >
                       <Heart className="w-3 h-3" />
@@ -251,17 +296,23 @@ export function HomeSocial() {
                       <>
                         <div className="flex items-center space-x-1 text-accent">
                           <Repeat2 className="w-3 h-3" />
-                          <span className="font-semibold">{latestPost.retweets}</span>
+                          <span className="font-semibold">
+                            {latestPost.retweets}
+                          </span>
                         </div>
                         <div className="flex items-center space-x-1 text-accent">
                           <MessageCircle className="w-3 h-3" />
-                          <span className="font-semibold">{latestPost.replies}</span>
+                          <span className="font-semibold">
+                            {latestPost.replies}
+                          </span>
                         </div>
                       </>
                     ) : (
                       <div className="flex items-center space-x-1 text-destructive">
                         <MessageCircle className="w-3 h-3" />
-                        <span className="font-semibold">{latestPost.comments}</span>
+                        <span className="font-semibold">
+                          {latestPost.comments}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -303,13 +354,25 @@ export function HomeSocial() {
               className="bg-transparent border-accent text-accent hover:bg-accent/10"
               asChild
             >
-              <a href="https://x.com/AMSUNrunning" target="_blank" rel="noopener noreferrer">
+              <a
+                href="https://x.com/AMSUNrunning"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <Twitter className="w-4 h-4 mr-2" />
                 View More on X
               </a>
             </Button>
-            <Button variant="outline" className="bg-transparent border-destructive text-destructive hover:bg-destructive/10" asChild>
-              <a href="https://www.instagram.com/amsunrunning/" target="_blank" rel="noopener noreferrer">
+            <Button
+              variant="outline"
+              className="bg-transparent border-destructive text-destructive hover:bg-destructive/10"
+              asChild
+            >
+              <a
+                href="https://www.instagram.com/amsunrunning/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <Instagram className="w-4 h-4 mr-2" />
                 View More on Instagram
               </a>
@@ -318,7 +381,7 @@ export function HomeSocial() {
         </div>
       </div>
     </section>
-  )
+  );
 }
 
-export default HomeSocial
+export default HomeSocial;

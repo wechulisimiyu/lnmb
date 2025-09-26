@@ -1,10 +1,10 @@
-import PartnersHero from "@/components/partners/hero"
-import PartnersTitleSponsors from "@/components/partners/title-sponsors"
-import PartnersGoldSponsors from "@/components/partners/gold-sponsors"
-import PartnersSilverSponsors from "@/components/partners/silver-sponsors"
-import PartnersCommunityPartners from "@/components/partners/community-partners"
-import PartnersBenefits from "@/components/partners/benefits"
-import PartnersCTA from "@/components/partners/cta"
+import PartnersHero from "@/components/partners/hero";
+import PartnersTitleSponsors from "@/components/partners/title-sponsors";
+import PartnersGoldSponsors from "@/components/partners/gold-sponsors";
+import PartnersSilverSponsors from "@/components/partners/silver-sponsors";
+import PartnersCommunityPartners from "@/components/partners/community-partners";
+import PartnersBenefits from "@/components/partners/benefits";
+import PartnersCTA from "@/components/partners/cta";
 
 export default function PartnersPage() {
   return (
@@ -19,5 +19,5 @@ export default function PartnersPage() {
         <PartnersCTA />
       </div>
     </div>
-  )
+  );
 }

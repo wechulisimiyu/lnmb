@@ -1,5 +1,5 @@
-import { Card, CardContent } from "@/components/ui/card"
-import { MapPin, Phone, Mail, Clock } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card";
+import { MapPin, Phone, Mail, Clock } from "lucide-react";
 
 export function ContactInfo() {
   return (
@@ -52,7 +52,7 @@ export function ContactInfo() {
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
-export default ContactInfo
+export default ContactInfo;

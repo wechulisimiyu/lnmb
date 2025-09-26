@@ -3,7 +3,13 @@
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { CheckCircle, XCircle, Clock, AlertTriangle } from "lucide-react";
 
 function PaymentResultContent() {
@@ -53,7 +59,7 @@ function PaymentResultContent() {
 
   const getStatusMessage = () => {
     if (message) return message;
-    
+
     switch (status) {
       case "paid":
         return "Your payment has been successfully processed. You will receive an email confirmation shortly with your order details.";
@@ -87,9 +93,7 @@ function PaymentResultContent() {
       <div className="container mx-auto px-4 max-w-md">
         <Card className="shadow-xl">
           <CardHeader className="text-center">
-            <div className="mx-auto mb-4">
-              {getStatusIcon()}
-            </div>
+            <div className="mx-auto mb-4">{getStatusIcon()}</div>
             <CardTitle className={`text-2xl ${getStatusColor()}`}>
               {getStatusTitle()}
             </CardTitle>
@@ -97,12 +101,14 @@ function PaymentResultContent() {
               {getStatusMessage()}
             </CardDescription>
           </CardHeader>
-          
+
           <CardContent className="space-y-4">
             {/* Order Details */}
             {reference && (
               <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-sm text-gray-700 mb-2">Order Details</h3>
+                <h3 className="font-semibold text-sm text-gray-700 mb-2">
+                  Order Details
+                </h3>
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
                     <span>Order Reference:</span>
@@ -121,10 +127,15 @@ function PaymentResultContent() {
             {/* Next Steps */}
             {status === "paid" && (
               <div className="bg-green-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-sm text-green-800 mb-2">What&apos;s Next?</h3>
+                <h3 className="font-semibold text-sm text-green-800 mb-2">
+                  What&apos;s Next?
+                </h3>
                 <ul className="text-sm text-green-700 space-y-1">
                   <li>• Check your email for order confirmation</li>
-                  <li>• Your t-shirt will be available for pickup at the specified location</li>
+                  <li>
+                    • Your t-shirt will be available for pickup at the specified
+                    location
+                  </li>
                   <li>• Join our charity run on race day!</li>
                 </ul>
               </div>
@@ -132,20 +143,25 @@ function PaymentResultContent() {
 
             {status === "processing" && (
               <div className="bg-yellow-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-sm text-yellow-800 mb-2">Please Wait</h3>
+                <h3 className="font-semibold text-sm text-yellow-800 mb-2">
+                  Please Wait
+                </h3>
                 <p className="text-sm text-yellow-700">
-                  Your payment is being confirmed. This usually takes a few minutes. 
-                  You can check your order status by visiting the checkout page with your order reference.
+                  Your payment is being confirmed. This usually takes a few
+                  minutes. You can check your order status by visiting the
+                  checkout page with your order reference.
                 </p>
               </div>
             )}
 
             {(status === "failed" || status === "error") && (
               <div className="bg-red-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-sm text-red-800 mb-2">Need Help?</h3>
+                <h3 className="font-semibold text-sm text-red-800 mb-2">
+                  Need Help?
+                </h3>
                 <p className="text-sm text-red-700">
-                  If you continue to experience issues, please contact our support team 
-                  with your order reference number.
+                  If you continue to experience issues, please contact our
+                  support team with your order reference number.
                 </p>
               </div>
             )}
@@ -153,16 +169,16 @@ function PaymentResultContent() {
             {/* Action Buttons */}
             <div className="space-y-3 pt-4">
               {status === "paid" && (
-                <Button 
+                <Button
                   onClick={() => router.push("/")}
                   className="w-full bg-green-600 hover:bg-green-700"
                 >
                   Return to Home
                 </Button>
               )}
-              
+
               {status === "processing" && (
-                <Button 
+                <Button
                   onClick={() => router.push("/checkout")}
                   className="w-full bg-yellow-600 hover:bg-yellow-700"
                 >
@@ -172,13 +188,13 @@ function PaymentResultContent() {
 
               {(status === "failed" || status === "error") && (
                 <>
-                  <Button 
+                  <Button
                     onClick={() => router.push("/shop")}
                     className="w-full bg-blue-600 hover:bg-blue-700"
                   >
                     Try Again
                   </Button>
-                  <Button 
+                  <Button
                     onClick={() => router.push("/contact")}
                     variant="outline"
                     className="w-full"
@@ -189,7 +205,7 @@ function PaymentResultContent() {
               )}
 
               {!status && (
-                <Button 
+                <Button
                   onClick={() => router.push("/")}
                   variant="outline"
                   className="w-full"
@@ -207,15 +223,17 @@ function PaymentResultContent() {
 
 export default function PaymentResultPage() {
   return (
-    <Suspense fallback={
-      <div className="container mx-auto px-4 py-8 max-w-2xl">
-        <Card>
-          <CardContent className="p-6">
-            <div className="text-center">Loading payment result...</div>
-          </CardContent>
-        </Card>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="container mx-auto px-4 py-8 max-w-2xl">
+          <Card>
+            <CardContent className="p-6">
+              <div className="text-center">Loading payment result...</div>
+            </CardContent>
+          </Card>
+        </div>
+      }
+    >
       <PaymentResultContent />
     </Suspense>
   );

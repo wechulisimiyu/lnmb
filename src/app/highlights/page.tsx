@@ -1,7 +1,7 @@
-import HighlightsHero from "@/components/highlights/hero"
-import HighlightsStats from "@/components/highlights/stats"
-import HighlightsTimeline from "@/components/highlights/timeline"
-import HighlightsSuccess from "@/components/highlights/success"
+import HighlightsHero from "@/components/highlights/hero";
+import HighlightsStats from "@/components/highlights/stats";
+import HighlightsTimeline from "@/components/highlights/timeline";
+import HighlightsSuccess from "@/components/highlights/success";
 
 export default function HighlightsPage() {
   return (
@@ -13,5 +13,5 @@ export default function HighlightsPage() {
         <HighlightsSuccess />
       </div>
     </div>
-  )
+  );
 }

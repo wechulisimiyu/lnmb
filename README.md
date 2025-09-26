@@ -34,7 +34,6 @@ If you are looking for the original Node/Express/Mongo implementation described 
 
 For the legacy backend (Node/Express/MongoDB) used historically by the initiative, see the original project notes (not included here).
 
-
 ## To run it locally
 
 Platform-specific instructions and common setup are in the documentation file: `docs/SETUP.md` (recommended). See that file for Linux and Windows step-by-step instructions, environment variables, and cloning notes.

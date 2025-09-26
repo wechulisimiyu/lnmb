@@ -1,6 +1,6 @@
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { ArrowRight } from "lucide-react"
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
 
 const highlights = [
   {
@@ -33,26 +33,31 @@ const highlights = [
       "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/AMSUN-2023-06138.jpg-qPix2GTYuTijAGV7JuUPSN300TGari.jpeg",
     color: "destructive",
   },
-]
+];
 
 export function HomeHighlights() {
   return (
     <section className="py-12 sm:py-16 lg:py-20 bg-secondary">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-4 sm:mb-6">Recent Highlights</h2>
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-4 sm:mb-6">
+            Recent Highlights
+          </h2>
         </div>
 
         <div className="grid gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3">
           {highlights.map((highlight, index) => (
-            <div key={index} className="group relative overflow-hidden rounded-2xl bg-background shadow-lg hover:shadow-2xl transition-all duration-300">
+            <div
+              key={index}
+              className="group relative overflow-hidden rounded-2xl bg-background shadow-lg hover:shadow-2xl transition-all duration-300"
+            >
               <div
                 className={`h-2 ${
                   highlight.color === "primary"
                     ? "bg-primary"
                     : highlight.color === "accent"
-                    ? "bg-accent"
-                    : "bg-destructive"
+                      ? "bg-accent"
+                      : "bg-destructive"
                 }`}
               ></div>
 
@@ -70,8 +75,8 @@ export function HomeHighlights() {
                     highlight.color === "primary"
                       ? "bg-primary"
                       : highlight.color === "accent"
-                      ? "bg-accent"
-                      : "bg-destructive"
+                        ? "bg-accent"
+                        : "bg-destructive"
                   }`}
                 >
                   {highlight.year} EVENT
@@ -90,13 +95,15 @@ export function HomeHighlights() {
                         highlight.color === "primary"
                           ? "text-primary"
                           : highlight.color === "accent"
-                          ? "text-accent"
-                          : "text-destructive"
+                            ? "text-accent"
+                            : "text-destructive"
                       }`}
                     >
                       {highlight.participants}
                     </div>
-                    <div className="text-xs text-muted-foreground font-medium">Participants</div>
+                    <div className="text-xs text-muted-foreground font-medium">
+                      Participants
+                    </div>
                   </div>
                   <div className="text-center p-3 bg-secondary rounded-lg">
                     <div
@@ -104,13 +111,15 @@ export function HomeHighlights() {
                         highlight.color === "primary"
                           ? "text-primary"
                           : highlight.color === "accent"
-                          ? "text-accent"
-                          : "text-destructive"
+                            ? "text-accent"
+                            : "text-destructive"
                       }`}
                     >
                       {highlight.raised}
                     </div>
-                    <div className="text-xs text-muted-foreground font-medium">Raised</div>
+                    <div className="text-xs text-muted-foreground font-medium">
+                      Raised
+                    </div>
                   </div>
                   <div className="text-center p-3 bg-secondary rounded-lg">
                     <div
@@ -118,18 +127,25 @@ export function HomeHighlights() {
                         highlight.color === "primary"
                           ? "text-primary"
                           : highlight.color === "accent"
-                          ? "text-accent"
-                          : "text-destructive"
+                            ? "text-accent"
+                            : "text-destructive"
                       }`}
                     >
                       {highlight.students}
                     </div>
-                    <div className="text-xs text-muted-foreground font-medium">Medics</div>
+                    <div className="text-xs text-muted-foreground font-medium">
+                      Medics
+                    </div>
                   </div>
                 </div>
 
-                <Button variant="outline" size="sm" className={`w-full bg-transparent`}>
-                  View Details <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={`w-full bg-transparent`}
+                >
+                  View Details{" "}
+                  <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
                 </Button>
               </div>
             </div>
@@ -137,7 +153,7 @@ export function HomeHighlights() {
         </div>
       </div>
     </section>
-  )
+  );
 }
 
-export default HomeHighlights
+export default HomeHighlights;

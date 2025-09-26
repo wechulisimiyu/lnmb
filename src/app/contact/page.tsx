@@ -1,8 +1,8 @@
-import ContactHero from "@/components/contact/hero"
-import ContactForm from "@/components/contact/form"
-import ContactInfo from "@/components/contact/info"
+import ContactHero from "@/components/contact/hero";
+import ContactForm from "@/components/contact/form";
+import ContactInfo from "@/components/contact/info";
 // import ContactDepartments from "@/components/contact/departments"
-import ContactFAQ from "@/components/contact/faq"
+import ContactFAQ from "@/components/contact/faq";
 // import ContactEmergency from "@/components/contact/emergency"
 
 export default function ContactPage() {
@@ -27,5 +27,5 @@ export default function ContactPage() {
         {/* <ContactEmergency /> */}
       </div>
     </div>
-  )
+  );
 }

@@ -1,6 +1,6 @@
-import StoryHero from "@/components/story/hero"
-import StoryOrigin from "@/components/story/origin"
-import StoryTimeline from "@/components/story/timeline"
+import StoryHero from "@/components/story/hero";
+import StoryOrigin from "@/components/story/origin";
+import StoryTimeline from "@/components/story/timeline";
 // import StoryValues from "@/components/story/values"
 // import StoryFuture from "@/components/story/future"
 
@@ -13,5 +13,5 @@ export default function StoryPage() {
         <StoryTimeline />
       </div>
     </div>
-  )
+  );
 }

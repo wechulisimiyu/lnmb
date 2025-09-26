@@ -12,7 +12,7 @@ const authToken = async () => {
         "Content-Type": "application/json",
         "Api-Key": process.env.JENGA_API_KEY,
       },
-    }
+    },
   );
 
   // The response contains accessToken field according to Jenga API docs

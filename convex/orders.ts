@@ -52,13 +52,22 @@ export const createOrder = mutation({
 
     function normalize(s?: string) {
       if (!s) return "";
-      return s.toLowerCase().trim().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()']/g, "").replace(/\s+/g, " ");
+      return s
+        .toLowerCase()
+        .trim()
+        .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()']/g, "")
+        .replace(/\s+/g, " ");
     }
 
     let normalizedUniversity = args.university;
     if (args.university) {
       const n = normalize(args.university);
-      const match = canonical.find((c) => normalize(c) === n || normalize(c).includes(n) || n.includes(normalize(c)));
+      const match = canonical.find(
+        (c) =>
+          normalize(c) === n ||
+          normalize(c).includes(n) ||
+          n.includes(normalize(c)),
+      );
       if (match) {
         normalizedUniversity = match;
       } else if (args.universityUserEntered) {
@@ -86,9 +95,11 @@ export const getOrderByReference = query({
   handler: async (ctx, args) => {
     const order = await ctx.db
       .query("orders")
-      .withIndex("by_reference", (q) => q.eq("orderReference", args.orderReference))
+      .withIndex("by_reference", (q) =>
+        q.eq("orderReference", args.orderReference),
+      )
       .first();
-    
+
     return order;
   },
 });
@@ -103,7 +114,9 @@ export const updateOrderPaymentStatus = mutation({
   handler: async (ctx, args) => {
     const order = await ctx.db
       .query("orders")
-      .withIndex("by_reference", (q) => q.eq("orderReference", args.orderReference))
+      .withIndex("by_reference", (q) =>
+        q.eq("orderReference", args.orderReference),
+      )
       .first();
 
     if (!order) {
@@ -131,12 +144,15 @@ export const createPaymentRecord = action({
     customerAddress: v.string(),
     productDescription: v.string(),
   },
-  handler: async (ctx, args): Promise<{ paymentId: string; paymentData: any }> => {
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{ paymentId: string; paymentData: any }> => {
     const now = Date.now();
-    
+
     // Generate payment token (external API call - this is why we need an action)
     const token = await generateAccessToken();
-    
+
     const paymentData = {
       token,
       merchantCode: process.env.JENGA_MERCHANT_CODE!,
@@ -161,10 +177,13 @@ export const createPaymentRecord = action({
     };
 
     // Use runMutation to insert into database from action
-    const paymentId = await ctx.runMutation(internal.orders.insertPaymentRecord, {
-      paymentData,
-    });
-    
+    const paymentId = await ctx.runMutation(
+      internal.orders.insertPaymentRecord,
+      {
+        paymentData,
+      },
+    );
+
     return { paymentId, paymentData };
   },
 });
@@ -177,7 +196,7 @@ export const getPaymentStatus = query({
       .query("payments")
       .withIndex("by_reference", (q) => q.eq("orderReference", args.reference))
       .first();
-    
+
     return payment;
   },
 });
@@ -193,7 +212,9 @@ export const updatePaymentStatus = mutation({
   handler: async (ctx, args) => {
     const payment = await ctx.db
       .query("payments")
-      .withIndex("by_reference", (q) => q.eq("orderReference", args.orderReference))
+      .withIndex("by_reference", (q) =>
+        q.eq("orderReference", args.orderReference),
+      )
       .first();
 
     if (!payment) {
@@ -211,7 +232,9 @@ export const updatePaymentStatus = mutation({
     if (args.status === "paid") {
       const order = await ctx.db
         .query("orders")
-        .withIndex("by_reference", (q) => q.eq("orderReference", args.orderReference))
+        .withIndex("by_reference", (q) =>
+          q.eq("orderReference", args.orderReference),
+        )
         .first();
 
       if (order) {
@@ -230,11 +253,8 @@ export const updatePaymentStatus = mutation({
 export const getAllOrders = query({
   args: {},
   handler: async (ctx) => {
-    const orders = await ctx.db
-      .query("orders")
-      .order("desc")
-      .collect();
-    
+    const orders = await ctx.db.query("orders").order("desc").collect();
+
     return orders;
   },
 });
@@ -243,11 +263,8 @@ export const getAllOrders = query({
 export const getAllPayments = query({
   args: {},
   handler: async (ctx) => {
-    const payments = await ctx.db
-      .query("payments")
-      .order("desc")
-      .collect();
-    
+    const payments = await ctx.db.query("payments").order("desc").collect();
+
     return payments;
   },
 });
@@ -258,24 +275,31 @@ export const getOrderStats = query({
   handler: async (ctx) => {
     const orders = await ctx.db.query("orders").collect();
     const payments = await ctx.db.query("payments").collect();
-    
+
     const totalOrders = orders.length;
-    const paidOrders = orders.filter(order => order.paid).length;
+    const paidOrders = orders.filter((order) => order.paid).length;
     const totalRevenue = orders
-      .filter(order => order.paid)
+      .filter((order) => order.paid)
       .reduce((sum, order) => sum + order.totalAmount, 0);
-    
-    const successfulPayments = payments.filter(payment => payment.status === "paid").length;
-    const pendingPayments = payments.filter(payment => payment.status === "pending").length;
-    
+
+    const successfulPayments = payments.filter(
+      (payment) => payment.status === "paid",
+    ).length;
+    const pendingPayments = payments.filter(
+      (payment) => payment.status === "pending",
+    ).length;
+
     // Calculate monthly orders (current month)
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
-    const monthlyOrders = orders.filter(order => {
+    const monthlyOrders = orders.filter((order) => {
       const orderDate = new Date(order.createdAt);
-      return orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear;
+      return (
+        orderDate.getMonth() === currentMonth &&
+        orderDate.getFullYear() === currentYear
+      );
     }).length;
-    
+
     return {
       totalOrders,
       paidOrders,

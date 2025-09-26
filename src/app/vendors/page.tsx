@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import VendorsHero from "@/components/vendors/hero"
-import VendorsBenefits from "@/components/vendors/benefits"
-import VendorsTestimonials from "@/components/vendors/testimonials"
+import VendorsHero from "@/components/vendors/hero";
+import VendorsBenefits from "@/components/vendors/benefits";
+import VendorsTestimonials from "@/components/vendors/testimonials";
 
 export default function VendorsPage() {
   return (
@@ -13,5 +13,5 @@ export default function VendorsPage() {
         <VendorsTestimonials />
       </div>
     </div>
-  )
+  );
 }

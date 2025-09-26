@@ -1,48 +1,50 @@
-"use client"
+"use client";
 
-import { useEffect } from "react"
-import { Card, CardContent } from "@/components/ui/card"
+import { useEffect } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 
 export function ContactForm() {
   useEffect(() => {
-    const d = document
-    const w = "https://tally.so/widgets/embed.js"
+    const d = document;
+    const w = "https://tally.so/widgets/embed.js";
 
     interface WindowWithTally extends Window {
-      Tally?: { loadEmbeds: () => void }
+      Tally?: { loadEmbeds: () => void };
     }
 
-    const win = window as WindowWithTally
+    const win = window as WindowWithTally;
 
     const v = () => {
       // If Tally is already available, initialise; otherwise set iframe src from data attribute
       if (typeof win.Tally !== "undefined") {
-        win.Tally!.loadEmbeds()
+        win.Tally!.loadEmbeds();
       } else {
-        const nodes = d.querySelectorAll('iframe[data-tally-src]:not([src])')
+        const nodes = d.querySelectorAll("iframe[data-tally-src]:not([src])");
         nodes.forEach((e) => {
-          const iframe = e as HTMLIFrameElement
-          iframe.src = iframe.dataset.tallySrc || ""
-        })
+          const iframe = e as HTMLIFrameElement;
+          iframe.src = iframe.dataset.tallySrc || "";
+        });
       }
-    }
+    };
 
-    if (typeof win.Tally !== "undefined") v()
+    if (typeof win.Tally !== "undefined") v();
     else if (d.querySelector('script[src="' + w + '"]') == null) {
-      const s = d.createElement("script")
-      s.src = w
-      s.async = true
-      s.onload = v
-      s.onerror = v
-      d.body.appendChild(s)
+      const s = d.createElement("script");
+      s.src = w;
+      s.async = true;
+      s.onload = v;
+      s.onerror = v;
+      d.body.appendChild(s);
     }
-  }, [])
+  }, []);
 
   return (
     <div>
       <Card className="p-8">
         <CardContent className="space-y-6">
-          <h2 className="text-2xl font-bold text-slate-900 mb-6">Send us a Message</h2>
+          <h2 className="text-2xl font-bold text-slate-900 mb-6">
+            Send us a Message
+          </h2>
 
           <div>
             <iframe
@@ -59,7 +61,7 @@ export function ContactForm() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
 
-export default ContactForm
+export default ContactForm;

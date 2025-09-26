@@ -52,17 +52,17 @@ node -v
 pnpm -v
 ```
 
-
 ### Windows
 
 1. Install Node.js from https://nodejs.org/en/
- (choose the v22 installer if available).
+   (choose the v22 installer if available).
 
 2. Install pnpm globally:
 
- ```bash
- npm install -g pnpm
- ```
+```bash
+npm install -g pnpm
+```
+
 3. Verify
 
 ```bash
@@ -77,7 +77,6 @@ We use pnpm for dependency management:
 ```bash
 pnpm install
 ```
-
 
 ## Environment variables
 
@@ -116,7 +115,7 @@ pnpm lint
 
 - Original project README (legacy Node/Express/Mongo implementation):
 
-	https://github.com/wechulisimiyu/leave-no-medic-behind/blob/dev/README.md (legacy project)
+  https://github.com/wechulisimiyu/leave-no-medic-behind/blob/dev/README.md (legacy project)
 
 ## Contributing
 

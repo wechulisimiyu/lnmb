@@ -39,7 +39,7 @@ export const useCart = () => {
 };
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
+  // router intentionally unused in this provider; navigation handled by consumers
   const [items, setItems] = useState<CartItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -47,7 +47,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     try {
       const raw = localStorage.getItem(LOCAL_KEY);
       if (raw) setItems(JSON.parse(raw));
-    } catch (e) {
+    } catch {
       // ignore
     }
   }, []);
@@ -55,7 +55,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try {
       localStorage.setItem(LOCAL_KEY, JSON.stringify(items));
-    } catch (e) {
+    } catch {
       // ignore
     }
   }, [items]);
@@ -63,10 +63,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const addItem = (item: CartItem) => {
     // If same product id + size exists, merge quantities
     setItems((prev) => {
-      const idx = prev.findIndex((p) => p.id === item.id && p.size === item.size);
+      const idx = prev.findIndex(
+        (p) => p.id === item.id && p.size === item.size,
+      );
       if (idx > -1) {
         const next = [...prev];
-        next[idx] = { ...next[idx], quantity: next[idx].quantity + item.quantity };
+        next[idx] = {
+          ...next[idx],
+          quantity: next[idx].quantity + item.quantity,
+        };
         return next;
       }
       return [...prev, item];
@@ -97,7 +102,21 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const close = () => setIsOpen(false);
 
   return (
-    <CartContext.Provider value={{ items, addItem, removeItem, updateQuantity, clear, total, count, isOpen, toggle, open, close }}>
+    <CartContext.Provider
+      value={{
+        items,
+        addItem,
+        removeItem,
+        updateQuantity,
+        clear,
+        total,
+        count,
+        isOpen,
+        toggle,
+        open,
+        close,
+      }}
+    >
       {children}
     </CartContext.Provider>
   );

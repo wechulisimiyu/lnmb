@@ -1,5 +1,5 @@
-import { Card, CardContent } from "@/components/ui/card"
-import { Calendar, Users, DollarSign, Award } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card";
+import { Calendar, Users, DollarSign, Award } from "lucide-react";
 
 export function HighlightsStats() {
   return (
@@ -44,7 +44,7 @@ export function HighlightsStats() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
 
-export default HighlightsStats
+export default HighlightsStats;

@@ -1,5 +1,12 @@
-import Link from "next/link"
-import { Facebook, Twitter, Instagram, Mail, MapPin, Phone } from "lucide-react"
+import Link from "next/link";
+import {
+  Facebook,
+  Twitter,
+  Instagram,
+  Mail,
+  MapPin,
+  Phone,
+} from "lucide-react";
 // import Image from "next/image"
 
 export function Footer() {
@@ -18,8 +25,9 @@ export function Footer() {
               />
             </div> */}
             <p className="text-slate-400 leading-relaxed text-sm sm:text-base">
-              Supporting medical students through community-driven charity runs, scholarships, and educational
-              resources. Every step counts towards building tomorrow&apos;s healthcare heroes.
+              Supporting medical students through community-driven charity runs,
+              scholarships, and educational resources. Every step counts towards
+              building tomorrow&apos;s healthcare heroes.
             </p>
             <div className="flex space-x-4">
               <Link
@@ -52,7 +60,9 @@ export function Footer() {
           </div>
 
           <div className="space-y-4">
-            <h3 className="font-bold text-blue-400 text-sm sm:text-base">QUICK LINKS</h3>
+            <h3 className="font-bold text-blue-400 text-sm sm:text-base">
+              QUICK LINKS
+            </h3>
             <div className="space-y-2 sm:space-y-3">
               <Link
                 href="/story"
@@ -82,7 +92,9 @@ export function Footer() {
           </div>
 
           <div className="space-y-4">
-            <h3 className="font-bold text-blue-400 text-sm sm:text-base">GET INVOLVED</h3>
+            <h3 className="font-bold text-blue-400 text-sm sm:text-base">
+              GET INVOLVED
+            </h3>
             <div className="space-y-2 sm:space-y-3">
               {/* TODO: update to /volunteer when volunteer page is ready */}
               <Link
@@ -111,7 +123,9 @@ export function Footer() {
           </div>
 
           <div className="space-y-4">
-            <h3 className="font-bold text-blue-400 text-sm sm:text-base">CONTACT INFO</h3>
+            <h3 className="font-bold text-blue-400 text-sm sm:text-base">
+              CONTACT INFO
+            </h3>
             <div className="space-y-3 sm:space-y-4">
               <div className="flex items-start space-x-3">
                 <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400 mt-1 flex-shrink-0" />
@@ -123,11 +137,15 @@ export function Footer() {
               </div>
               <div className="flex items-center space-x-3">
                 <Phone className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400 flex-shrink-0" />
-                <div className="text-slate-400 text-sm sm:text-base">+254 796 105948</div>
+                <div className="text-slate-400 text-sm sm:text-base">
+                  +254 796 105948
+                </div>
               </div>
               <div className="flex items-center space-x-3">
                 <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400 flex-shrink-0" />
-                <div className="text-slate-400 text-sm sm:text-base">communication@lnmb-run.org</div>
+                <div className="text-slate-400 text-sm sm:text-base">
+                  communication@lnmb-run.org
+                </div>
               </div>
             </div>
           </div>
@@ -135,11 +153,14 @@ export function Footer() {
 
         <div className="border-t border-slate-700 mt-8 sm:mt-12 pt-6 sm:pt-8 text-center">
           <p className="text-slate-400 text-sm sm:text-base">
-            &copy; {new Date().getFullYear()} Prof Hassan Saidi Fund. All rights reserved.
+            &copy; {new Date().getFullYear()} Prof Hassan Saidi Fund. All rights
+            reserved.
           </p>
-          <p className="text-slate-500 text-xs sm:text-sm mt-2">Leave No Medic Behind</p>
+          <p className="text-slate-500 text-xs sm:text-sm mt-2">
+            Leave No Medic Behind
+          </p>
         </div>
       </div>
     </footer>
-  )
+  );
 }

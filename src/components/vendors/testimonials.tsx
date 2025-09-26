@@ -1,6 +1,6 @@
-import { Badge } from "@/components/ui/badge"
-import { Star } from "lucide-react"
-import Image from "next/image"
+import { Badge } from "@/components/ui/badge";
+import { Star } from "lucide-react";
+import Image from "next/image";
 
 export function VendorsTestimonials() {
   const testimonials = [
@@ -48,18 +48,20 @@ export function VendorsTestimonials() {
       studentsSupported: 15,
       rating: 4,
     },
-  ]
+  ];
 
   return (
     <div className="mb-12 sm:mb-16">
       <div className="text-center mb-8 sm:mb-12">
-        <Badge className="bg-green-600 text-white mb-4 px-3 py-1 text-sm">PARTNER TESTIMONIALS</Badge>
+        <Badge className="bg-green-600 text-white mb-4 px-3 py-1 text-sm">
+          PARTNER TESTIMONIALS
+        </Badge>
         <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 mb-4 sm:mb-6">
           What Our Partners Say
         </h2>
         <p className="text-base sm:text-lg text-slate-600 max-w-3xl mx-auto leading-relaxed">
-          Hear from our valued partners about their experience working with Leave No Medic Behind and the impact
-          we&apos;ve made together.
+          Hear from our valued partners about their experience working with
+          Leave No Medic Behind and the impact we&apos;ve made together.
         </p>
       </div>
 
@@ -85,8 +87,12 @@ export function VendorsTestimonials() {
                   />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900">{testimonial.company}</h3>
-                  <p className="text-sm text-slate-600">{testimonial.contact}</p>
+                  <h3 className="text-lg font-bold text-slate-900">
+                    {testimonial.company}
+                  </h3>
+                  <p className="text-sm text-slate-600">
+                    {testimonial.contact}
+                  </p>
                   <p className="text-xs text-slate-500">{testimonial.role}</p>
                 </div>
               </div>
@@ -100,11 +106,15 @@ export function VendorsTestimonials() {
               <div className="flex items-center justify-between">
                 <div className="flex space-x-4 text-sm">
                   <div className="text-center">
-                    <div className="font-bold text-blue-600">{testimonial.partnershipYears}</div>
+                    <div className="font-bold text-blue-600">
+                      {testimonial.partnershipYears}
+                    </div>
                     <div className="text-slate-500 text-xs">Years</div>
                   </div>
                   <div className="text-center">
-                    <div className="font-bold text-green-600">{testimonial.studentsSupported}</div>
+                    <div className="font-bold text-green-600">
+                      {testimonial.studentsSupported}
+                    </div>
                     <div className="text-slate-500 text-xs">Students</div>
                   </div>
                 </div>
@@ -114,7 +124,9 @@ export function VendorsTestimonials() {
                     <Star
                       key={i}
                       className={`w-4 h-4 ${
-                        i < testimonial.rating ? "text-yellow-500 fill-current" : "text-gray-300"
+                        i < testimonial.rating
+                          ? "text-yellow-500 fill-current"
+                          : "text-gray-300"
                       }`}
                     />
                   ))}
@@ -125,7 +137,7 @@ export function VendorsTestimonials() {
         ))}
       </div>
     </div>
-  )
+  );
 }
 
-export default VendorsTestimonials
+export default VendorsTestimonials;

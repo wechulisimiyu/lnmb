@@ -1,13 +1,14 @@
-import { Card, CardContent } from "@/components/ui/card"
-import { Star } from "lucide-react"
-import Image from "next/image"
+import { Card, CardContent } from "@/components/ui/card";
+import { Star } from "lucide-react";
+import Image from "next/image";
 
 export function PartnersTitleSponsors() {
   const titleSponsors = [
     {
       name: "MedTech Solutions",
       logo: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/AMSUN-2023-06138.jpg-qPix2GTYuTijAGV7JuUPSN300TGari.jpeg",
-      description: "Leading medical technology company supporting healthcare innovation",
+      description:
+        "Leading medical technology company supporting healthcare innovation",
       partnership: "Title Sponsor since 2022",
       contribution: "KES 50,000 annually",
     },
@@ -18,7 +19,7 @@ export function PartnersTitleSponsors() {
       partnership: "Title Sponsor since 2021",
       contribution: "KES 45,000 annually",
     },
-  ]
+  ];
 
   return (
     <div className="mb-16">
@@ -40,10 +41,14 @@ export function PartnersTitleSponsors() {
                 className="mx-auto"
               />
               <div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">{sponsor.name}</h3>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                  {sponsor.name}
+                </h3>
                 <p className="text-gray-600 mb-4">{sponsor.description}</p>
                 <div className="space-y-2 text-sm">
-                  <p className="font-semibold text-blue-600">{sponsor.partnership}</p>
+                  <p className="font-semibold text-blue-600">
+                    {sponsor.partnership}
+                  </p>
                   <p className="text-sky-600">{sponsor.contribution}</p>
                 </div>
               </div>
@@ -52,7 +57,7 @@ export function PartnersTitleSponsors() {
         ))}
       </div>
     </div>
-  )
+  );
 }
 
-export default PartnersTitleSponsors
+export default PartnersTitleSponsors;

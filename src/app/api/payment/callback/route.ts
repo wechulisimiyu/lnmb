@@ -33,15 +33,23 @@ interface STKPushCallback {
 
 function mapCallbackStatus(code: number): string {
   switch (code) {
-    case 0: return "pending";
-    case 1: return "failed";
-    case 2: return "awaiting_settlement";
-    case 3: return "paid"; // COMPLETED/CREDITED
-    case 4: return "awaiting_settlement";
+    case 0:
+      return "pending";
+    case 1:
+      return "failed";
+    case 2:
+      return "awaiting_settlement";
+    case 3:
+      return "paid"; // COMPLETED/CREDITED
+    case 4:
+      return "awaiting_settlement";
     case 5:
-    case 6: return "cancelled";
-    case 7: return "failed"; // REJECTED
-    default: return "failed";
+    case 6:
+      return "cancelled";
+    case 7:
+      return "failed"; // REJECTED
+    default:
+      return "failed";
   }
 }
 
@@ -49,7 +57,7 @@ function mapCallbackStatus(code: number): string {
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    
+
     // Extract payment response parameters from Jenga PGW
     const transactionId = searchParams.get("transactionId");
     const status = searchParams.get("status");
@@ -72,7 +80,7 @@ export async function GET(request: NextRequest) {
     if (!orderReference) {
       return NextResponse.json(
         { error: "Missing order reference" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -96,16 +104,15 @@ export async function GET(request: NextRequest) {
     const redirectUrl = new URL("/checkout/result", request.url);
     redirectUrl.searchParams.set("status", paymentStatus);
     redirectUrl.searchParams.set("reference", orderReference);
-    
+
     if (transactionId) {
       redirectUrl.searchParams.set("transactionId", transactionId);
     }
 
     return NextResponse.redirect(redirectUrl);
-
   } catch (error) {
     console.error("Error processing Jenga payment callback:", error);
-    
+
     const redirectUrl = new URL("/checkout/result", request.url);
     redirectUrl.searchParams.set("status", "error");
     redirectUrl.searchParams.set("message", "Payment processing failed");
@@ -117,7 +124,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
+
     console.log("Payment callback POST received:", body);
 
     // Check if this is a Jenga PGW callback or legacy STK Push callback
@@ -137,7 +144,7 @@ export async function POST(request: NextRequest) {
       if (!orderReference) {
         return NextResponse.json(
           { error: "Missing order reference" },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -157,27 +164,30 @@ export async function POST(request: NextRequest) {
         paymentChannel: desc || undefined,
       });
 
-      return NextResponse.json({ 
-        success: true, 
-        message: "Payment status updated" 
+      return NextResponse.json({
+        success: true,
+        message: "Payment status updated",
       });
-
     } else {
       // Handle legacy STK Push callback
       const stkBody: STKPushCallback = body;
-      
+
       if (!stkBody.transactionReference) {
-        return NextResponse.json({ error: "Missing transaction reference" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Missing transaction reference" },
+          { status: 400 },
+        );
       }
 
       const status = mapCallbackStatus(stkBody.code);
-      
+
       // Try to update using the old checkout API if it exists, otherwise use orders API
       try {
         // Check if checkout API exists first
         if (typeof api.checkout?.handlePaymentCallback !== "undefined") {
           await convex.mutation(api.checkout.handlePaymentCallback, {
-            transactionId: stkBody.telcoReference || stkBody.transactionReference,
+            transactionId:
+              stkBody.telcoReference || stkBody.transactionReference,
             status,
             orderReference: stkBody.transactionReference,
             amount: stkBody.requestAmount?.toString(),
@@ -197,17 +207,16 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      return NextResponse.json({ 
-        success: true, 
-        message: "STK Push callback processed" 
+      return NextResponse.json({
+        success: true,
+        message: "STK Push callback processed",
       });
     }
-
   } catch (error) {
     console.error("Error processing payment callback:", error);
     return NextResponse.json(
       { error: "Failed to process payment callback" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

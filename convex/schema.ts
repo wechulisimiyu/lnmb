@@ -8,34 +8,34 @@ export default defineSchema({
     university: v.optional(v.string()), // "uon", "partner", "other"
     yearOfStudy: v.optional(v.string()), // "I", "II", "III", "IV", "IVs", "V", "VI"
     regNumber: v.optional(v.string()),
-    
+
     // Attendance and product details
     attending: v.string(), // "attending" or "notattending"
     tshirtType: v.string(), // "polo" or "round"
     tshirtSize: v.string(), // "small", "medium", "large", "extra-large"
     quantity: v.number(),
     totalAmount: v.number(),
-    
+
     // Contact information
     name: v.string(),
     email: v.string(),
     phone: v.string(),
-    
+
     // Emergency contact
     nameOfKin: v.string(),
     kinNumber: v.string(),
-    
+
     // Medical and logistics
     medicalCondition: v.string(),
     pickUp: v.optional(v.string()), // "kenyatta-national-hospital" or "chiromo-campus"
-    
+
     // Confirmation and payment status
     confirm: v.string(),
     paid: v.boolean(),
-    
+
     // Order reference for payment tracking
     orderReference: v.string(),
-    
+
     // Timestamps
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -44,7 +44,7 @@ export default defineSchema({
     .index("by_email", ["email"])
     .index("by_phone", ["phone"])
     .index("by_created_at", ["createdAt"]),
-    
+
   payments: defineTable({
     // Jenga PGW fields for /processPayment (made optional for backward compatibility)
     token: v.optional(v.string()),
@@ -75,7 +75,7 @@ export default defineSchema({
     status: v.string(), // "pending", "processing", "paid", "failed"
     transactionId: v.optional(v.string()),
     paymentChannel: v.optional(v.string()), // "MPESA", "CARD", "EQUITEL", etc.
-    
+
     // Timestamps
     createdAt: v.number(),
     updatedAt: v.number(),

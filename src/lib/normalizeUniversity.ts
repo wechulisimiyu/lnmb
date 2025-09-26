@@ -8,7 +8,10 @@ export function normalizeString(s: string) {
 }
 
 // Try to match input to a canonical list using exact or substring match
-export function matchUniversity(input: string, canonicalList: string[]): string | null {
+export function matchUniversity(
+  input: string,
+  canonicalList: string[],
+): string | null {
   if (!input) return null;
   const n = normalizeString(input);
   // exact match
@@ -17,10 +20,13 @@ export function matchUniversity(input: string, canonicalList: string[]): string 
   }
   // substring match
   for (const c of canonicalList) {
-    if (normalizeString(c).includes(n) || n.includes(normalizeString(c))) return c;
+    if (normalizeString(c).includes(n) || n.includes(normalizeString(c)))
+      return c;
   }
   // no match
   return null;
 }
 
-export default { normalizeString, matchUniversity };
+const Normalizer = { normalizeString, matchUniversity };
+
+export default Normalizer;

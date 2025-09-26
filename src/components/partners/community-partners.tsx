@@ -1,6 +1,6 @@
-import { Card, CardContent } from "@/components/ui/card"
-import { Users } from "lucide-react"
-import Image from "next/image"
+import { Card, CardContent } from "@/components/ui/card";
+import { Users } from "lucide-react";
+import Image from "next/image";
 
 export function PartnersCommunityPartners() {
   const communityPartners = [
@@ -24,7 +24,7 @@ export function PartnersCommunityPartners() {
       role: "Student recruitment and support",
       logo: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/AMSUN-2023-06138.jpg-qPix2GTYuTijAGV7JuUPSN300TGari.jpeg",
     },
-  ]
+  ];
 
   return (
     <div className="mb-16">
@@ -54,7 +54,7 @@ export function PartnersCommunityPartners() {
         ))}
       </div>
     </div>
-  )
+  );
 }
 
-export default PartnersCommunityPartners
+export default PartnersCommunityPartners;

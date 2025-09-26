@@ -1,6 +1,6 @@
-import { Card, CardContent } from "@/components/ui/card"
-import { Calendar, Users, DollarSign, Award } from "lucide-react"
-import Image from "next/image"
+import { Card, CardContent } from "@/components/ui/card";
+import { Calendar, Users, DollarSign, Award } from "lucide-react";
+import Image from "next/image";
 
 export function HighlightsTimeline() {
   const yearlyHighlights = [
@@ -94,7 +94,7 @@ export function HighlightsTimeline() {
         "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/AMSUN-2023-06138.jpg-qPix2GTYuTijAGV7JuUPSN300TGari.jpeg",
       ],
     },
-  ]
+  ];
 
   return (
     <div className="space-y-12">
@@ -103,7 +103,9 @@ export function HighlightsTimeline() {
           <CardContent className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-3xl font-bold text-gray-900">{year.year}: {year.theme}</h2>
+                <h2 className="text-3xl font-bold text-gray-900">
+                  {year.year}: {year.theme}
+                </h2>
               </div>
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
                 <Calendar className="w-8 h-8 text-blue-600" />
@@ -114,7 +116,9 @@ export function HighlightsTimeline() {
               <div className="flex items-center space-x-3">
                 <Users className="w-8 h-8 text-sky-600" />
                 <div>
-                  <div className="text-2xl font-bold text-sky-600">{year.participants}</div>
+                  <div className="text-2xl font-bold text-sky-600">
+                    {year.participants}
+                  </div>
                   <div className="text-gray-600">Participants</div>
                 </div>
               </div>
@@ -122,7 +126,9 @@ export function HighlightsTimeline() {
               <div className="flex items-center space-x-3">
                 <DollarSign className="w-8 h-8 text-blue-600" />
                 <div>
-                  <div className="text-2xl font-bold text-blue-600">{year.raised}</div>
+                  <div className="text-2xl font-bold text-blue-600">
+                    {year.raised}
+                  </div>
                   <div className="text-gray-600">Raised</div>
                 </div>
               </div>
@@ -130,14 +136,18 @@ export function HighlightsTimeline() {
               <div className="flex items-center space-x-3">
                 <Award className="w-8 h-8 text-cyan-600" />
                 <div>
-                  <div className="text-2xl font-bold text-cyan-600">{year.studentsHelped}</div>
+                  <div className="text-2xl font-bold text-cyan-600">
+                    {year.studentsHelped}
+                  </div>
                   <div className="text-gray-600">Students Helped</div>
                 </div>
               </div>
             </div>
 
             <div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Key Achievements</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                Key Achievements
+              </h3>
               <ul className="grid md:grid-cols-2 gap-2">
                 {year.highlights.map((highlight, idx) => (
                   <li key={idx} className="flex items-start space-x-2">
@@ -149,7 +159,9 @@ export function HighlightsTimeline() {
             </div>
 
             <div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Event Photos</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                Event Photos
+              </h3>
               <div className="grid md:grid-cols-3 gap-4">
                 {year.images.map((image, idx) => (
                   <Image
@@ -171,7 +183,7 @@ export function HighlightsTimeline() {
         </Card>
       ))}
     </div>
-  )
+  );
 }
 
-export default HighlightsTimeline
+export default HighlightsTimeline;

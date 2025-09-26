@@ -1,18 +1,22 @@
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Award, Heart } from "lucide-react"
-import Link from "next/link"
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Award, Heart } from "lucide-react";
+import Link from "next/link";
 
 export function HomeCTA() {
   return (
     <section className="py-12 sm:py-16 lg:py-20 bg-blue-600 text-white">
       <div className="container mx-auto px-4">
         <div className="text-center max-w-4xl mx-auto">
-          <Badge className="bg-blue-800 text-white mb-4 sm:mb-6 px-3 py-1 text-sm">JOIN THE MISSION</Badge>
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 sm:mb-6">Ready to Support Future Medics?</h2>
+          <Badge className="bg-blue-800 text-white mb-4 sm:mb-6 px-3 py-1 text-sm">
+            JOIN THE MISSION
+          </Badge>
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 sm:mb-6">
+            Ready to Support Future Medics?
+          </h2>
           <p className="text-lg sm:text-xl text-blue-100 mb-8 sm:mb-10 leading-relaxed max-w-3xl mx-auto">
-            Join thousands of runners, walkers, and supporters in our mission to ensure no medic is left behind in
-            their journey to serve others.
+            Join thousands of runners, walkers, and supporters in our mission to
+            ensure no medic is left behind in their journey to serve others.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center max-w-md sm:max-w-none mx-auto">
@@ -37,7 +41,7 @@ export function HomeCTA() {
         </div>
       </div>
     </section>
-  )
+  );
 }
 
-export default HomeCTA
+export default HomeCTA;

@@ -21,7 +21,7 @@ This document defines the user experience flow for the LNMB charity run registra
 | Round Neck T-shirt | KES 600       | KES 1,000         |
 | Polo T-shirt       | KES 1,000     | KES 1,500         |
 
-*Note: Current system shows fixed prices (Polo: 1,500, Round: 1,200). Implementation will need price adjustment based on student status.*
+_Note: Current system shows fixed prices (Polo: 1,500, Round: 1,200). Implementation will need price adjustment based on student status._
 
 ## Core UX Principles
 
@@ -67,7 +67,7 @@ This document defines the user experience flow for the LNMB charity run registra
 ```typescript
 {
   tshirtType: "polo" | "round",
-  tshirtSize: "small" | "medium" | "large" | "extra-large", 
+  tshirtSize: "small" | "medium" | "large" | "extra-large",
   quantity: number,
   student: "yes" | "no",
   university?: string, // canonical name or `Other: <text>` when free-text
@@ -111,14 +111,14 @@ This document defines the user experience flow for the LNMB charity run registra
 ```typescript
 {
   name: string,
-  email: string, 
+  email: string,
   phone: string,
   medicalCondition: string, // Recommended; allow "None"
   pickUp?: string,
   nameOfKin: string,
   kinNumber: string,
   graduationYear?: string, // If student
-  regNumber?: string // If student  
+  regNumber?: string // If student
 }
 ```
 
@@ -287,6 +287,7 @@ United States International University-Africa
 ```
 
 Implementation notes:
+
 - Include common aliases in the client-side normalization table (e.g., "UoN" → "University of Nairobi", "KMTC" → "Kenya Medical Training College").
 - Offer a "My university isn't listed" manual fallback; when used, persist the value as `Other: <raw input>` in the `university` field and set `universityUserEntered` to `true`.
 - Maintain the JSON file in the repo so it can be updated easily; consider adding a small script to regenerate it from a seed source if needed.
@@ -307,17 +308,18 @@ This section is a lightweight delivery tracker and developer handoff for the wor
 
 ### Task tracker (minimal)
 
-| Task | Owner | ETA | Status | Acceptance Criteria (AC) |
-|---|---:|---:|---|---|
-| Canonical universities JSON (`src/data/universities.json`) | you | — | Done | File contains curated list incl. KMTC; lazy-loadable |
-| Combobox UI in `order-form.tsx` (shadcn Command + Popover) |  |  | Done | Loads lazily; typeahead matches; selecting sets `university` and `universityUserEntered=false`; manual fallback sets `universityUserEntered=true` |
-| Student toggle & pricing in `products.tsx` & `cart-context.tsx` |  |  | Done | Student toggle updates price real-time; cart stores student flag per item |
-| Persist order to Convex with `university` normalization |  |  | Done | Server re-normalizes incoming university; stores canonical or `Other: <text>` |
-| Graduation year & registration number in `order-form.tsx` |  |  | Done | Graduation year required when student=yes; saved to `graduationYear` |
-| Review page & checkout integration (`/shop/review` + `/checkout`) |  |  | Existing | Creates pending Convex order before redirect; return + webhook reconcile status |
-| Admin reconciliation UI |  |  | Not started | Lists `Other:` values and allows mapping to canonical names |
+| Task                                                              | Owner | ETA | Status      | Acceptance Criteria (AC)                                                                                                                          |
+| ----------------------------------------------------------------- | ----: | --: | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Canonical universities JSON (`src/data/universities.json`)        |   you |   — | Done        | File contains curated list incl. KMTC; lazy-loadable                                                                                              |
+| Combobox UI in `order-form.tsx` (shadcn Command + Popover)        |       |     | Done        | Loads lazily; typeahead matches; selecting sets `university` and `universityUserEntered=false`; manual fallback sets `universityUserEntered=true` |
+| Student toggle & pricing in `products.tsx` & `cart-context.tsx`   |       |     | Done        | Student toggle updates price real-time; cart stores student flag per item                                                                         |
+| Persist order to Convex with `university` normalization           |       |     | Done        | Server re-normalizes incoming university; stores canonical or `Other: <text>`                                                                     |
+| Graduation year & registration number in `order-form.tsx`         |       |     | Done        | Graduation year required when student=yes; saved to `graduationYear`                                                                              |
+| Review page & checkout integration (`/shop/review` + `/checkout`) |       |     | Existing    | Creates pending Convex order before redirect; return + webhook reconcile status                                                                   |
+| Admin reconciliation UI                                           |       |     | Not started | Lists `Other:` values and allows mapping to canonical names                                                                                       |
 
 Notes:
+
 - Update the "Status" column directly when you start / finish tasks. Include a short note in this file with links to PRs or issues if helpful.
 
 ### File-level mapping (quick)
@@ -368,6 +370,6 @@ Notes:
 - Deploy Phase 1 to staging first and test Jenga flows using dev keys.
 - If possible, feature flag the new student pricing UI so you can toggle it if something goes wrong.
 
-----
+---
 
 Update status: `src/data/universities.json` has been created and canonical list is Done (see Task tracker above).

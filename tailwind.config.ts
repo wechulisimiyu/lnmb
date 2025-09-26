@@ -1,5 +1,5 @@
-import type { Config } from "tailwindcss"
-import tailwindcssAnimate from "tailwindcss-animate"
+import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate";
 
 // all in fixtures is set to tailwind v3 as interims solutions
 
@@ -66,7 +66,7 @@ const config: Config = {
         },
         // LNMB Brand Colors
         "lnmb-navy": "#2D3748",
-        "lnmb-cyan": "#38BDF8", 
+        "lnmb-cyan": "#38BDF8",
         "lnmb-red": "#EF4444",
         "lnmb-black": "#1A202C",
 
@@ -122,5 +122,5 @@ const config: Config = {
     },
   },
   plugins: [tailwindcssAnimate],
-}
-export default config
+};
+export default config;

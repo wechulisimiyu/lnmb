@@ -1,6 +1,6 @@
-import { Card, CardContent } from "@/components/ui/card"
-import { Heart } from "lucide-react"
-import Image from "next/image"
+import { Card, CardContent } from "@/components/ui/card";
+import { Heart } from "lucide-react";
+import Image from "next/image";
 
 export function PartnersSilverSponsors() {
   const silverSponsors = [
@@ -12,7 +12,7 @@ export function PartnersSilverSponsors() {
     "Sports Medicine Clinic",
     "Kenya Medical Society",
     "Healthcare Staffing Solutions",
-  ]
+  ];
 
   return (
     <div className="mb-16">
@@ -39,7 +39,7 @@ export function PartnersSilverSponsors() {
         ))}
       </div>
     </div>
-  )
+  );
 }
 
-export default PartnersSilverSponsors
+export default PartnersSilverSponsors;

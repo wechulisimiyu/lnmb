@@ -1,32 +1,36 @@
-import { Heart, Users, TrendingUp } from "lucide-react"
+import { Heart, Users, TrendingUp } from "lucide-react";
 
 export function VendorsBenefits() {
   const benefits = [
     {
       icon: Heart,
       title: "Community Impact",
-      description: "Directly support medical students and contribute to healthcare workforce development",
+      description:
+        "Directly support medical students and contribute to healthcare workforce development",
       color: "red",
     },
     {
       icon: Users,
       title: "Brand Visibility",
-      description: "Prominent logo placement on race materials, website, and social media channels",
+      description:
+        "Prominent logo placement on race materials, website, and social media channels",
       color: "blue",
     },
     {
       icon: Users,
       title: "Networking Opportunities",
-      description: "Connect with healthcare professionals, medical institutions, and community leaders",
+      description:
+        "Connect with healthcare professionals, medical institutions, and community leaders",
       color: "green",
     },
     {
       icon: TrendingUp,
       title: "Marketing ROI",
-      description: "Reach engaged audiences while building positive brand association with healthcare",
+      description:
+        "Reach engaged audiences while building positive brand association with healthcare",
       color: "purple",
     },
-  ]
+  ];
 
   return (
     <div className="grid gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-4 mb-12 sm:mb-16">
@@ -89,13 +93,15 @@ export function VendorsBenefits() {
                 {benefit.title}
               </h3>
 
-              <p className="text-slate-600 text-sm leading-relaxed">{benefit.description}</p>
+              <p className="text-slate-600 text-sm leading-relaxed">
+                {benefit.description}
+              </p>
             </div>
           </div>
         </div>
       ))}
     </div>
-  )
+  );
 }
 
-export default VendorsBenefits
+export default VendorsBenefits;

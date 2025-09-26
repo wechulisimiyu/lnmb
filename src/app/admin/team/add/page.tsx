@@ -1,17 +1,23 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowLeft, Upload, Save } from "lucide-react"
-import Link from "next/link"
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ArrowLeft, Upload, Save } from "lucide-react";
+import Link from "next/link";
 
 export default function AddTeamMemberPage() {
   const [formData, setFormData] = useState({
@@ -26,13 +32,13 @@ export default function AddTeamMemberPage() {
     specialties: "",
     awards: "",
     status: "Active",
-  })
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     // Handle form submission
-    console.log("Form submitted:", formData)
-  }
+    console.log("Form submitted:", formData);
+  };
 
   return (
     <div className="min-h-screen bg-secondary py-8">
@@ -48,8 +54,12 @@ export default function AddTeamMemberPage() {
             </Link>
             <Badge className="bg-destructive text-white">PERSONNEL FILE</Badge>
           </div>
-          <h1 className="text-3xl font-bold text-foreground">Add Team Member</h1>
-          <p className="text-slate-600">Create a new personnel record for the command roster</p>
+          <h1 className="text-3xl font-bold text-foreground">
+            Add Team Member
+          </h1>
+          <p className="text-slate-600">
+            Create a new personnel record for the command roster
+          </p>
         </div>
 
         <form onSubmit={handleSubmit}>
@@ -67,7 +77,9 @@ export default function AddTeamMemberPage() {
                       <Input
                         id="name"
                         value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, name: e.target.value })
+                        }
                         placeholder="Dr. John Smith"
                         required
                       />
@@ -77,7 +89,9 @@ export default function AddTeamMemberPage() {
                       <Input
                         id="rank"
                         value={formData.rank}
-                        onChange={(e) => setFormData({ ...formData, rank: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, rank: e.target.value })
+                        }
                         placeholder="Mission Commander"
                       />
                     </div>
@@ -89,14 +103,21 @@ export default function AddTeamMemberPage() {
                       <Input
                         id="role"
                         value={formData.role}
-                        onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, role: e.target.value })
+                        }
                         placeholder="Medical Director"
                         required
                       />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="year">Year *</Label>
-                      <Select value={formData.year} onValueChange={(value) => setFormData({ ...formData, year: value })}>
+                      <Select
+                        value={formData.year}
+                        onValueChange={(value) =>
+                          setFormData({ ...formData, year: value })
+                        }
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Select year" />
                         </SelectTrigger>
@@ -117,7 +138,9 @@ export default function AddTeamMemberPage() {
                     <Textarea
                       id="bio"
                       value={formData.bio}
-                      onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, bio: e.target.value })
+                      }
                       placeholder="Brief description of background, experience, and role in the mission..."
                       rows={4}
                       required
@@ -137,7 +160,9 @@ export default function AddTeamMemberPage() {
                       id="email"
                       type="email"
                       value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, email: e.target.value })
+                      }
                       placeholder="john@leavenomedicbehind.org"
                       required
                     />
@@ -149,7 +174,9 @@ export default function AddTeamMemberPage() {
                       <Input
                         id="linkedin"
                         value={formData.linkedin}
-                        onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, linkedin: e.target.value })
+                        }
                         placeholder="https://linkedin.com/in/username"
                       />
                     </div>
@@ -158,7 +185,9 @@ export default function AddTeamMemberPage() {
                       <Input
                         id="twitter"
                         value={formData.twitter}
-                        onChange={(e) => setFormData({ ...formData, twitter: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, twitter: e.target.value })
+                        }
                         placeholder="@username"
                       />
                     </div>
@@ -176,10 +205,17 @@ export default function AddTeamMemberPage() {
                     <Input
                       id="specialties"
                       value={formData.specialties}
-                      onChange={(e) => setFormData({ ...formData, specialties: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          specialties: e.target.value,
+                        })
+                      }
                       placeholder="Emergency Medicine, Leadership, Medical Education (comma separated)"
                     />
-                    <p className="text-sm text-slate-500">Separate multiple specialties with commas</p>
+                    <p className="text-sm text-slate-500">
+                      Separate multiple specialties with commas
+                    </p>
                   </div>
 
                   <div className="space-y-2">
@@ -187,11 +223,15 @@ export default function AddTeamMemberPage() {
                     <Textarea
                       id="awards"
                       value={formData.awards}
-                      onChange={(e) => setFormData({ ...formData, awards: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, awards: e.target.value })
+                      }
                       placeholder="Healthcare Hero 2023, Community Leader Award (one per line)"
                       rows={3}
                     />
-                    <p className="text-sm text-slate-500">Enter one award per line</p>
+                    <p className="text-sm text-slate-500">
+                      Enter one award per line
+                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -222,7 +262,12 @@ export default function AddTeamMemberPage() {
                 <CardContent>
                   <div className="space-y-2">
                     <Label htmlFor="status">Member Status</Label>
-                    <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+                    <Select
+                      value={formData.status}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, status: value })
+                      }
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Select status" />
                       </SelectTrigger>
@@ -241,11 +286,18 @@ export default function AddTeamMemberPage() {
                   <CardTitle>Actions</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <Button type="submit" className="w-full bg-destructive hover:bg-destructive/90">
+                  <Button
+                    type="submit"
+                    className="w-full bg-destructive hover:bg-destructive/90"
+                  >
                     <Save className="w-4 h-4 mr-2" />
                     Save Team Member
                   </Button>
-                  <Button type="button" variant="outline" className="w-full bg-transparent">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full bg-transparent"
+                  >
                     Save as Draft
                   </Button>
                   <Link href="/admin">
@@ -260,5 +312,5 @@ export default function AddTeamMemberPage() {
         </form>
       </div>
     </div>
-  )
+  );
 }

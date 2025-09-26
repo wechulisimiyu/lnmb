@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from "vitest";
 
 // Test pricing logic functionality
 interface Product {
@@ -27,36 +27,38 @@ function getProductPrice(product: Product, isStudent: boolean): number {
   return isStudent ? product.studentPrice : product.price;
 }
 
-describe('Student Pricing Logic', () => {
-  it('should return regular price for non-students', () => {
+describe("Student Pricing Logic", () => {
+  it("should return regular price for non-students", () => {
     const polo = products[0];
     const round = products[1];
-    
+
     expect(getProductPrice(polo, false)).toBe(1500);
     expect(getProductPrice(round, false)).toBe(1200);
   });
 
-  it('should return student price for students', () => {
+  it("should return student price for students", () => {
     const polo = products[0];
     const round = products[1];
-    
+
     expect(getProductPrice(polo, true)).toBe(1000);
     expect(getProductPrice(round, true)).toBe(600);
   });
 
-  it('should calculate correct savings for students', () => {
+  it("should calculate correct savings for students", () => {
     const polo = products[0];
     const round = products[1];
-    
+
     const poloSavings = polo.price - polo.studentPrice;
     const roundSavings = round.price - round.studentPrice;
-    
+
     expect(poloSavings).toBe(500);
     expect(roundSavings).toBe(600);
   });
 
-  it('should validate maximum savings claim', () => {
-    const maxSavings = Math.max(...products.map(p => p.price - p.studentPrice));
+  it("should validate maximum savings claim", () => {
+    const maxSavings = Math.max(
+      ...products.map((p) => p.price - p.studentPrice),
+    );
     expect(maxSavings).toBe(600); // Round neck has the biggest savings
   });
 });

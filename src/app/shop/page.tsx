@@ -1,9 +1,9 @@
-import ShopHero from "@/components/shop/hero"
-import ShopProducts from "@/components/shop/products"
-import ShopInfo from "@/components/shop/info"
-import ShopCTA from "@/components/shop/cta"
-import { CartProvider } from "@/components/shop/cart-context"
-import CartUI from "@/components/shop/cart-ui"
+import ShopHero from "@/components/shop/hero";
+import ShopProducts from "@/components/shop/products";
+import ShopInfo from "@/components/shop/info";
+import ShopCTA from "@/components/shop/cta";
+import { CartProvider } from "@/components/shop/cart-context";
+import CartUI from "@/components/shop/cart-ui";
 
 export default function ShopPage() {
   return (
@@ -18,5 +18,5 @@ export default function ShopPage() {
         <CartUI />
       </div>
     </CartProvider>
-  )
+  );
 }

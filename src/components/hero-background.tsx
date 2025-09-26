@@ -1,14 +1,14 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState } from "react"
-import Image from "next/image"
+import type React from "react";
+import { useState } from "react";
+import Image from "next/image";
 
 interface HeroBackgroundProps {
-  imageUrl?: string
-  fallbackGradient?: string
-  overlay?: string
-  children: React.ReactNode
+  imageUrl?: string;
+  fallbackGradient?: string;
+  overlay?: string;
+  children: React.ReactNode;
 }
 
 export function HeroBackground({
@@ -17,16 +17,16 @@ export function HeroBackground({
   overlay = "from-primary/80 via-primary/70 to-primary/60",
   children,
 }: HeroBackgroundProps) {
-  const [imageLoaded, setImageLoaded] = useState(false)
-  const [imageError, setImageError] = useState(false)
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   const handleImageLoad = () => {
-    setImageLoaded(true)
-  }
+    setImageLoaded(true);
+  };
 
   const handleImageError = () => {
-    setImageError(true)
-  }
+    setImageError(true);
+  };
 
   return (
     <section
@@ -66,5 +66,5 @@ export function HeroBackground({
         {children}
       </div>
     </section>
-  )
+  );
 }

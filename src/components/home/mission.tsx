@@ -1,18 +1,21 @@
-import { Badge } from "@/components/ui/badge"
-import { GraduationCap, BookOpen, Stethoscope, Plus } from "lucide-react"
+import { Badge } from "@/components/ui/badge";
+import { GraduationCap, BookOpen, Stethoscope, Plus } from "lucide-react";
 
 export function HomeMission() {
   return (
     <section className="py-12 sm:py-16 lg:py-20 bg-slate-50">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12 lg:mb-16">
-          <Badge className="bg-blue-600 text-white mb-4 px-3 py-1 text-sm">OUR MISSION</Badge>
+          <Badge className="bg-blue-600 text-white mb-4 px-3 py-1 text-sm">
+            OUR MISSION
+          </Badge>
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 mb-4 sm:mb-6">
             Supporting Future Healthcare Heroes
           </h2>
           <p className="text-lg sm:text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
-            We believe every passionate medical student deserves the chance to complete their education and serve
-            their community, regardless of financial barriers.
+            We believe every passionate medical student deserves the chance to
+            complete their education and serve their community, regardless of
+            financial barriers.
           </p>
         </div>
 
@@ -36,8 +39,9 @@ export function HomeMission() {
                 </h3>
 
                 <p className="text-slate-600 leading-relaxed mb-6">
-                  Provide direct financial assistance to medical students facing economic hardships, covering tuition,
-                  books, and living expenses.
+                  Provide direct financial assistance to medical students facing
+                  economic hardships, covering tuition, books, and living
+                  expenses.
                 </p>
 
                 <div className="flex items-center text-blue-600 font-semibold text-sm group-hover:translate-x-2 transition-transform duration-300">
@@ -68,8 +72,8 @@ export function HomeMission() {
                 </h3>
 
                 <p className="text-slate-600 leading-relaxed mb-6">
-                  Fund essential textbooks, medical equipment, and online learning platforms to enhance medical
-                  education quality.
+                  Fund essential textbooks, medical equipment, and online
+                  learning platforms to enhance medical education quality.
                 </p>
 
                 <div className="flex items-center text-green-600 font-semibold text-sm group-hover:translate-x-2 transition-transform duration-300">
@@ -100,8 +104,8 @@ export function HomeMission() {
                 </h3>
 
                 <p className="text-slate-600 leading-relaxed mb-6">
-                  Connect students with healthcare professionals for guidance, career advice, and professional
-                  development opportunities.
+                  Connect students with healthcare professionals for guidance,
+                  career advice, and professional development opportunities.
                 </p>
 
                 <div className="flex items-center text-purple-600 font-semibold text-sm group-hover:translate-x-2 transition-transform duration-300">
@@ -114,7 +118,7 @@ export function HomeMission() {
         </div>
       </div>
     </section>
-  )
+  );
 }
 
-export default HomeMission
+export default HomeMission;

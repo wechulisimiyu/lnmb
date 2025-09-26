@@ -2,7 +2,9 @@ export function StoryTimeline() {
   return (
     <section className="px-4 py-12 sm:py-16 lg:py-20">
       <div className="mx-auto max-w-6xl mb-16">
-        <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">Our Journey</h2>
+        <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
+          Our Journey
+        </h2>
         <div className="mx-auto max-w-3xl space-y-8">
           <div className="flex flex-col items-center text-center space-y-3">
             <div className="w-16 h-16 bg-blue-200 rounded-full flex items-center justify-center flex-shrink-0">
@@ -10,7 +12,9 @@ export function StoryTimeline() {
             </div>
             <div>
               <h3 className="text-xl font-semibold">First ever</h3>
-              <p className="text-gray-600">Launched our inaugural charity run.</p>
+              <p className="text-gray-600">
+                Launched our inaugural charity run.
+              </p>
             </div>
           </div>
 
@@ -30,7 +34,9 @@ export function StoryTimeline() {
             </div>
             <div>
               <h3 className="text-xl font-semibold">Third ever</h3>
-              <p className="text-gray-600">Scaled and had even more participants.</p>
+              <p className="text-gray-600">
+                Scaled and had even more participants.
+              </p>
             </div>
           </div>
 
@@ -46,7 +52,7 @@ export function StoryTimeline() {
         </div>
       </div>
     </section>
-  )
+  );
 }
 
-export default StoryTimeline
+export default StoryTimeline;

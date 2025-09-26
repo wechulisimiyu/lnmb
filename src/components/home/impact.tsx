@@ -1,13 +1,17 @@
-import { Badge } from "@/components/ui/badge"
-import { Heart, Users, Award, GraduationCap } from "lucide-react"
+import { Badge } from "@/components/ui/badge";
+import { Heart, Users, Award, GraduationCap } from "lucide-react";
 
 export function HomeImpact() {
   return (
     <section className="py-12 sm:py-16 lg:py-20 bg-background">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
-          <Badge className="bg-brand-success text-white mb-4 px-3 py-1 text-sm">IMPACT REPORT</Badge>
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-4">Making a Real Difference</h2>
+          <Badge className="bg-brand-success text-white mb-4 px-3 py-1 text-sm">
+            IMPACT REPORT
+          </Badge>
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-4">
+            Making a Real Difference
+          </h2>
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
@@ -19,7 +23,9 @@ export function HomeImpact() {
               <div className="text-2xl sm:text-3xl font-bold mb-1 group-hover:scale-110 transition-transform duration-300">
                 KES 675K+
               </div>
-              <div className="opacity-80 text-xs sm:text-sm font-medium">Total Raised</div>
+              <div className="opacity-80 text-xs sm:text-sm font-medium">
+                Total Raised
+              </div>
             </div>
           </div>
 
@@ -28,8 +34,12 @@ export function HomeImpact() {
               <GraduationCap className="w-full h-full" />
             </div>
             <div className="relative z-10">
-              <div className="text-2xl sm:text-3xl font-bold mb-1 group-hover:scale-110 transition-transform duration-300">138</div>
-              <div className="opacity-80 text-xs sm:text-sm font-medium">Medics Supported</div>
+              <div className="text-2xl sm:text-3xl font-bold mb-1 group-hover:scale-110 transition-transform duration-300">
+                138
+              </div>
+              <div className="opacity-80 text-xs sm:text-sm font-medium">
+                Medics Supported
+              </div>
             </div>
           </div>
 
@@ -38,8 +48,12 @@ export function HomeImpact() {
               <Users className="w-full h-full" />
             </div>
             <div className="relative z-10">
-              <div className="text-2xl sm:text-3xl font-bold mb-1 group-hover:scale-110 transition-transform duration-300">6,600+</div>
-              <div className="opacity-80 text-xs sm:text-sm font-medium">Participants</div>
+              <div className="text-2xl sm:text-3xl font-bold mb-1 group-hover:scale-110 transition-transform duration-300">
+                6,600+
+              </div>
+              <div className="opacity-80 text-xs sm:text-sm font-medium">
+                Participants
+              </div>
             </div>
           </div>
 
@@ -48,14 +62,18 @@ export function HomeImpact() {
               <Award className="w-full h-full" />
             </div>
             <div className="relative z-10">
-              <div className="text-2xl sm:text-3xl font-bold mb-1 group-hover:scale-110 transition-transform duration-300">5</div>
-              <div className="opacity-80 text-xs sm:text-sm font-medium">Years Running</div>
+              <div className="text-2xl sm:text-3xl font-bold mb-1 group-hover:scale-110 transition-transform duration-300">
+                5
+              </div>
+              <div className="opacity-80 text-xs sm:text-sm font-medium">
+                Years Running
+              </div>
             </div>
           </div>
         </div>
       </div>
     </section>
-  )
+  );
 }
 
-export default HomeImpact
+export default HomeImpact;

@@ -45,14 +45,14 @@
 
 :root {
   --radius: 0.625rem;
-  
+
   /* LNMB Brand Colors */
-  --brand-navy: #2D3748;
-  --brand-cyan: #38BDF8;
-  --brand-red: #EF4444;
-  --brand-black: #1A202C;
-  --white: #FFFFFF;
-  
+  --brand-navy: #2d3748;
+  --brand-cyan: #38bdf8;
+  --brand-red: #ef4444;
+  --brand-black: #1a202c;
+  --white: #ffffff;
+
   /* Semantic Tokens */
   --color-background: var(--white);
   --color-foreground: var(--brand-black);
@@ -62,13 +62,13 @@
   --color-accent-foreground: var(--brand-black);
   --color-destructive: var(--brand-red);
   --color-destructive-foreground: var(--white);
-  --color-border: #E6E8EB;
-  
+  --color-border: #e6e8eb;
+
   /* State Colors */
   --color-info: var(--brand-cyan);
   --color-success: var(--brand-navy);
   --color-warning: var(--brand-red);
-  
+
   /* Base tokens mapped to semantic tokens */
   --background: var(--color-background);
   --foreground: var(--color-foreground);
@@ -78,9 +78,9 @@
   --popover-foreground: var(--brand-black);
   --primary: var(--color-primary);
   --primary-foreground: var(--color-primary-foreground);
-  --secondary: #F7FAFC;
+  --secondary: #f7fafc;
   --secondary-foreground: var(--brand-black);
-  --muted: #F7FAFC;
+  --muted: #f7fafc;
   --muted-foreground: #718096;
   --accent: var(--color-accent);
   --accent-foreground: var(--color-accent-foreground);
@@ -93,12 +93,12 @@
   --chart-2: var(--brand-navy);
   --chart-3: var(--brand-red);
   --chart-4: #718096;
-  --chart-5: #A0AEC0;
-  --sidebar: #F7FAFC;
+  --chart-5: #a0aec0;
+  --sidebar: #f7fafc;
   --sidebar-foreground: var(--brand-black);
   --sidebar-primary: var(--brand-navy);
   --sidebar-primary-foreground: var(--white);
-  --sidebar-accent: #EDF2F7;
+  --sidebar-accent: #edf2f7;
   --sidebar-accent-foreground: var(--brand-black);
   --sidebar-border: var(--color-border);
   --sidebar-ring: var(--color-primary);
@@ -108,39 +108,39 @@
   /* Swap background and foreground for dark mode */
   --color-background: var(--brand-black);
   --color-foreground: var(--white);
-  
+
   /* Update base tokens for dark mode */
   --background: var(--color-background);
   --foreground: var(--color-foreground);
-  --card: #2D3748;
+  --card: #2d3748;
   --card-foreground: var(--white);
-  --popover: #2D3748;
+  --popover: #2d3748;
   --popover-foreground: var(--white);
   --primary: var(--brand-cyan);
   --primary-foreground: var(--brand-black);
-  --secondary: #4A5568;
+  --secondary: #4a5568;
   --secondary-foreground: var(--white);
-  --muted: #4A5568;
-  --muted-foreground: #A0AEC0;
+  --muted: #4a5568;
+  --muted-foreground: #a0aec0;
   --accent: var(--brand-cyan);
   --accent-foreground: var(--brand-black);
   --destructive: var(--brand-red);
   --destructive-foreground: var(--white);
-  --border: #4A5568;
-  --input: #4A5568;
+  --border: #4a5568;
+  --input: #4a5568;
   --ring: var(--brand-cyan);
   --chart-1: var(--brand-cyan);
   --chart-2: var(--brand-navy);
   --chart-3: var(--brand-red);
   --chart-4: #718096;
-  --chart-5: #A0AEC0;
-  --sidebar: #2D3748;
+  --chart-5: #a0aec0;
+  --sidebar: #2d3748;
   --sidebar-foreground: var(--white);
   --sidebar-primary: var(--brand-cyan);
   --sidebar-primary-foreground: var(--brand-black);
-  --sidebar-accent: #4A5568;
+  --sidebar-accent: #4a5568;
   --sidebar-accent-foreground: var(--white);
-  --sidebar-border: #4A5568;
+  --sidebar-border: #4a5568;
   --sidebar-ring: var(--brand-cyan);
 }
 

@@ -78,34 +78,45 @@ class PaymentService {
   private readonly merchantAccountNumber = "0170280594893";
 
   private createSTKPayload(request: PaymentRequest): STKPayload {
-    const siteUrl = process.env.SITE_URL || 'http://localhost:3000';
+    const siteUrl = process.env.SITE_URL || "http://localhost:3000";
 
     // Build payload matching the API used in the test script
     return {
       merchant: {
         accountNumber: this.merchantAccountNumber,
         countryCode: "KE",
-        name: process.env.JENGA_MERCHANT_NAME || "Merchant Name"
+        name: process.env.JENGA_MERCHANT_NAME || "Merchant Name",
       },
       payment: {
         ref: request.order.orderReference,
-        amount: request.payment.details?.paymentAmount.toString() || String(request.order.orderAmount),
-        currency: request.payment.paymentCurrency || request.order.orderCurrency || "KES",
+        amount:
+          request.payment.details?.paymentAmount.toString() ||
+          String(request.order.orderAmount),
+        currency:
+          request.payment.paymentCurrency ||
+          request.order.orderCurrency ||
+          "KES",
         telco: "Safaricom",
-        mobileNumber: request.payment.details?.msisdn || request.customer.phoneNumber || '',
-        date: new Date().toISOString().split('T')[0],
-        callBackUrl: request.payment.callbackUrl || `${siteUrl}/api/payment/callback`,
-        pushType: "STK"
-      }
+        mobileNumber:
+          request.payment.details?.msisdn || request.customer.phoneNumber || "",
+        date: new Date().toISOString().split("T")[0],
+        callBackUrl:
+          request.payment.callbackUrl || `${siteUrl}/api/payment/callback`,
+        pushType: "STK",
+      },
     };
   }
 
   // New signature formula: order.orderReference + payment.paymentCurrency + payment.details.msisdn + payment.details.paymentAmount
   private generateSignatureData(request: PaymentRequest): string {
     const orderRef = request.order.orderReference;
-    const currency = request.payment.paymentCurrency || request.order.orderCurrency || 'KES';
-    const msisdn = request.payment.details?.msisdn || request.customer.phoneNumber || '';
-    const amount = String(request.payment.details?.paymentAmount ?? request.order.orderAmount);
+    const currency =
+      request.payment.paymentCurrency || request.order.orderCurrency || "KES";
+    const msisdn =
+      request.payment.details?.msisdn || request.customer.phoneNumber || "";
+    const amount = String(
+      request.payment.details?.paymentAmount ?? request.order.orderAmount,
+    );
 
     return `${orderRef}${currency}${msisdn}${amount}`;
   }
@@ -120,7 +131,10 @@ class PaymentService {
     return "";
   }
 
-  private async makeSTKRequest(payload: STKPayload, signature: string): Promise<Response> {
+  private async makeSTKRequest(
+    payload: STKPayload,
+    signature: string,
+  ): Promise<Response> {
     const token = await authToken();
 
     // Use the new endpoint used in the test script
@@ -128,46 +142,55 @@ class PaymentService {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
-        "Signature": signature
+        Authorization: `Bearer ${token}`,
+        Signature: signature,
       },
       body: JSON.stringify(payload),
     });
   }
 
-  private createSuccessResponse(responseData: any, request: PaymentRequest): STKPushResponse {
+  private createSuccessResponse(
+    responseData: any,
+    request: PaymentRequest,
+  ): STKPushResponse {
     return {
       status: responseData.status ? "initiated" : "failed",
       message: responseData.message || "STK push initiated successfully",
-  reference: responseData.reference || request.order.orderReference,
+      reference: responseData.reference || request.order.orderReference,
       transactionId: responseData.transactionId || `stk_${Date.now()}`,
     };
   }
 
-  private createErrorResponse(error: unknown, request: PaymentRequest): STKPushResponse {
-    const message = error instanceof Error ? error.message : "STK Push failed - please try again";
-    
+  private createErrorResponse(
+    error: unknown,
+    request: PaymentRequest,
+  ): STKPushResponse {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "STK Push failed - please try again";
+
     return {
       status: "failed",
-  message,
-  reference: request.order.orderReference,
+      message,
+      reference: request.order.orderReference,
     };
   }
 
   private createSimulationResponse(request: PaymentRequest): STKPushResponse {
     return {
       status: "initiated",
-  message: `STK push simulated for ${request.customer?.name || ''} (${request.customer?.phoneNumber || ''})`,
-  reference: request.order.orderReference,
+      message: `STK push simulated for ${request.customer?.name || ""} (${request.customer?.phoneNumber || ""})`,
+      reference: request.order.orderReference,
       transactionId: `sim_${Date.now()}`,
     };
   }
 
   async initiateSTKPush(request: PaymentRequest): Promise<STKPushResponse> {
     try {
-  const payload = this.createSTKPayload(request);
-  const signature = this.generateSignature(request);
-  const response = await this.makeSTKRequest(payload, signature);
+      const payload = this.createSTKPayload(request);
+      const signature = this.generateSignature(request);
+      const response = await this.makeSTKRequest(payload, signature);
 
       if (response.ok) {
         const responseData = await response.json();
@@ -175,15 +198,17 @@ class PaymentService {
       }
 
       const errorData = await response.json();
-      throw new Error(`STK Push API error: ${response.status} - ${errorData.message || 'Unknown error'}`);
-      
+      throw new Error(
+        `STK Push API error: ${response.status} - ${errorData.message || "Unknown error"}`,
+      );
     } catch (error) {
-      const isDevelopment = process.env.NODE_ENV === 'development' || !process.env.JENGA_API_KEY;
-      
+      const isDevelopment =
+        process.env.NODE_ENV === "development" || !process.env.JENGA_API_KEY;
+
       if (isDevelopment) {
         return this.createSimulationResponse(request);
       }
-      
+
       return this.createErrorResponse(error, request);
     }
   }
@@ -214,10 +239,12 @@ export const createPaymentRecord = mutation({
       service: v.optional(v.string()),
       provider: v.optional(v.string()),
       callbackUrl: v.optional(v.string()),
-      details: v.optional(v.object({
-        msisdn: v.string(),
-        paymentAmount: v.number(),
-      })),
+      details: v.optional(
+        v.object({
+          msisdn: v.string(),
+          paymentAmount: v.number(),
+        }),
+      ),
     }),
     status: v.string(),
   },
@@ -242,8 +269,8 @@ export const createPaymentRecord = mutation({
       productType: "LNMB_TSHIRT",
       productDescription: args.order.description || "LNMB T-Shirt Purchase",
       paymentTimeLimit: "3600",
-      customerFirstName: args.customer.name.split(' ')[0] || args.customer.name,
-      customerLastName: args.customer.name.split(' ').slice(1).join(' ') || "",
+      customerFirstName: args.customer.name.split(" ")[0] || args.customer.name,
+      customerLastName: args.customer.name.split(" ").slice(1).join(" ") || "",
       customerPostalCodeZip: "00100",
       customerAddress: args.customer.firstAddress || "",
       customerEmail: args.customer.email || "",
@@ -251,7 +278,7 @@ export const createPaymentRecord = mutation({
       callbackUrl: args.payment.callbackUrl,
       countryCode: "KE",
       secondaryReference: `SEC_${cleanRef}`,
-      
+
       // Payment status tracking
       status: args.status,
       createdAt: timestamp,
@@ -288,9 +315,23 @@ export const updatePaymentStatus = mutation({
 
 export const triggerSTKPush = action({
   args: {
-    order: v.object({ orderReference: v.string(), orderAmount: v.number(), orderCurrency: v.string() }),
-    customer: v.object({ name: v.string(), email: v.optional(v.string()), phoneNumber: v.optional(v.string()) }),
-    payment: v.object({ paymentReference: v.string(), paymentCurrency: v.string(), details: v.optional(v.object({ msisdn: v.string(), paymentAmount: v.number() })) }),
+    order: v.object({
+      orderReference: v.string(),
+      orderAmount: v.number(),
+      orderCurrency: v.string(),
+    }),
+    customer: v.object({
+      name: v.string(),
+      email: v.optional(v.string()),
+      phoneNumber: v.optional(v.string()),
+    }),
+    payment: v.object({
+      paymentReference: v.string(),
+      paymentCurrency: v.string(),
+      details: v.optional(
+        v.object({ msisdn: v.string(), paymentAmount: v.number() }),
+      ),
+    }),
   },
   handler: async (ctx, args): Promise<STKPushResponse> => {
     const paymentService = new PaymentService();
@@ -339,7 +380,7 @@ export const initiateCheckout = action({
       order: {
         orderReference,
         orderAmount: args.amount,
-        orderCurrency: 'KES',
+        orderCurrency: "KES",
         description: args.productDescription,
       },
       customer: {
@@ -350,12 +391,12 @@ export const initiateCheckout = action({
       },
       payment: {
         paymentReference: `PAY_${Date.now()}`,
-        paymentCurrency: 'KES',
+        paymentCurrency: "KES",
         details: {
           msisdn: args.phoneNumber,
           paymentAmount: args.amount,
-        }
-      }
+        },
+      },
     };
 
     try {
@@ -366,11 +407,14 @@ export const initiateCheckout = action({
         status: "pending",
       });
 
-      const stkResponse: STKPushResponse = await ctx.runAction(api.checkout.triggerSTKPush, {
-        order: paymentRequest.order,
-        customer: paymentRequest.customer,
-        payment: paymentRequest.payment,
-      });
+      const stkResponse: STKPushResponse = await ctx.runAction(
+        api.checkout.triggerSTKPush,
+        {
+          order: paymentRequest.order,
+          customer: paymentRequest.customer,
+          payment: paymentRequest.payment,
+        },
+      );
 
       await ctx.runMutation(api.checkout.updatePaymentStatus, {
         reference: orderReference,

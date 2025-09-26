@@ -1,13 +1,13 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Menu, X, Heart } from "lucide-react"
-import Image from "next/image"
+import { useState } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Menu, X, Heart } from "lucide-react";
+import Image from "next/image";
 
 export function Navigation() {
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false);
 
   const navItems = [
     { href: "/", label: "Home" },
@@ -16,9 +16,9 @@ export function Navigation() {
     // { href: "/highlights", label: "Highlights" },
     // { href: "/partners", label: "Partners" },
     // { href: "/vendors", label: "Vendors" },
-    { href: "/shop", label: "Shop" }, 
+    { href: "/shop", label: "Shop" },
     { href: "/contact", label: "Contact" },
-  ]
+  ];
 
   return (
     <nav className="bg-white shadow-lg sticky top-0 z-50 border-b border-slate-200">
@@ -52,7 +52,11 @@ export function Navigation() {
           </div>
 
           {/* Mobile Menu Button */}
-          <button className="lg:hidden p-2 -mr-2" onClick={() => setIsOpen(!isOpen)} aria-label="Toggle menu">
+          <button
+            className="lg:hidden p-2 -mr-2"
+            onClick={() => setIsOpen(!isOpen)}
+            aria-label="Toggle menu"
+          >
             {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
@@ -80,5 +84,5 @@ export function Navigation() {
         )}
       </div>
     </nav>
-  )
+  );
 }

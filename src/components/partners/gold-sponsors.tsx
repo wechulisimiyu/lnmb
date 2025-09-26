@@ -1,6 +1,6 @@
-import { Card, CardContent } from "@/components/ui/card"
-import { Building } from "lucide-react"
-import Image from "next/image"
+import { Card, CardContent } from "@/components/ui/card";
+import { Building } from "lucide-react";
+import Image from "next/image";
 
 export function PartnersGoldSponsors() {
   const goldSponsors = [
@@ -24,7 +24,7 @@ export function PartnersGoldSponsors() {
       logo: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/AMSUN-2023-06138.jpg-qPix2GTYuTijAGV7JuUPSN300TGari.jpeg",
       description: "Athletic wear and wellness product manufacturer",
     },
-  ]
+  ];
 
   return (
     <div className="mb-16">
@@ -36,7 +36,10 @@ export function PartnersGoldSponsors() {
 
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
         {goldSponsors.map((sponsor, index) => (
-          <Card key={index} className="p-6 text-center hover:shadow-lg transition-shadow">
+          <Card
+            key={index}
+            className="p-6 text-center hover:shadow-lg transition-shadow"
+          >
             <CardContent className="space-y-4">
               <Image
                 src={sponsor.logo || "/placeholder.svg"}
@@ -54,7 +57,7 @@ export function PartnersGoldSponsors() {
         ))}
       </div>
     </div>
-  )
+  );
 }
 
-export default PartnersGoldSponsors
+export default PartnersGoldSponsors;

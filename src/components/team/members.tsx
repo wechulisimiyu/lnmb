@@ -1,18 +1,18 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { ChevronDown, ChevronUp, Mail, Linkedin, Twitter } from "lucide-react"
-import Image from "next/image"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { ChevronDown, ChevronUp, Mail, Linkedin, Twitter } from "lucide-react";
+import Image from "next/image";
 
 export function TeamMembers() {
-  const [expandedYear, setExpandedYear] = useState("2024")
+  const [expandedYear, setExpandedYear] = useState("2024");
 
   // Map old colors to brand colors
   const getBrandColor = (color: string, index: number) => {
     const brandColors = ["primary", "accent", "destructive"];
     return brandColors[index % 3];
-  }
+  };
 
   const getBrandColorClasses = (brandColor: string) => {
     switch (brandColor) {
@@ -21,31 +21,31 @@ export function TeamMembers() {
           bg: "bg-primary/10",
           bgSolid: "bg-primary",
           text: "text-primary",
-          border: "border-primary"
+          border: "border-primary",
         };
       case "accent":
         return {
-          bg: "bg-accent/10", 
+          bg: "bg-accent/10",
           bgSolid: "bg-accent",
           text: "text-accent",
-          border: "border-accent"
+          border: "border-accent",
         };
       case "destructive":
         return {
           bg: "bg-destructive/10",
-          bgSolid: "bg-destructive", 
+          bgSolid: "bg-destructive",
           text: "text-destructive",
-          border: "border-destructive"
+          border: "border-destructive",
         };
       default:
         return {
           bg: "bg-primary/10",
           bgSolid: "bg-primary",
-          text: "text-primary", 
-          border: "border-primary"
+          text: "text-primary",
+          border: "border-primary",
         };
     }
-  }
+  };
 
   const teamByYear = {
     "2024": [
@@ -59,7 +59,11 @@ export function TeamMembers() {
         email: "sarah@medicalstudentsrun.org",
         linkedin: "#",
         twitter: "#",
-        specialties: ["Emergency Medicine", "Medical Education", "Student Advocacy"],
+        specialties: [
+          "Emergency Medicine",
+          "Medical Education",
+          "Student Advocacy",
+        ],
         achievements: ["Healthcare Hero 2023", "Community Leader Award"],
         color: "blue",
       },
@@ -101,7 +105,11 @@ export function TeamMembers() {
         email: "james@medicalstudentsrun.org",
         linkedin: "#",
         twitter: "#",
-        specialties: ["Partnership Development", "Strategic Planning", "Corporate Relations"],
+        specialties: [
+          "Partnership Development",
+          "Strategic Planning",
+          "Corporate Relations",
+        ],
         achievements: ["Partnership Excellence", "Strategic Leadership Award"],
         color: "orange",
       },
@@ -166,9 +174,11 @@ export function TeamMembers() {
         color: "teal",
       },
     ],
-  }
+  };
 
-  const years = Object.keys(teamByYear).sort((a, b) => Number.parseInt(b) - Number.parseInt(a))
+  const years = Object.keys(teamByYear).sort(
+    (a, b) => Number.parseInt(b) - Number.parseInt(a),
+  );
 
   return (
     <>
@@ -181,7 +191,9 @@ export function TeamMembers() {
               variant={expandedYear === year ? "default" : "outline"}
               onClick={() => setExpandedYear(expandedYear === year ? "" : year)}
               className={`text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-3 ${
-                expandedYear === year ? "bg-blue-600 hover:bg-blue-700" : "bg-transparent"
+                expandedYear === year
+                  ? "bg-blue-600 hover:bg-blue-700"
+                  : "bg-transparent"
               }`}
               size="sm"
             >
@@ -200,123 +212,135 @@ export function TeamMembers() {
       {expandedYear && (
         <div className="space-y-6 sm:space-y-8 mb-16">
           <div className="text-center mb-6 sm:mb-8">
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-900">{expandedYear} Team Members</h2>
-            <p className="text-slate-600 text-sm sm:text-base">team members coming soon</p>
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
+              {expandedYear} Team Members
+            </h2>
+            <p className="text-slate-600 text-sm sm:text-base">
+              team members coming soon
+            </p>
           </div>
 
           {false && (
             <div className="grid gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3">
-              {teamByYear[expandedYear as keyof typeof teamByYear].map((member, index) => {
-                const brandColor = getBrandColor(member.color, index);
-                const colorClasses = getBrandColorClasses(brandColor);
+              {teamByYear[expandedYear as keyof typeof teamByYear].map(
+                (member, index) => {
+                  const brandColor = getBrandColor(member.color, index);
+                  const colorClasses = getBrandColorClasses(brandColor);
 
-                return (
-                  <div
-                    key={index}
-                    className={`group relative overflow-hidden rounded-2xl ${colorClasses.bg} p-1 hover:shadow-2xl transition-all duration-300`}
-                  >
-                    <div className="relative bg-background rounded-xl overflow-hidden h-full">
-                      {/* Medical Chart Header */}
-                      <div className={`h-2 ${colorClasses.bgSolid}`}></div>
+                  return (
+                    <div
+                      key={index}
+                      className={`group relative overflow-hidden rounded-2xl ${colorClasses.bg} p-1 hover:shadow-2xl transition-all duration-300`}
+                    >
+                      <div className="relative bg-background rounded-xl overflow-hidden h-full">
+                        {/* Medical Chart Header */}
+                        <div className={`h-2 ${colorClasses.bgSolid}`}></div>
 
-                      {/* Profile Image */}
-                      <div className="relative">
-                        <Image
-                          src={
-                            member.image ||
-                            "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/AMSUN-2023-06138.jpg-qPix2GTYuTijAGV7JuUPSN300TGari.jpeg" ||
-                            "/placeholder.svg" ||
-                            "/placeholder.svg"
-                          }
-                          alt={member.name}
-                          width={300}
-                          height={300}
-                          className="w-full h-48 sm:h-56 lg:h-64 object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
+                        {/* Profile Image */}
+                        <div className="relative">
+                          <Image
+                            src={
+                              member.image ||
+                              "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/AMSUN-2023-06138.jpg-qPix2GTYuTijAGV7JuUPSN300TGari.jpeg" ||
+                              "/placeholder.svg" ||
+                              "/placeholder.svg"
+                            }
+                            alt={member.name}
+                            width={300}
+                            height={300}
+                            className="w-full h-48 sm:h-56 lg:h-64 object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
 
-                        {/* Medical Badge */}
-                        <div className={`absolute top-4 left-4 px-3 py-1 rounded-full text-white text-xs font-bold ${colorClasses.bgSolid}`}>
-                          {member.title}
-                        </div>
-                      </div>
-
-                      <div className="p-4 sm:p-6">
-                        <div className="space-y-4">
-                          <div className="text-center">
-                            <h3 className={`text-lg sm:text-xl font-bold text-foreground group-hover:${colorClasses.text} transition-colors`}>
-                              {member.name}
-                            </h3>
-                            <p className={`font-semibold text-sm sm:text-base ${colorClasses.text}`}>
-                              {member.role}
-                            </p>
+                          {/* Medical Badge */}
+                          <div
+                            className={`absolute top-4 left-4 px-3 py-1 rounded-full text-white text-xs font-bold ${colorClasses.bgSolid}`}
+                          >
+                            {member.title}
                           </div>
+                        </div>
 
-                          {/* Contact Actions */}
-                          <div className="flex justify-center space-x-4 pt-4 border-t border-slate-200">
-                            <a
-                              href={`mailto:${member.email}`}
-                              className={`p-2 rounded-lg transition-colors ${
-                                member.color === "blue"
-                                  ? "text-slate-400 hover:text-blue-600 hover:bg-blue-50"
-                                  : member.color === "green"
-                                    ? "text-slate-400 hover:text-green-600 hover:bg-green-50"
-                                    : member.color === "purple"
-                                      ? "text-slate-400 hover:text-purple-600 hover:bg-purple-50"
-                                      : member.color === "orange"
-                                        ? "text-slate-400 hover:text-orange-600 hover:bg-orange-50"
-                                        : member.color === "pink"
-                                          ? "text-slate-400 hover:text-pink-600 hover:bg-pink-50"
-                                          : "text-slate-400 hover:text-teal-600 hover:bg-teal-50"
-                              }`}
-                              aria-label="Email"
-                            >
-                              <Mail className="w-4 h-4 sm:w-5 sm:h-5" />
-                            </a>
-                            <a
-                              href={member.linkedin}
-                              className={`p-2 rounded-lg transition-colors ${
-                                member.color === "blue"
-                                  ? "text-slate-400 hover:text-blue-600 hover:bg-blue-50"
-                                  : member.color === "green"
-                                    ? "text-slate-400 hover:text-green-600 hover:bg-green-50"
-                                    : member.color === "purple"
-                                      ? "text-slate-400 hover:text-purple-600 hover:bg-purple-50"
-                                      : member.color === "orange"
-                                        ? "text-slate-400 hover:text-orange-600 hover:bg-orange-50"
-                                        : member.color === "pink"
-                                          ? "text-slate-400 hover:text-pink-600 hover:bg-pink-50"
-                                          : "text-slate-400 hover:text-teal-600 hover:bg-teal-50"
-                              }`}
-                              aria-label="LinkedIn"
-                            >
-                              <Linkedin className="w-4 h-4 sm:w-5 sm:h-5" />
-                            </a>
-                            <a
-                              href={member.twitter}
-                              className={`p-2 rounded-lg transition-colors ${
-                                member.color === "blue"
-                                  ? "text-slate-400 hover:text-blue-600 hover:bg-blue-50"
-                                  : member.color === "green"
-                                    ? "text-slate-400 hover:text-green-600 hover:bg-green-50"
-                                    : member.color === "purple"
-                                      ? "text-slate-400 hover:text-purple-600 hover:bg-purple-50"
-                                      : member.color === "orange"
-                                        ? "text-slate-400 hover:text-orange-600 hover:bg-orange-50"
-                                        : member.color === "pink"
-                                          ? "text-slate-400 hover:text-pink-600 hover:bg-pink-50"
-                                          : "text-slate-400 hover:text-teal-600 hover:bg-teal-50"
-                              }`}
-                              aria-label="Twitter"
-                            >
-                              <Twitter className="w-4 h-4 sm:w-5 sm:h-5" />
-                            </a>
+                        <div className="p-4 sm:p-6">
+                          <div className="space-y-4">
+                            <div className="text-center">
+                              <h3
+                                className={`text-lg sm:text-xl font-bold text-foreground group-hover:${colorClasses.text} transition-colors`}
+                              >
+                                {member.name}
+                              </h3>
+                              <p
+                                className={`font-semibold text-sm sm:text-base ${colorClasses.text}`}
+                              >
+                                {member.role}
+                              </p>
+                            </div>
+
+                            {/* Contact Actions */}
+                            <div className="flex justify-center space-x-4 pt-4 border-t border-slate-200">
+                              <a
+                                href={`mailto:${member.email}`}
+                                className={`p-2 rounded-lg transition-colors ${
+                                  member.color === "blue"
+                                    ? "text-slate-400 hover:text-blue-600 hover:bg-blue-50"
+                                    : member.color === "green"
+                                      ? "text-slate-400 hover:text-green-600 hover:bg-green-50"
+                                      : member.color === "purple"
+                                        ? "text-slate-400 hover:text-purple-600 hover:bg-purple-50"
+                                        : member.color === "orange"
+                                          ? "text-slate-400 hover:text-orange-600 hover:bg-orange-50"
+                                          : member.color === "pink"
+                                            ? "text-slate-400 hover:text-pink-600 hover:bg-pink-50"
+                                            : "text-slate-400 hover:text-teal-600 hover:bg-teal-50"
+                                }`}
+                                aria-label="Email"
+                              >
+                                <Mail className="w-4 h-4 sm:w-5 sm:h-5" />
+                              </a>
+                              <a
+                                href={member.linkedin}
+                                className={`p-2 rounded-lg transition-colors ${
+                                  member.color === "blue"
+                                    ? "text-slate-400 hover:text-blue-600 hover:bg-blue-50"
+                                    : member.color === "green"
+                                      ? "text-slate-400 hover:text-green-600 hover:bg-green-50"
+                                      : member.color === "purple"
+                                        ? "text-slate-400 hover:text-purple-600 hover:bg-purple-50"
+                                        : member.color === "orange"
+                                          ? "text-slate-400 hover:text-orange-600 hover:bg-orange-50"
+                                          : member.color === "pink"
+                                            ? "text-slate-400 hover:text-pink-600 hover:bg-pink-50"
+                                            : "text-slate-400 hover:text-teal-600 hover:bg-teal-50"
+                                }`}
+                                aria-label="LinkedIn"
+                              >
+                                <Linkedin className="w-4 h-4 sm:w-5 sm:h-5" />
+                              </a>
+                              <a
+                                href={member.twitter}
+                                className={`p-2 rounded-lg transition-colors ${
+                                  member.color === "blue"
+                                    ? "text-slate-400 hover:text-blue-600 hover:bg-blue-50"
+                                    : member.color === "green"
+                                      ? "text-slate-400 hover:text-green-600 hover:bg-green-50"
+                                      : member.color === "purple"
+                                        ? "text-slate-400 hover:text-purple-600 hover:bg-purple-50"
+                                        : member.color === "orange"
+                                          ? "text-slate-400 hover:text-orange-600 hover:bg-orange-50"
+                                          : member.color === "pink"
+                                            ? "text-slate-400 hover:text-pink-600 hover:bg-pink-50"
+                                            : "text-slate-400 hover:text-teal-600 hover:bg-teal-50"
+                                }`}
+                                aria-label="Twitter"
+                              >
+                                <Twitter className="w-4 h-4 sm:w-5 sm:h-5" />
+                              </a>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                )
-              })}
+                  );
+                },
+              )}
             </div>
           )}
 
@@ -324,7 +348,7 @@ export function TeamMembers() {
         </div>
       )}
     </>
-  )
+  );
 }
 
-export default TeamMembers
+export default TeamMembers;

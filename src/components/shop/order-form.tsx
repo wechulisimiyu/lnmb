@@ -3,19 +3,42 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, AlertTriangle, Info } from "lucide-react";
 import { matchUniversity } from "@/lib/normalizeUniversity";
 import * as React from "react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Check } from "lucide-react";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 
 interface OrderFormData {
   student: string;
@@ -69,18 +92,25 @@ export default function OrderForm() {
   // T-shirt pricing
   const POLO_PRICE = 1500;
   const ROUND_PRICE = 1200;
-  
+
   const calculateTotal = () => {
-    const basePrice = formData.tshirtType === "polo" ? POLO_PRICE : 
-                     formData.tshirtType === "round" ? ROUND_PRICE : 0;
+    const basePrice =
+      formData.tshirtType === "polo"
+        ? POLO_PRICE
+        : formData.tshirtType === "round"
+          ? ROUND_PRICE
+          : 0;
     return basePrice * formData.quantity;
   };
 
-  const handleInputChange = (field: keyof OrderFormData, value: string | number) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const handleInputChange = (
+    field: keyof OrderFormData,
+    value: string | number,
+  ) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
     // Clear error when user starts typing
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: "" }));
+      setErrors((prev) => ({ ...prev, [field]: "" }));
     }
   };
 
@@ -88,22 +118,32 @@ export default function OrderForm() {
     const newErrors: Record<string, string> = {};
 
     // Required fields
-    if (!formData.student) newErrors.student = "Please select if you are a student";
-    if (!formData.attending) newErrors.attending = "Please select if you will attend the run";
-    if (!formData.tshirtType) newErrors.tshirtType = "Please select t-shirt type";
-    if (!formData.tshirtSize) newErrors.tshirtSize = "Please select t-shirt size";
+    if (!formData.student)
+      newErrors.student = "Please select if you are a student";
+    if (!formData.attending)
+      newErrors.attending = "Please select if you will attend the run";
+    if (!formData.tshirtType)
+      newErrors.tshirtType = "Please select t-shirt type";
+    if (!formData.tshirtSize)
+      newErrors.tshirtSize = "Please select t-shirt size";
     if (!formData.name.trim()) newErrors.name = "Name is required";
     if (!formData.email.trim()) newErrors.email = "Email is required";
     if (!formData.phone.trim()) newErrors.phone = "Phone number is required";
-    if (!formData.nameOfKin.trim()) newErrors.nameOfKin = "Next of kin name is required";
-    if (!formData.kinNumber.trim()) newErrors.kinNumber = "Next of kin phone number is required";
-    if (!formData.medicalCondition.trim()) newErrors.medicalCondition = "Medical condition field is required";
-    if (!formData.confirm) newErrors.confirm = "Please confirm the terms and conditions";
+    if (!formData.nameOfKin.trim())
+      newErrors.nameOfKin = "Next of kin name is required";
+    if (!formData.kinNumber.trim())
+      newErrors.kinNumber = "Next of kin phone number is required";
+    if (!formData.medicalCondition.trim())
+      newErrors.medicalCondition = "Medical condition field is required";
+    if (!formData.confirm)
+      newErrors.confirm = "Please confirm the terms and conditions";
 
     // Student-specific validation
     if (formData.student === "yes") {
-      if (!formData.university) newErrors.university = "Please select your university";
-      if (!formData.graduationYear) newErrors.graduationYear = "Please select your graduation year";
+      if (!formData.university)
+        newErrors.university = "Please select your university";
+      if (!formData.graduationYear)
+        newErrors.graduationYear = "Please select your graduation year";
     }
 
     // Email validation
@@ -118,7 +158,8 @@ export default function OrderForm() {
       newErrors.phone = "Please enter a valid phone number (format: 7XXXXXXXX)";
     }
     if (formData.kinNumber && !phoneRegex.test(formData.kinNumber)) {
-      newErrors.kinNumber = "Please enter a valid phone number (format: 7XXXXXXXX)";
+      newErrors.kinNumber =
+        "Please enter a valid phone number (format: 7XXXXXXXX)";
     }
 
     setErrors(newErrors);
@@ -132,7 +173,9 @@ export default function OrderForm() {
       import("@/data/universities.json")
         .then((mod) => {
           if (!mounted) return;
-          const list = Array.isArray(mod.default || mod) ? (mod.default || mod) : [];
+          const list = Array.isArray(mod.default || mod)
+            ? mod.default || mod
+            : [];
           setUniversities(list as string[]);
         })
         .catch((err) => {
@@ -155,10 +198,18 @@ export default function OrderForm() {
   const handleSelectUniversity = (value: string) => {
     if (value === "__manual__") {
       setShowManualUniversity(true);
-      setFormData((prev) => ({ ...prev, university: "", universityUserEntered: true }));
+      setFormData((prev) => ({
+        ...prev,
+        university: "",
+        universityUserEntered: true,
+      }));
     } else {
       setShowManualUniversity(false);
-      setFormData((prev) => ({ ...prev, university: value, universityUserEntered: false }));
+      setFormData((prev) => ({
+        ...prev,
+        university: value,
+        universityUserEntered: false,
+      }));
     }
     setUniQuery("");
     setUniPopoverOpen(false);
@@ -166,20 +217,20 @@ export default function OrderForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
 
     setIsSubmitting(true);
-    
+
     try {
       // Calculate total amount
       const totalAmount = calculateTotal();
-      
+
       // Create order reference
       const orderReference = `LNMB${Date.now()}${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
-      
+
       // Try to normalize university client-side if we have the canonical list
       let universityToSave = formData.university;
       let userEntered = !!formData.universityUserEntered;
@@ -203,13 +254,12 @@ export default function OrderForm() {
         orderReference,
         paid: false,
       };
-      
+
       // Store order data in localStorage for checkout page
       localStorage.setItem("pendingOrder", JSON.stringify(orderData));
-      
+
       // Redirect to checkout
       router.push("/checkout");
-      
     } catch (error) {
       console.error("Error processing order:", error);
       setErrors({ general: "An error occurred. Please try again." });
@@ -226,19 +276,20 @@ export default function OrderForm() {
             Order Your T-Shirt
           </CardTitle>
           <CardDescription>
-            Fill in your details to proceed with your order. All fields marked with * are required.
+            Fill in your details to proceed with your order. All fields marked
+            with * are required.
           </CardDescription>
         </CardHeader>
-        
+
         <CardContent className="space-y-6">
           {/* Catalog Alert */}
           <Alert>
             <Info className="h-4 w-4" />
             <AlertDescription>
               <strong>Before ordering:</strong> View our{" "}
-              <a 
-                href="https://drive.google.com/drive/folders/1sNyBxlP0RlHGnhNAj2Mgr9C5YAsnTMLk" 
-                target="_blank" 
+              <a
+                href="https://drive.google.com/drive/folders/1sNyBxlP0RlHGnhNAj2Mgr9C5YAsnTMLk"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-600 underline hover:text-blue-800"
               >
@@ -251,10 +302,14 @@ export default function OrderForm() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Student Status */}
             <div className="space-y-3">
-              <Label className="text-base font-semibold">Are you a student? *</Label>
+              <Label className="text-base font-semibold">
+                Are you a student? *
+              </Label>
               <RadioGroup
                 value={formData.student}
-                onValueChange={(value: string) => handleInputChange("student", value)}
+                onValueChange={(value: string) =>
+                  handleInputChange("student", value)
+                }
                 className="flex gap-6"
               >
                 <div className="flex items-center space-x-2">
@@ -266,7 +321,9 @@ export default function OrderForm() {
                   <Label htmlFor="student-no">No</Label>
                 </div>
               </RadioGroup>
-              {errors.student && <p className="text-red-500 text-sm">{errors.student}</p>}
+              {errors.student && (
+                <p className="text-red-500 text-sm">{errors.student}</p>
+              )}
             </div>
 
             {/* Student-specific fields */}
@@ -274,7 +331,12 @@ export default function OrderForm() {
               <div className="space-y-4 border-l-4 border-blue-200 pl-4">
                 <div className="space-y-2">
                   <Label htmlFor="graduationYear">Graduation Year *</Label>
-                  <Select value={formData.graduationYear} onValueChange={(value) => handleInputChange("graduationYear", value)}>
+                  <Select
+                    value={formData.graduationYear}
+                    onValueChange={(value) =>
+                      handleInputChange("graduationYear", value)
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select your graduation year" />
                     </SelectTrigger>
@@ -287,7 +349,11 @@ export default function OrderForm() {
                       <SelectItem value="2030">2030</SelectItem>
                     </SelectContent>
                   </Select>
-                  {errors.graduationYear && <p className="text-red-500 text-sm">{errors.graduationYear}</p>}
+                  {errors.graduationYear && (
+                    <p className="text-red-500 text-sm">
+                      {errors.graduationYear}
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -295,7 +361,9 @@ export default function OrderForm() {
                   <Input
                     id="regNumber"
                     value={formData.regNumber}
-                    onChange={(e) => handleInputChange("regNumber", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("regNumber", e.target.value)
+                    }
                     placeholder="e.g., H31/12345/2010"
                   />
                 </div>
@@ -309,25 +377,54 @@ export default function OrderForm() {
                 {!universities ? (
                   <div>Loading universities...</div>
                 ) : (
-                  <Popover open={uniPopoverOpen} onOpenChange={setUniPopoverOpen}>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" role="combobox" aria-expanded={uniPopoverOpen} className="w-full justify-between">
-                          <span className="truncate">{formData.university ? formData.university : "Search or select your university..."}</span>
-                          {formData.university && !showManualUniversity ? <Check className="ml-2 h-4 w-4 text-green-600" /> : null}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-full p-0">
+                  <Popover
+                    open={uniPopoverOpen}
+                    onOpenChange={setUniPopoverOpen}
+                  >
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={uniPopoverOpen}
+                        className="w-full justify-between"
+                      >
+                        <span className="truncate">
+                          {formData.university
+                            ? formData.university
+                            : "Search or select your university..."}
+                        </span>
+                        {formData.university && !showManualUniversity ? (
+                          <Check className="ml-2 h-4 w-4 text-green-600" />
+                        ) : null}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0">
                       <Command>
-                          <CommandInput placeholder="Search university..." value={uniQuery} onValueChange={(v: string) => setUniQuery(v)} />
+                        <CommandInput
+                          placeholder="Search university..."
+                          value={uniQuery}
+                          onValueChange={(v: string) => setUniQuery(v)}
+                        />
                         <CommandList>
                           <CommandEmpty>No university found.</CommandEmpty>
                           <CommandGroup>
                             {filteredUniversities.map((u) => (
-                              <CommandItem key={u} value={u} onSelect={() => handleSelectUniversity(u)}>
+                              <CommandItem
+                                key={u}
+                                value={u}
+                                onSelect={() => handleSelectUniversity(u)}
+                              >
                                 {u}
                               </CommandItem>
                             ))}
-                            <CommandItem value="__manual__" onSelect={() => handleSelectUniversity("__manual__")}>My university isn&apos;t listed</CommandItem>
+                            <CommandItem
+                              value="__manual__"
+                              onSelect={() =>
+                                handleSelectUniversity("__manual__")
+                              }
+                            >
+                              My university isn&apos;t listed
+                            </CommandItem>
                           </CommandGroup>
                         </CommandList>
                       </Command>
@@ -337,19 +434,32 @@ export default function OrderForm() {
 
                 {showManualUniversity && (
                   <div className="space-y-2">
-                    <Input id="manualUniversity" placeholder="Type your university" value={formData.university} onChange={(e) => handleInputChange("university", e.target.value)} />
+                    <Input
+                      id="manualUniversity"
+                      placeholder="Type your university"
+                      value={formData.university}
+                      onChange={(e) =>
+                        handleInputChange("university", e.target.value)
+                      }
+                    />
                   </div>
                 )}
-                {errors.university && <p className="text-red-500 text-sm">{errors.university}</p>}
+                {errors.university && (
+                  <p className="text-red-500 text-sm">{errors.university}</p>
+                )}
               </div>
             )}
 
             {/* Attendance */}
             <div className="space-y-3">
-              <Label className="text-base font-semibold">Will you attend the run on race day? *</Label>
+              <Label className="text-base font-semibold">
+                Will you attend the run on race day? *
+              </Label>
               <RadioGroup
                 value={formData.attending}
-                onValueChange={(value: string) => handleInputChange("attending", value)}
+                onValueChange={(value: string) =>
+                  handleInputChange("attending", value)
+                }
                 className="flex gap-6"
               >
                 <div className="flex items-center space-x-2">
@@ -361,17 +471,26 @@ export default function OrderForm() {
                   <Label htmlFor="attending-no">Just buying a T-shirt</Label>
                 </div>
               </RadioGroup>
-              {errors.attending && <p className="text-red-500 text-sm">{errors.attending}</p>}
+              {errors.attending && (
+                <p className="text-red-500 text-sm">{errors.attending}</p>
+              )}
             </div>
 
             {/* T-shirt Details */}
             <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
-              <h3 className="font-semibold text-lg text-gray-800">T-shirt Details</h3>
-              
+              <h3 className="font-semibold text-lg text-gray-800">
+                T-shirt Details
+              </h3>
+
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="tshirtType">T-shirt Type *</Label>
-                  <Select value={formData.tshirtType} onValueChange={(value) => handleInputChange("tshirtType", value)}>
+                  <Select
+                    value={formData.tshirtType}
+                    onValueChange={(value) =>
+                      handleInputChange("tshirtType", value)
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select t-shirt type" />
                     </SelectTrigger>
@@ -390,12 +509,19 @@ export default function OrderForm() {
                       </SelectItem>
                     </SelectContent>
                   </Select>
-                  {errors.tshirtType && <p className="text-red-500 text-sm">{errors.tshirtType}</p>}
+                  {errors.tshirtType && (
+                    <p className="text-red-500 text-sm">{errors.tshirtType}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="tshirtSize">T-shirt Size *</Label>
-                  <Select value={formData.tshirtSize} onValueChange={(value) => handleInputChange("tshirtSize", value)}>
+                  <Select
+                    value={formData.tshirtSize}
+                    onValueChange={(value) =>
+                      handleInputChange("tshirtSize", value)
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select size" />
                     </SelectTrigger>
@@ -406,7 +532,9 @@ export default function OrderForm() {
                       <SelectItem value="extra-large">Extra Large</SelectItem>
                     </SelectContent>
                   </Select>
-                  {errors.tshirtSize && <p className="text-red-500 text-sm">{errors.tshirtSize}</p>}
+                  {errors.tshirtSize && (
+                    <p className="text-red-500 text-sm">{errors.tshirtSize}</p>
+                  )}
                 </div>
               </div>
 
@@ -418,7 +546,9 @@ export default function OrderForm() {
                   min={1}
                   max={3}
                   value={formData.quantity}
-                  onChange={(e) => handleInputChange("quantity", parseInt(e.target.value) || 1)}
+                  onChange={(e) =>
+                    handleInputChange("quantity", parseInt(e.target.value) || 1)
+                  }
                   className="w-32"
                 />
               </div>
@@ -435,8 +565,10 @@ export default function OrderForm() {
 
             {/* Personal Information */}
             <div className="space-y-4">
-              <h3 className="font-semibold text-lg text-gray-800">Personal Information</h3>
-              
+              <h3 className="font-semibold text-lg text-gray-800">
+                Personal Information
+              </h3>
+
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Full Name *</Label>
@@ -446,7 +578,9 @@ export default function OrderForm() {
                     onChange={(e) => handleInputChange("name", e.target.value)}
                     placeholder="Enter your full name"
                   />
-                  {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
+                  {errors.name && (
+                    <p className="text-red-500 text-sm">{errors.name}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -458,7 +592,9 @@ export default function OrderForm() {
                     onChange={(e) => handleInputChange("email", e.target.value)}
                     placeholder="your.email@example.com"
                   />
-                  {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
+                  {errors.email && (
+                    <p className="text-red-500 text-sm">{errors.email}</p>
+                  )}
                 </div>
               </div>
 
@@ -476,24 +612,32 @@ export default function OrderForm() {
                     className="rounded-l-none"
                   />
                 </div>
-                {errors.phone && <p className="text-red-500 text-sm">{errors.phone}</p>}
+                {errors.phone && (
+                  <p className="text-red-500 text-sm">{errors.phone}</p>
+                )}
               </div>
             </div>
 
             {/* Emergency Contact */}
             <div className="space-y-4">
-              <h3 className="font-semibold text-lg text-gray-800">Emergency Contact</h3>
-              
+              <h3 className="font-semibold text-lg text-gray-800">
+                Emergency Contact
+              </h3>
+
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="nameOfKin">Next of Kin Name *</Label>
                   <Input
                     id="nameOfKin"
                     value={formData.nameOfKin}
-                    onChange={(e) => handleInputChange("nameOfKin", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("nameOfKin", e.target.value)
+                    }
                     placeholder="Emergency contact name"
                   />
-                  {errors.nameOfKin && <p className="text-red-500 text-sm">{errors.nameOfKin}</p>}
+                  {errors.nameOfKin && (
+                    <p className="text-red-500 text-sm">{errors.nameOfKin}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -505,12 +649,16 @@ export default function OrderForm() {
                     <Input
                       id="kinNumber"
                       value={formData.kinNumber}
-                      onChange={(e) => handleInputChange("kinNumber", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("kinNumber", e.target.value)
+                      }
                       placeholder="700000000"
                       className="rounded-l-none"
                     />
                   </div>
-                  {errors.kinNumber && <p className="text-red-500 text-sm">{errors.kinNumber}</p>}
+                  {errors.kinNumber && (
+                    <p className="text-red-500 text-sm">{errors.kinNumber}</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -521,22 +669,35 @@ export default function OrderForm() {
               <Input
                 id="medicalCondition"
                 value={formData.medicalCondition}
-                onChange={(e) => handleInputChange("medicalCondition", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("medicalCondition", e.target.value)
+                }
                 placeholder="Enter any medical conditions or 'None'"
               />
-              {errors.medicalCondition && <p className="text-red-500 text-sm">{errors.medicalCondition}</p>}
+              {errors.medicalCondition && (
+                <p className="text-red-500 text-sm">
+                  {errors.medicalCondition}
+                </p>
+              )}
             </div>
 
             {/* Pick-up Point */}
             <div className="space-y-2">
               <Label htmlFor="pickUp">Pick-up Point</Label>
-              <Select value={formData.pickUp} onValueChange={(value) => handleInputChange("pickUp", value)}>
+              <Select
+                value={formData.pickUp}
+                onValueChange={(value) => handleInputChange("pickUp", value)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select a pick-up point" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="kenyatta-national-hospital">Kenyatta National Hospital</SelectItem>
-                  <SelectItem value="chiromo-campus">Chiromo Campus, University of Nairobi</SelectItem>
+                  <SelectItem value="kenyatta-national-hospital">
+                    Kenyatta National Hospital
+                  </SelectItem>
+                  <SelectItem value="chiromo-campus">
+                    Chiromo Campus, University of Nairobi
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -545,21 +706,33 @@ export default function OrderForm() {
             <div className="space-y-3">
               <RadioGroup
                 value={formData.confirm}
-                onValueChange={(value: string) => handleInputChange("confirm", value)}
+                onValueChange={(value: string) =>
+                  handleInputChange("confirm", value)
+                }
               >
                 <div className="flex items-start space-x-3">
-                  <RadioGroupItem value="confirm" id="confirm" className="mt-1" />
+                  <RadioGroupItem
+                    value="confirm"
+                    id="confirm"
+                    className="mt-1"
+                  />
                   <Label htmlFor="confirm" className="text-sm leading-relaxed">
-                    I confirm that I am in good physical health to participate in the Leave No Medic Behind Charity Run. 
-                    I will follow the laid out trail and directions of the race organizers. I acknowledge that the Charity 
-                    run may pose possible risk and danger due to the nature of the activity and I release the Charity Run 
-                    organizers from any responsibility in the event of any accident, illness or injury. I understand my 
-                    contact information may be used to reach out to me for feedback on the activities related to the 
-                    Charity run. I confirm that all the details provided above are accurate and true. *
+                    I confirm that I am in good physical health to participate
+                    in the Leave No Medic Behind Charity Run. I will follow the
+                    laid out trail and directions of the race organizers. I
+                    acknowledge that the Charity run may pose possible risk and
+                    danger due to the nature of the activity and I release the
+                    Charity Run organizers from any responsibility in the event
+                    of any accident, illness or injury. I understand my contact
+                    information may be used to reach out to me for feedback on
+                    the activities related to the Charity run. I confirm that
+                    all the details provided above are accurate and true. *
                   </Label>
                 </div>
               </RadioGroup>
-              {errors.confirm && <p className="text-red-500 text-sm">{errors.confirm}</p>}
+              {errors.confirm && (
+                <p className="text-red-500 text-sm">{errors.confirm}</p>
+              )}
             </div>
 
             {/* General Error */}

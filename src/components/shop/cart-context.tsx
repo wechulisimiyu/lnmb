@@ -63,10 +63,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const addItem = (item: CartItem) => {
     // If same product id + size exists, merge quantities
     setItems((prev) => {
-      const idx = prev.findIndex((p) => p.id === item.id && p.size === item.size);
+      const idx = prev.findIndex(
+        (p) => p.id === item.id && p.size === item.size,
+      );
       if (idx > -1) {
         const next = [...prev];
-        next[idx] = { ...next[idx], quantity: next[idx].quantity + item.quantity };
+        next[idx] = {
+          ...next[idx],
+          quantity: next[idx].quantity + item.quantity,
+        };
         return next;
       }
       return [...prev, item];
@@ -97,7 +102,21 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const close = () => setIsOpen(false);
 
   return (
-    <CartContext.Provider value={{ items, addItem, removeItem, updateQuantity, clear, total, count, isOpen, toggle, open, close }}>
+    <CartContext.Provider
+      value={{
+        items,
+        addItem,
+        removeItem,
+        updateQuantity,
+        clear,
+        total,
+        count,
+        isOpen,
+        toggle,
+        open,
+        close,
+      }}
+    >
       {children}
     </CartContext.Provider>
   );

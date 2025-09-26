@@ -3,9 +3,21 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, CreditCard, Smartphone, ArrowLeft, CheckCircle } from "lucide-react";
+import {
+  Loader2,
+  CreditCard,
+  Smartphone,
+  ArrowLeft,
+  CheckCircle,
+} from "lucide-react";
 import { useMutation, useQuery, useAction } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 
@@ -56,13 +68,16 @@ export default function CheckoutPage() {
   const [orderData, setOrderData] = useState<OrderData | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [paymentFormData, setPaymentFormData] = useState<PaymentFormData | null>(null);
+  const [paymentFormData, setPaymentFormData] =
+    useState<PaymentFormData | null>(null);
 
   const createOrder = useMutation(api.orders.createOrder);
   const createPaymentRecord = useAction(api.orders.createPaymentRecord);
   const paymentStatus = useQuery(
     api.orders.getPaymentStatus,
-    orderData?.orderReference ? { reference: orderData.orderReference } : "skip"
+    orderData?.orderReference
+      ? { reference: orderData.orderReference }
+      : "skip",
   );
 
   useEffect(() => {
@@ -113,11 +128,14 @@ export default function CheckoutPage() {
       // Create payment record and get Jenga PGW form data
       const [firstName, ...lastNameParts] = orderData.name.split(" ");
       const lastName = lastNameParts.join(" ") || firstName;
-      
+
       // Sanitize product description for Jenga PGW (only allow alphanumeric, hyphen, quotation mark, forward slash, back slash, underscore, space)
       const rawDescription = `${orderData.tshirtType} T-shirt ${orderData.tshirtSize} x${orderData.quantity} - Leave No Medic Behind Charity Run`;
-      const productDescription = rawDescription.replace(/[^a-zA-Z0-9\-"\/\\_\s]/g, '');
-      
+      const productDescription = rawDescription.replace(
+        /[^a-zA-Z0-9\-"\/\\_\s]/g,
+        "",
+      );
+
       const paymentRecord = await createPaymentRecord({
         orderReference: orderData.orderReference,
         orderAmount: orderData.totalAmount,
@@ -131,10 +149,9 @@ export default function CheckoutPage() {
 
       // Set payment form data for submission to Jenga PGW
       setPaymentFormData(paymentRecord.paymentData);
-      
+
       // Clear localStorage
       localStorage.removeItem("pendingOrder");
-
     } catch (error) {
       console.error("Error processing payment:", error);
       setError("Failed to process payment. Please try again.");
@@ -189,9 +206,10 @@ export default function CheckoutPage() {
   };
 
   const getSizeDisplay = (size: string) => {
-    return size.split("-").map(word => 
-      word.charAt(0).toUpperCase() + word.slice(1)
-    ).join(" ");
+    return size
+      .split("-")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
   };
 
   if (!orderData) {
@@ -212,9 +230,12 @@ export default function CheckoutPage() {
         <Card className="max-w-md w-full mx-4">
           <CardHeader className="text-center">
             <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-            <CardTitle className="text-2xl text-green-600">Payment Successful!</CardTitle>
+            <CardTitle className="text-2xl text-green-600">
+              Payment Successful!
+            </CardTitle>
             <CardDescription>
-              Your order has been confirmed. You will receive an email confirmation shortly.
+              Your order has been confirmed. You will receive an email
+              confirmation shortly.
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">
@@ -239,9 +260,11 @@ export default function CheckoutPage() {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Shop
           </Button>
-          
+
           <h1 className="text-3xl font-bold text-gray-900">Checkout</h1>
-          <p className="text-gray-600 mt-2">Review your order and complete payment</p>
+          <p className="text-gray-600 mt-2">
+            Review your order and complete payment
+          </p>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8">
@@ -268,7 +291,9 @@ export default function CheckoutPage() {
                   </div>
                   <div className="flex justify-between">
                     <span>Will attend run:</span>
-                    <span>{orderData.attending === "attending" ? "Yes" : "No"}</span>
+                    <span>
+                      {orderData.attending === "attending" ? "Yes" : "No"}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -306,7 +331,9 @@ export default function CheckoutPage() {
               <div className="pt-4">
                 <div className="flex justify-between items-center text-lg font-bold">
                   <span>Total Amount:</span>
-                  <span className="text-blue-600">KES {orderData.totalAmount.toLocaleString()}</span>
+                  <span className="text-blue-600">
+                    KES {orderData.totalAmount.toLocaleString()}
+                  </span>
                 </div>
                 <p className="text-sm text-gray-600 mt-2">
                   Order Reference: {orderData.orderReference}
@@ -332,7 +359,8 @@ export default function CheckoutPage() {
                       <span className="font-semibold">M-PESA Payment</span>
                     </div>
                     <p className="text-sm text-gray-700">
-                      You can pay using M-PESA STK Push or other supported payment methods.
+                      You can pay using M-PESA STK Push or other supported
+                      payment methods.
                     </p>
                   </div>
 
@@ -342,7 +370,8 @@ export default function CheckoutPage() {
                       <span className="font-semibold">Card Payment</span>
                     </div>
                     <p className="text-sm text-gray-700">
-                      Visa, Mastercard, and other supported card payments are available.
+                      Visa, Mastercard, and other supported card payments are
+                      available.
                     </p>
                   </div>
 
@@ -374,8 +403,9 @@ export default function CheckoutPage() {
                 <>
                   <Alert>
                     <AlertDescription>
-                      Your payment has been prepared. Click the button below to complete your payment 
-                      securely through Jenga Payment Gateway.
+                      Your payment has been prepared. Click the button below to
+                      complete your payment securely through Jenga Payment
+                      Gateway.
                     </AlertDescription>
                   </Alert>
 
@@ -404,10 +434,15 @@ export default function CheckoutPage() {
             </CardHeader>
             <CardContent>
               <div className="flex items-center space-x-2">
-                <div className={`w-3 h-3 rounded-full ${
-                  paymentStatus.status === "paid" ? "bg-green-500" : 
-                  paymentStatus.status === "processing" ? "bg-yellow-500" : "bg-red-500"
-                }`} />
+                <div
+                  className={`w-3 h-3 rounded-full ${
+                    paymentStatus.status === "paid"
+                      ? "bg-green-500"
+                      : paymentStatus.status === "processing"
+                        ? "bg-yellow-500"
+                        : "bg-red-500"
+                  }`}
+                />
                 <span className="capitalize font-semibold">
                   {paymentStatus.status}
                 </span>

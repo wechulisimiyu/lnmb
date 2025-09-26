@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -98,6 +98,7 @@ export default function OrderForm() {
   const router = useRouter();
   type Step = (typeof STEPS)[keyof typeof STEPS];
   const [currentStep, setCurrentStep] = useState<Step>(STEPS.PRODUCT_SELECTION);
+  const formRef = useRef<HTMLDivElement | null>(null);
   const [formData, setFormData] = useState<OrderFormData>({
     // Step 1: Product Selection
     tshirtType: "",
@@ -256,14 +257,36 @@ export default function OrderForm() {
   const nextStep = () => {
     if (validateStep(currentStep)) {
       if (currentStep < STEPS.REVIEW) {
-        setCurrentStep((s) => ((s + 1) as Step));
+        setCurrentStep((s) => {
+          const next = (s + 1) as Step;
+          // wait for DOM update then scroll form into view
+          setTimeout(() => {
+            if (formRef.current) {
+              formRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+            } else {
+              // fallback to top of window
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }
+          }, 0);
+          return next;
+        });
       }
     }
   };
 
   const prevStep = () => {
     if (currentStep > STEPS.PRODUCT_SELECTION) {
-      setCurrentStep((s) => ((s - 1) as Step));
+      setCurrentStep((s) => {
+        const prev = (s - 1) as Step;
+        setTimeout(() => {
+          if (formRef.current) {
+            formRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+          } else {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }
+        }, 0);
+        return prev;
+      });
     }
   };
 
@@ -618,7 +641,7 @@ export default function OrderForm() {
 
       {/* Size and Quantity Selection */}
       {formData.tshirtType && (
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid md:grid-cols-2 gap-4 items-center">
           <div className="space-y-2">
             <Label htmlFor="tshirtSize">Size *</Label>
             <div className="grid grid-cols-4 gap-2">
@@ -626,7 +649,7 @@ export default function OrderForm() {
                 <button
                   key={size}
                   type="button"
-                  className={`px-3 py-2 text-sm rounded-md border transition-colors ${
+                  className={`h-9 flex items-center justify-center px-3 text-sm rounded-md border transition-colors leading-none ${
                     formData.tshirtSize === size
                       ? "bg-blue-600 text-white border-blue-600"
                       : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
@@ -649,6 +672,7 @@ export default function OrderForm() {
                 type="button"
                 variant="outline"
                 size="sm"
+                className="leading-none"
                 onClick={() =>
                   handleInputChange(
                     "quantity",
@@ -673,6 +697,7 @@ export default function OrderForm() {
                 type="button"
                 variant="outline"
                 size="sm"
+                className="leading-none"
                 onClick={() =>
                   handleInputChange(
                     "quantity",
@@ -1071,7 +1096,7 @@ export default function OrderForm() {
   );
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div ref={formRef} className="max-w-4xl mx-auto">
       {renderStepIndicator()}
 
       <Card className="shadow-xl">

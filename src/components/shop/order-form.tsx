@@ -170,7 +170,7 @@ export default function OrderForm() {
   React.useEffect(() => {
     let mounted = true;
     if (formData.student === "yes" && universities === null) {
-      import("@/data/universities.json")
+      import("../../data/universities.json")
         .then((mod) => {
           if (!mounted) return;
           const list = Array.isArray(mod.default || mod)

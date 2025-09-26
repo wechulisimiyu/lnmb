@@ -67,7 +67,7 @@ export function ShopProducts() {
   useEffect(() => {
     let mounted = true;
     if (isStudent && universities === null) {
-      import("@/data/universities.json")
+      import("../../data/universities.json")
         .then((mod) => {
           if (!mounted) return;
           const list = Array.isArray(mod.default || mod)

@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import { useMutation, useQuery, useAction } from "convex/react";
 import { api } from "../../../convex/_generated/api";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 interface OrderData {
   student: string;
@@ -71,6 +73,7 @@ export default function CheckoutPage() {
   const [error, setError] = useState<string | null>(null);
   const [paymentFormData, setPaymentFormData] =
     useState<PaymentFormData | null>(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>("mpesa");
 
   const createOrder = useMutation(api.orders.createOrder);
   const createPaymentRecord = useAction(api.orders.createPaymentRecord);
@@ -353,26 +356,57 @@ export default function CheckoutPage() {
             <CardContent className="space-y-6">
               {!paymentFormData ? (
                 <>
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <div className="flex items-center space-x-3 mb-3">
-                      <Smartphone className="h-6 w-6 text-blue-600" />
-                      <span className="font-semibold">M-PESA Payment</span>
-                    </div>
-                    <p className="text-sm text-gray-700">
-                      You can pay using M-PESA STK Push or other supported
-                      payment methods.
-                    </p>
-                  </div>
+                  <div className="space-y-4">
+                    <Label className="text-base font-semibold">Select Payment Method</Label>
+                    <RadioGroup
+                      value={selectedPaymentMethod}
+                      onValueChange={setSelectedPaymentMethod}
+                      className="space-y-3"
+                    >
+                      <div
+                        className={`p-4 rounded-lg border-2 cursor-pointer transition-colors ${
+                          selectedPaymentMethod === "mpesa"
+                            ? "border-blue-600 bg-blue-50"
+                            : "border-gray-200 bg-gray-50 hover:border-gray-300"
+                        }`}
+                        onClick={() => setSelectedPaymentMethod("mpesa")}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <RadioGroupItem value="mpesa" id="mpesa" />
+                          <Smartphone className="h-6 w-6 text-blue-600" />
+                          <div className="flex-1">
+                            <Label htmlFor="mpesa" className="font-semibold cursor-pointer">
+                              M-PESA Payment
+                            </Label>
+                            <p className="text-sm text-gray-700 mt-1">
+                              Pay using M-PESA STK Push or other mobile money methods
+                            </p>
+                          </div>
+                        </div>
+                      </div>
 
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="flex items-center space-x-3 mb-3">
-                      <CreditCard className="h-6 w-6 text-gray-600" />
-                      <span className="font-semibold">Card Payment</span>
-                    </div>
-                    <p className="text-sm text-gray-700">
-                      Visa, Mastercard, and other supported card payments are
-                      available.
-                    </p>
+                      <div
+                        className={`p-4 rounded-lg border-2 cursor-pointer transition-colors ${
+                          selectedPaymentMethod === "card"
+                            ? "border-blue-600 bg-blue-50"
+                            : "border-gray-200 bg-gray-50 hover:border-gray-300"
+                        }`}
+                        onClick={() => setSelectedPaymentMethod("card")}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <RadioGroupItem value="card" id="card" />
+                          <CreditCard className="h-6 w-6 text-gray-600" />
+                          <div className="flex-1">
+                            <Label htmlFor="card" className="font-semibold cursor-pointer">
+                              Card Payment
+                            </Label>
+                            <p className="text-sm text-gray-700 mt-1">
+                              Visa, Mastercard, and other supported card payments
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </RadioGroup>
                   </div>
 
                   {error && (
@@ -393,8 +427,12 @@ export default function CheckoutPage() {
                       </>
                     ) : (
                       <>
-                        <CreditCard className="w-5 h-5 mr-2" />
-                        Proceed to Payment
+                        {selectedPaymentMethod === "mpesa" ? (
+                          <Smartphone className="w-5 h-5 mr-2" />
+                        ) : (
+                          <CreditCard className="w-5 h-5 mr-2" />
+                        )}
+                        Proceed with {selectedPaymentMethod === "mpesa" ? "M-PESA" : "Card"} Payment
                       </>
                     )}
                   </Button>

@@ -11,17 +11,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Loader2,
-  CreditCard,
-  Smartphone,
-  ArrowLeft,
-  CheckCircle,
-} from "lucide-react";
+import { Loader2, CreditCard, ArrowLeft, CheckCircle } from "lucide-react";
 import { useMutation, useQuery, useAction } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
+// Label not needed here after payment selection removal
 
 interface OrderData {
   student: string;
@@ -74,8 +67,7 @@ export default function CheckoutPage() {
   const [error, setError] = useState<string | null>(null);
   const [paymentFormData, setPaymentFormData] =
     useState<PaymentFormData | null>(null);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] =
-    useState<string>("mpesa");
+  // Single payment flow: no client selection between card and mpesa
 
   const createOrder = useMutation(api.orders.createOrder);
   const createPaymentRecord = useAction(api.orders.createPaymentRecord);
@@ -245,6 +237,9 @@ export default function CheckoutPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">
+            <p className="text-sm text-gray-600 mb-4">
+              Order Reference: {orderData?.orderReference}
+            </p>
             <Button onClick={() => router.push("/")} className="w-full">
               Return to Home
             </Button>
@@ -341,9 +336,11 @@ export default function CheckoutPage() {
                     KES {orderData.totalAmount.toLocaleString()}
                   </span>
                 </div>
-                <p className="text-sm text-gray-600 mt-2">
-                  Order Reference: {orderData.orderReference}
-                </p>
+                {paymentStatus?.status === "paid" ? (
+                  <p className="text-sm text-gray-600 mt-2">
+                    Order Reference: {orderData.orderReference}
+                  </p>
+                ) : null}
               </div>
             </CardContent>
           </Card>
@@ -359,69 +356,6 @@ export default function CheckoutPage() {
             <CardContent className="space-y-6">
               {!paymentFormData ? (
                 <>
-                  <div className="space-y-4">
-                    <Label className="text-base font-semibold">
-                      Select Payment Method
-                    </Label>
-                    <RadioGroup
-                      value={selectedPaymentMethod}
-                      onValueChange={setSelectedPaymentMethod}
-                      className="space-y-3"
-                    >
-                      <div
-                        className={`p-4 rounded-lg border-2 cursor-pointer transition-colors ${
-                          selectedPaymentMethod === "mpesa"
-                            ? "border-blue-600 bg-blue-50"
-                            : "border-gray-200 bg-gray-50 hover:border-gray-300"
-                        }`}
-                        onClick={() => setSelectedPaymentMethod("mpesa")}
-                      >
-                        <div className="flex items-center space-x-3">
-                          <RadioGroupItem value="mpesa" id="mpesa" />
-                          <Smartphone className="h-6 w-6 text-blue-600" />
-                          <div className="flex-1">
-                            <Label
-                              htmlFor="mpesa"
-                              className="font-semibold cursor-pointer"
-                            >
-                              M-PESA Payment
-                            </Label>
-                            <p className="text-sm text-gray-700 mt-1">
-                              Pay using M-PESA STK Push or other mobile money
-                              methods
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div
-                        className={`p-4 rounded-lg border-2 cursor-pointer transition-colors ${
-                          selectedPaymentMethod === "card"
-                            ? "border-blue-600 bg-blue-50"
-                            : "border-gray-200 bg-gray-50 hover:border-gray-300"
-                        }`}
-                        onClick={() => setSelectedPaymentMethod("card")}
-                      >
-                        <div className="flex items-center space-x-3">
-                          <RadioGroupItem value="card" id="card" />
-                          <CreditCard className="h-6 w-6 text-gray-600" />
-                          <div className="flex-1">
-                            <Label
-                              htmlFor="card"
-                              className="font-semibold cursor-pointer"
-                            >
-                              Card Payment
-                            </Label>
-                            <p className="text-sm text-gray-700 mt-1">
-                              Visa, Mastercard, and other supported card
-                              payments
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </RadioGroup>
-                  </div>
-
                   {error && (
                     <Alert variant="destructive">
                       <AlertDescription>{error}</AlertDescription>
@@ -436,21 +370,16 @@ export default function CheckoutPage() {
                     {isProcessing ? (
                       <>
                         <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                        Processing Payment...
+                        Processing...
                       </>
                     ) : (
-                      <>
-                        {selectedPaymentMethod === "mpesa" ? (
-                          <Smartphone className="w-5 h-5 mr-2" />
-                        ) : (
-                          <CreditCard className="w-5 h-5 mr-2" />
-                        )}
-                        Proceed with{" "}
-                        {selectedPaymentMethod === "mpesa" ? "M-PESA" : "Card"}{" "}
-                        Payment
-                      </>
+                      <>Pay KES {orderData.totalAmount.toLocaleString()}</>
                     )}
                   </Button>
+
+                  <p className="text-xs text-gray-500 mt-2">
+                    We&apos;ll prepare M-PESA or card payment automatically.
+                  </p>
                 </>
               ) : (
                 <>

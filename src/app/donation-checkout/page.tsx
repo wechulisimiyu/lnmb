@@ -11,9 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, CreditCard, Smartphone, ArrowLeft } from "lucide-react";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
+import { Loader2, CreditCard, ArrowLeft } from "lucide-react";
 import { useMutation, useAction } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 
@@ -31,8 +29,7 @@ export default function DonationCheckoutPage() {
   const [donationData, setDonationData] = useState<DonationData | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] =
-    useState<string>("mpesa");
+  // Single payment flow: no client selection between card and mpesa
   const [paymentFormData, setPaymentFormData] = useState<Record<
     string,
     string
@@ -195,8 +192,9 @@ export default function DonationCheckoutPage() {
                     KES {donationData.totalAmount.toLocaleString()}
                   </span>
                 </div>
+                {/** hide reference until payment completes */}
                 <p className="text-sm text-gray-600 mt-2">
-                  Reference: {donationData.orderReference}
+                  Reference: {paymentFormData ? donationData.orderReference : "(will be shown after payment)"}
                 </p>
               </div>
             </CardContent>
@@ -210,68 +208,6 @@ export default function DonationCheckoutPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <Label className="text-base font-semibold">
-                  Select Payment Method
-                </Label>
-                <RadioGroup
-                  value={selectedPaymentMethod}
-                  onValueChange={setSelectedPaymentMethod}
-                  className="space-y-3"
-                >
-                  <div
-                    className={`p-4 rounded-lg border-2 cursor-pointer transition-colors ${
-                      selectedPaymentMethod === "mpesa"
-                        ? "border-blue-600 bg-blue-50"
-                        : "border-gray-200 bg-gray-50 hover:border-gray-300"
-                    }`}
-                    onClick={() => setSelectedPaymentMethod("mpesa")}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <RadioGroupItem value="mpesa" id="mpesa" />
-                      <Smartphone className="h-6 w-6 text-blue-600" />
-                      <div className="flex-1">
-                        <Label
-                          htmlFor="mpesa"
-                          className="font-semibold cursor-pointer"
-                        >
-                          M-PESA Payment
-                        </Label>
-                        <p className="text-sm text-gray-700 mt-1">
-                          Pay using M-PESA STK Push or other mobile money
-                          methods
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div
-                    className={`p-4 rounded-lg border-2 cursor-pointer transition-colors ${
-                      selectedPaymentMethod === "card"
-                        ? "border-blue-600 bg-blue-50"
-                        : "border-gray-200 bg-gray-50 hover:border-gray-300"
-                    }`}
-                    onClick={() => setSelectedPaymentMethod("card")}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <RadioGroupItem value="card" id="card" />
-                      <CreditCard className="h-6 w-6 text-gray-600" />
-                      <div className="flex-1">
-                        <Label
-                          htmlFor="card"
-                          className="font-semibold cursor-pointer"
-                        >
-                          Card Payment
-                        </Label>
-                        <p className="text-sm text-gray-700 mt-1">
-                          Visa, Mastercard, and other supported card payments
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </RadioGroup>
-              </div>
-
               {error && (
                 <Alert variant="destructive">
                   <AlertDescription>{error}</AlertDescription>
@@ -279,29 +215,26 @@ export default function DonationCheckoutPage() {
               )}
 
               {!paymentFormData ? (
-                <Button
-                  onClick={handleProcessPayment}
-                  disabled={isProcessing}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6"
-                >
-                  {isProcessing ? (
-                    <>
-                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                      Processing Donation...
-                    </>
-                  ) : (
-                    <>
-                      {selectedPaymentMethod === "mpesa" ? (
-                        <Smartphone className="w-5 h-5 mr-2" />
-                      ) : (
-                        <CreditCard className="w-5 h-5 mr-2" />
-                      )}
-                      Proceed with{" "}
-                      {selectedPaymentMethod === "mpesa" ? "M-PESA" : "Card"}{" "}
-                      Payment
-                    </>
-                  )}
-                </Button>
+                <>
+                  <Button
+                    onClick={handleProcessPayment}
+                    disabled={isProcessing}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6"
+                  >
+                    {isProcessing ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>Pay KES {donationData.totalAmount.toLocaleString()}</>
+                    )}
+                  </Button>
+
+                  <p className="text-xs text-gray-500 mt-2">
+                    We&apos;ll prepare M-PESA or card payment automatically.
+                  </p>
+                </>
               ) : (
                 <>
                   <Alert>

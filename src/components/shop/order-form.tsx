@@ -28,6 +28,7 @@ import {
   Info,
   ChevronLeft,
   ChevronRight,
+  Upload,
 } from "lucide-react";
 import { matchUniversity } from "@/lib/normalizeUniversity";
 import * as React from "react";
@@ -59,8 +60,7 @@ interface OrderFormData {
   totalAmount: number;
 
   // Step 2: Personal & Registration Details
-  graduationYear?: string;
-  regNumber?: string;
+  schoolIdFile?: File;
   name: string;
   email: string;
   phone: string;
@@ -76,7 +76,6 @@ interface OrderFormData {
 
 // Pricing constants from PRD (authoritative)
 const PRICING = {
-  polo: { regular: 1500, student: 1000 },
   round: { regular: 1000, student: 600 },
 };
 
@@ -101,7 +100,7 @@ export default function OrderForm() {
   const formRef = useRef<HTMLDivElement | null>(null);
   const [formData, setFormData] = useState<OrderFormData>({
     // Step 1: Product Selection
-    tshirtType: "",
+    tshirtType: "round",
     tshirtSize: "",
     quantity: 1,
     student: "",
@@ -111,8 +110,7 @@ export default function OrderForm() {
     totalAmount: 0,
 
     // Step 2: Personal & Registration Details
-    graduationYear: "",
-    regNumber: "",
+    schoolIdFile: undefined,
     name: "",
     email: "",
     phone: "",
@@ -176,8 +174,25 @@ export default function OrderForm() {
 
   const handleInputChange = (
     field: keyof OrderFormData,
-    value: string | number | boolean,
+    value: string | number | boolean | File,
   ) => {
+    // Auto-correct phone number format for phone and kinNumber fields
+    if ((field === "phone" || field === "kinNumber") && typeof value === "string") {
+      // Remove all non-digits
+      const digitsOnly = value.replace(/\D/g, "");
+      
+      // Handle different formats
+      if (digitsOnly.startsWith("0")) {
+        // Remove leading 0 for 0796105948 format
+        value = digitsOnly.slice(1);
+      } else if (digitsOnly.startsWith("254")) {
+        // Remove country code for +254796105948 format
+        value = digitsOnly.slice(3);
+      } else {
+        value = digitsOnly;
+      }
+    }
+
     setFormData((prev) => ({ ...prev, [field]: value }));
     // Clear error when user starts typing
     if (errors[field]) {
@@ -211,10 +226,7 @@ export default function OrderForm() {
         if (!formData.email.trim()) newErrors.email = "Email is required";
         if (!formData.phone.trim())
           newErrors.phone = "Phone number is required";
-        if (!formData.nameOfKin.trim())
-          newErrors.nameOfKin = "Next of kin name is required";
-        if (!formData.kinNumber.trim())
-          newErrors.kinNumber = "Next of kin phone number is required";
+        // nameOfKin and kinNumber are now optional
         if (!formData.medicalCondition.trim())
           newErrors.medicalCondition = "Medical condition field is required";
 
@@ -237,8 +249,8 @@ export default function OrderForm() {
 
         // Student-specific validation
         if (formData.student === "yes") {
-          if (!formData.graduationYear)
-            newErrors.graduationYear = "Please select your graduation year";
+          if (!formData.schoolIdFile)
+            newErrors.schoolIdFile = "Please upload your school ID picture";
         }
         break;
 
@@ -414,7 +426,7 @@ export default function OrderForm() {
     </div>
   );
 
-  const renderProductCard = (type: "polo" | "round") => {
+  const renderProductCard = (type: "round") => {
     const pricing = PRICING[type];
     const isStudent = formData.student === "yes";
     const currentPrice = isStudent ? pricing.student : pricing.regular;
@@ -432,14 +444,14 @@ export default function OrderForm() {
         <div className="relative aspect-square mb-4">
           <Image
             src="/images/shop/lnmb-tshirt-2025.webp"
-            alt={`${type === "polo" ? "Polo" : "Round"} Neck T-shirt`}
+            alt="Round Neck T-shirt"
             fill
             className="object-cover rounded-md"
           />
         </div>
         <div className="text-center">
           <h3 className="font-semibold text-lg mb-2">
-            {type === "polo" ? "Polo Neck" : "Round Neck"} T-shirt
+            Round Neck T-shirt
           </h3>
           <div className="space-y-1">
             <div className="flex items-center justify-center space-x-2">
@@ -630,8 +642,7 @@ export default function OrderForm() {
       {/* Product Selection Cards */}
       <div className="space-y-4">
         <Label className="text-base font-semibold">Choose Your T-shirt *</Label>
-        <div className="grid md:grid-cols-2 gap-6">
-          {renderProductCard("polo")}
+        <div className="grid md:grid-cols-1 gap-6 max-w-md mx-auto">
           {renderProductCard("round")}
         </div>
         {errors.tshirtType && (
@@ -644,8 +655,8 @@ export default function OrderForm() {
         <div className="grid md:grid-cols-2 gap-4 items-center">
           <div className="space-y-2">
             <Label htmlFor="tshirtSize">Size *</Label>
-            <div className="grid grid-cols-4 gap-2">
-              {["small", "medium", "large", "extra-large"].map((size) => (
+            <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+              {["XS", "S", "M", "L", "XL", "XXL", "XXXL"].map((size) => (
                 <button
                   key={size}
                   type="button"
@@ -656,7 +667,7 @@ export default function OrderForm() {
                   }`}
                   onClick={() => handleInputChange("tshirtSize", size)}
                 >
-                  {size.charAt(0).toUpperCase() + size.slice(1)}
+                  {size}
                 </button>
               ))}
             </div>
@@ -666,7 +677,7 @@ export default function OrderForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="quantity">Quantity (Max 3) *</Label>
+            <Label htmlFor="quantity">Quantity *</Label>
             <div className="flex items-center space-x-2">
               <Button
                 type="button"
@@ -686,7 +697,6 @@ export default function OrderForm() {
               <Input
                 type="number"
                 min={1}
-                max={3}
                 value={formData.quantity}
                 onChange={(e) =>
                   handleInputChange("quantity", parseInt(e.target.value) || 1)
@@ -701,10 +711,9 @@ export default function OrderForm() {
                 onClick={() =>
                   handleInputChange(
                     "quantity",
-                    Math.min(3, formData.quantity + 1),
+                    formData.quantity + 1,
                   )
                 }
-                disabled={formData.quantity >= 3}
               >
                 +
               </Button>
@@ -724,7 +733,7 @@ export default function OrderForm() {
               <p className="font-semibold">Order Summary</p>
               <p className="text-sm text-gray-600">
                 {formData.quantity}x{" "}
-                {formData.tshirtType === "polo" ? "Polo" : "Round"} Neck T-shirt
+                Round Neck T-shirt
                 ({formData.tshirtSize})
               </p>
               {formData.student === "yes" && (
@@ -755,39 +764,42 @@ export default function OrderForm() {
       {formData.student === "yes" && (
         <div className="space-y-4 border-l-4 border-blue-200 pl-4">
           <h4 className="font-semibold text-gray-800">Student Information</h4>
+          
           <div className="space-y-2">
-            <Label htmlFor="graduationYear">Graduation Year *</Label>
-            <Select
-              value={formData.graduationYear}
-              onValueChange={(value) =>
-                handleInputChange("graduationYear", value)
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select your graduation year" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="2025">2025</SelectItem>
-                <SelectItem value="2026">2026</SelectItem>
-                <SelectItem value="2027">2027</SelectItem>
-                <SelectItem value="2028">2028</SelectItem>
-                <SelectItem value="2029">2029</SelectItem>
-                <SelectItem value="2030">2030</SelectItem>
-              </SelectContent>
-            </Select>
-            {errors.graduationYear && (
-              <p className="text-red-500 text-sm">{errors.graduationYear}</p>
+            <Label htmlFor="schoolId">School ID Picture *</Label>
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+              <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+              <p className="text-sm text-gray-600 mb-2">
+                Upload a clear photo of your student ID
+              </p>
+              <Input
+                id="schoolId"
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    handleInputChange("schoolIdFile", file);
+                  }
+                }}
+                className="hidden"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => document.getElementById("schoolId")?.click()}
+              >
+                Choose File
+              </Button>
+              {formData.schoolIdFile && (
+                <p className="text-sm text-green-600 mt-2">
+                  File selected: {formData.schoolIdFile.name}
+                </p>
+              )}
+            </div>
+            {errors.schoolIdFile && (
+              <p className="text-red-500 text-sm">{errors.schoolIdFile}</p>
             )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="regNumber">Registration Number</Label>
-            <Input
-              id="regNumber"
-              value={formData.regNumber}
-              onChange={(e) => handleInputChange("regNumber", e.target.value)}
-              placeholder="e.g., H31/12345/2010"
-            />
           </div>
         </div>
       )}
@@ -849,7 +861,7 @@ export default function OrderForm() {
         <h4 className="font-semibold text-gray-800">Emergency Contact</h4>
         <div className="grid md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="nameOfKin">Next of Kin Name *</Label>
+            <Label htmlFor="nameOfKin">Next of Kin Name (Optional)</Label>
             <Input
               id="nameOfKin"
               value={formData.nameOfKin}
@@ -862,7 +874,7 @@ export default function OrderForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="kinNumber">Next of Kin Phone Number *</Label>
+            <Label htmlFor="kinNumber">Next of Kin Phone Number (Optional)</Label>
             <div className="flex">
               <span className="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-l-md">
                 +254
@@ -998,8 +1010,7 @@ export default function OrderForm() {
             </h5>
             <div className="space-y-1 text-sm">
               <p>
-                <strong>T-shirt:</strong>{" "}
-                {formData.tshirtType === "polo" ? "Polo" : "Round"} Neck
+                <strong>T-shirt:</strong> Round Neck
               </p>
               <p>
                 <strong>Size:</strong>{" "}
@@ -1062,8 +1073,7 @@ export default function OrderForm() {
             <h5 className="font-semibold text-lg">Total Amount</h5>
             <div className="text-sm text-gray-600">
               <p>
-                {formData.quantity}x{" "}
-                {formData.tshirtType === "polo" ? "Polo" : "Round"} Neck @ KES{" "}
+                {formData.quantity}x Round Neck @ KES{" "}
                 {formData.unitPrice.toLocaleString()} each
               </p>
               {formData.student === "yes" && (

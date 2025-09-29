@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 
 export function HomeHero() {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -79,23 +80,25 @@ export function HomeHero() {
           </p>
 
           <div className="mt-8 flex flex-col items-center sm:flex-row sm:items-center sm:justify-center gap-3">
-            <Button
-              size="lg"
-              className="bg-blue-800/90 hover:bg-blue-800/95 text-white font-semibold text-sm sm:text-base px-3 py-2 sm:px-6 sm:py-3 w-44 mx-auto"
-              onClick={() => scrollToSection("#join")}
-            >
-              <ArrowRight className="w-4 h-4 mr-2" />
-              Get a T-Shirt
-            </Button>
+            <Link href="/register">
+              <Button
+                size="lg"
+                className="bg-blue-800/90 hover:bg-blue-800/95 text-white font-semibold text-sm sm:text-base px-3 py-2 sm:px-6 sm:py-3 w-44 mx-auto"
+              >
+                <ArrowRight className="w-4 h-4 mr-2" />
+                Get a T-Shirt
+              </Button>
+            </Link>
 
-            <Button
-              size="lg"
-              variant="outline"
-              className="border-blue-800/60 text-blue-800/90 hover:bg-white/5 text-sm sm:text-base px-3 py-2 sm:px-6 sm:py-3 w-44 mx-auto"
-              onClick={() => scrollToSection("#story")}
-            >
-              Read Our Story
-            </Button>
+            <Link href="/about">
+              <Button
+                size="lg"
+                variant="outline"
+                className="border-blue-800/60 text-blue-800/90 hover:bg-white/5 text-sm sm:text-base px-3 py-2 sm:px-6 sm:py-3 w-44 mx-auto"
+              >
+                Read Our Story
+              </Button>
+            </Link>
           </div>
         </div>
       </div>

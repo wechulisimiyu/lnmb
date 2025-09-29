@@ -3,17 +3,17 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-export default function ShopPage() {
+export default function AboutPage() {
   const router = useRouter();
   
   useEffect(() => {
-    router.replace("/register");
+    router.replace("/story");
   }, [router]);
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center">
       <div className="text-center">
-        <p>Redirecting to registration...</p>
+        <p>Redirecting to our story...</p>
       </div>
     </div>
   );

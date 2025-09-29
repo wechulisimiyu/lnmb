@@ -25,6 +25,8 @@ export const createOrder = mutation({
     pickUp: v.optional(v.string()),
     confirm: v.string(),
     orderReference: v.string(),
+    schoolIdUrl: v.optional(v.string()),
+    schoolIdPublicId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const now = Date.now();

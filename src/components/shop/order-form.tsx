@@ -28,6 +28,7 @@ import {
   Info,
   ChevronLeft,
   ChevronRight,
+  Upload,
 } from "lucide-react";
 import { matchUniversity } from "@/lib/normalizeUniversity";
 import * as React from "react";
@@ -59,8 +60,9 @@ interface OrderFormData {
   totalAmount: number;
 
   // Step 2: Personal & Registration Details
-  graduationYear?: string;
-  regNumber?: string;
+  schoolIdFile?: File;
+  schoolIdUrl?: string;
+  schoolIdPublicId?: string;
   name: string;
   email: string;
   phone: string;
@@ -76,7 +78,6 @@ interface OrderFormData {
 
 // Pricing constants from PRD (authoritative)
 const PRICING = {
-  polo: { regular: 1500, student: 1000 },
   round: { regular: 1000, student: 600 },
 };
 
@@ -101,7 +102,7 @@ export default function OrderForm() {
   const formRef = useRef<HTMLDivElement | null>(null);
   const [formData, setFormData] = useState<OrderFormData>({
     // Step 1: Product Selection
-    tshirtType: "",
+    tshirtType: "round",
     tshirtSize: "",
     quantity: 1,
     student: "",
@@ -111,8 +112,7 @@ export default function OrderForm() {
     totalAmount: 0,
 
     // Step 2: Personal & Registration Details
-    graduationYear: "",
-    regNumber: "",
+    schoolIdFile: undefined,
     name: "",
     email: "",
     phone: "",
@@ -128,6 +128,13 @@ export default function OrderForm() {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploadingSchoolId, setIsUploadingSchoolId] = useState(false);
+  const [schoolIdUploadError, setSchoolIdUploadError] = useState<string | null>(
+    null,
+  );
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  // Maximum upload size (5MB)
+  const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
   const [universities, setUniversities] = useState<string[] | null>(null);
   const [uniQuery, setUniQuery] = useState("");
   const [uniPopoverOpen, setUniPopoverOpen] = useState(false);
@@ -176,8 +183,11 @@ export default function OrderForm() {
 
   const handleInputChange = (
     field: keyof OrderFormData,
-    value: string | number | boolean,
+    value: string | number | boolean | File,
   ) => {
+    // Auto-correct phone number format for phone and kinNumber fields
+    // Accept any UI format; normalize on validation/submit
+
     setFormData((prev) => ({ ...prev, [field]: value }));
     // Clear error when user starts typing
     if (errors[field]) {
@@ -209,12 +219,20 @@ export default function OrderForm() {
       case STEPS.PERSONAL_DETAILS:
         if (!formData.name.trim()) newErrors.name = "Name is required";
         if (!formData.email.trim()) newErrors.email = "Email is required";
-        if (!formData.phone.trim())
+        // Normalize phone for validation without mutating UI immediately
+        const normalizeKenyaPhone = (raw: string) => {
+          let s = (raw || "").replace(/\D/g, "");
+          while (s.startsWith("0")) s = s.slice(1);
+          if (s.startsWith("254")) s = s.slice(3);
+          if (s.length === 9 && s.startsWith("7")) return `254${s}`;
+          return s;
+        };
+
+        const normalizedPhone = normalizeKenyaPhone(formData.phone as string);
+
+        if (!formData.phone || !formData.phone.toString().trim())
           newErrors.phone = "Phone number is required";
-        if (!formData.nameOfKin.trim())
-          newErrors.nameOfKin = "Next of kin name is required";
-        if (!formData.kinNumber.trim())
-          newErrors.kinNumber = "Next of kin phone number is required";
+        // nameOfKin and kinNumber are now optional
         if (!formData.medicalCondition.trim())
           newErrors.medicalCondition = "Medical condition field is required";
 
@@ -224,21 +242,24 @@ export default function OrderForm() {
           newErrors.email = "Please enter a valid email address";
         }
 
-        // Phone validation (Kenyan format)
-        const phoneRegex = /^[7][0-9]{8}$/;
-        if (formData.phone && !phoneRegex.test(formData.phone)) {
+        // Phone validation (Kenyan format) using normalized 254-prefixed value
+        const phoneRegex = /^2547[0-9]{8}$/;
+        if (formData.phone && !phoneRegex.test(normalizedPhone)) {
           newErrors.phone =
-            "Please enter a valid phone number (format: 7XXXXXXXX)";
+            "Please enter a valid phone number (format: 2547XXXXXXXX)";
         }
-        if (formData.kinNumber && !phoneRegex.test(formData.kinNumber)) {
-          newErrors.kinNumber =
-            "Please enter a valid phone number (format: 7XXXXXXXX)";
+        if (formData.kinNumber) {
+          const normalizedKin = normalizeKenyaPhone(formData.kinNumber as string);
+          if (!phoneRegex.test(normalizedKin)) {
+            newErrors.kinNumber =
+              "Please enter a valid phone number (format: 2547XXXXXXXX)";
+          }
         }
 
-        // Student-specific validation
+        // Student-specific validation: accept either a selected File or an already uploaded URL
         if (formData.student === "yes") {
-          if (!formData.graduationYear)
-            newErrors.graduationYear = "Please select your graduation year";
+          if (!formData.schoolIdFile && !formData.schoolIdUrl)
+            newErrors.schoolIdFile = "Please upload your school ID picture";
         }
         break;
 
@@ -262,7 +283,10 @@ export default function OrderForm() {
           // wait for DOM update then scroll form into view
           setTimeout(() => {
             if (formRef.current) {
-              formRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+              formRef.current.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+              });
             } else {
               // fallback to top of window
               window.scrollTo({ top: 0, behavior: "smooth" });
@@ -280,7 +304,10 @@ export default function OrderForm() {
         const prev = (s - 1) as Step;
         setTimeout(() => {
           if (formRef.current) {
-            formRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+            formRef.current.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
           } else {
             window.scrollTo({ top: 0, behavior: "smooth" });
           }
@@ -364,9 +391,55 @@ export default function OrderForm() {
         }
       }
 
+      // If student uploaded a school ID file, upload it first to Cloudinary
+      let schoolIdUrl: string | undefined = undefined;
+      if (formData.schoolIdFile) {
+        try {
+          const uploadForm = new FormData();
+          uploadForm.append("file", formData.schoolIdFile);
+
+          const res = await fetch("/api/upload-school-id", {
+            method: "POST",
+            body: uploadForm,
+          });
+
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err?.error || "Upload failed");
+          }
+
+          const body = await res.json();
+          schoolIdUrl = body.url;
+        } catch (uploadError) {
+          console.error("School ID upload failed", uploadError);
+          setErrors({
+            general: "Failed to upload school ID. Please try again.",
+          });
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      // Normalize phone and kinNumber before saving order
+      const normalizeKenyaPhone = (raw: string | undefined) => {
+        if (!raw) return "";
+        let s = raw.replace(/\D/g, "");
+        while (s.startsWith("0")) s = s.slice(1);
+        if (s.startsWith("254")) s = s.slice(3);
+        return s;
+      };
+
+  const normalizedPhone = normalizeKenyaPhone(formData.phone as string);
+  const normalizedKin = normalizeKenyaPhone(formData.kinNumber as string);
+
       // Prepare order data for checkout
       const orderData = {
         ...formData,
+        phone: normalizedPhone,
+        kinNumber: normalizedKin,
+        // Remove File from the saved order; include uploaded URL if available
+        schoolIdFile: undefined,
+        schoolIdUrl,
         university: universityToSave,
         universityUserEntered: userEntered,
         orderReference,
@@ -414,7 +487,7 @@ export default function OrderForm() {
     </div>
   );
 
-  const renderProductCard = (type: "polo" | "round") => {
+  const renderProductCard = (type: "round") => {
     const pricing = PRICING[type];
     const isStudent = formData.student === "yes";
     const currentPrice = isStudent ? pricing.student : pricing.regular;
@@ -432,15 +505,13 @@ export default function OrderForm() {
         <div className="relative aspect-square mb-4">
           <Image
             src="/images/shop/lnmb-tshirt-2025.webp"
-            alt={`${type === "polo" ? "Polo" : "Round"} Neck T-shirt`}
+            alt="Round Neck T-shirt"
             fill
             className="object-cover rounded-md"
           />
         </div>
         <div className="text-center">
-          <h3 className="font-semibold text-lg mb-2">
-            {type === "polo" ? "Polo Neck" : "Round Neck"} T-shirt
-          </h3>
+          <h3 className="font-semibold text-lg mb-2">Round Neck T-shirt</h3>
           <div className="space-y-1">
             <div className="flex items-center justify-center space-x-2">
               <span className="text-xl font-bold text-blue-600">
@@ -630,8 +701,7 @@ export default function OrderForm() {
       {/* Product Selection Cards */}
       <div className="space-y-4">
         <Label className="text-base font-semibold">Choose Your T-shirt *</Label>
-        <div className="grid md:grid-cols-2 gap-6">
-          {renderProductCard("polo")}
+        <div className="grid md:grid-cols-1 gap-6 max-w-md mx-auto">
           {renderProductCard("round")}
         </div>
         {errors.tshirtType && (
@@ -644,8 +714,8 @@ export default function OrderForm() {
         <div className="grid md:grid-cols-2 gap-4 items-center">
           <div className="space-y-2">
             <Label htmlFor="tshirtSize">Size *</Label>
-            <div className="grid grid-cols-4 gap-2">
-              {["small", "medium", "large", "extra-large"].map((size) => (
+            <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+              {["XS", "S", "M", "L", "XL", "XXL", "XXXL"].map((size) => (
                 <button
                   key={size}
                   type="button"
@@ -656,7 +726,7 @@ export default function OrderForm() {
                   }`}
                   onClick={() => handleInputChange("tshirtSize", size)}
                 >
-                  {size.charAt(0).toUpperCase() + size.slice(1)}
+                  {size}
                 </button>
               ))}
             </div>
@@ -666,7 +736,7 @@ export default function OrderForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="quantity">Quantity (Max 3) *</Label>
+            <Label htmlFor="quantity">Quantity *</Label>
             <div className="flex items-center space-x-2">
               <Button
                 type="button"
@@ -688,9 +758,11 @@ export default function OrderForm() {
                 min={1}
                 max={3}
                 value={formData.quantity}
-                onChange={(e) =>
-                  handleInputChange("quantity", parseInt(e.target.value) || 1)
-                }
+                onChange={(e) => {
+                  const v = parseInt(e.target.value) || 1;
+                  const clamped = Math.min(3, Math.max(1, v));
+                  handleInputChange("quantity", clamped);
+                }}
                 className="w-20 text-center"
               />
               <Button
@@ -723,9 +795,7 @@ export default function OrderForm() {
             <div>
               <p className="font-semibold">Order Summary</p>
               <p className="text-sm text-gray-600">
-                {formData.quantity}x{" "}
-                {formData.tshirtType === "polo" ? "Polo" : "Round"} Neck T-shirt
-                ({formData.tshirtSize})
+                {formData.quantity}x Round Neck T-shirt ({formData.tshirtSize})
               </p>
               {formData.student === "yes" && (
                 <p className="text-sm text-green-600">
@@ -755,39 +825,193 @@ export default function OrderForm() {
       {formData.student === "yes" && (
         <div className="space-y-4 border-l-4 border-blue-200 pl-4">
           <h4 className="font-semibold text-gray-800">Student Information</h4>
-          <div className="space-y-2">
-            <Label htmlFor="graduationYear">Graduation Year *</Label>
-            <Select
-              value={formData.graduationYear}
-              onValueChange={(value) =>
-                handleInputChange("graduationYear", value)
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select your graduation year" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="2025">2025</SelectItem>
-                <SelectItem value="2026">2026</SelectItem>
-                <SelectItem value="2027">2027</SelectItem>
-                <SelectItem value="2028">2028</SelectItem>
-                <SelectItem value="2029">2029</SelectItem>
-                <SelectItem value="2030">2030</SelectItem>
-              </SelectContent>
-            </Select>
-            {errors.graduationYear && (
-              <p className="text-red-500 text-sm">{errors.graduationYear}</p>
-            )}
-          </div>
 
           <div className="space-y-2">
-            <Label htmlFor="regNumber">Registration Number</Label>
-            <Input
-              id="regNumber"
-              value={formData.regNumber}
-              onChange={(e) => handleInputChange("regNumber", e.target.value)}
-              placeholder="e.g., H31/12345/2010"
-            />
+            <Label htmlFor="schoolId">School ID Picture *</Label>
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+              <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+              <p className="text-sm text-gray-600 mb-2">
+                Upload a clear photo of your student ID
+              </p>
+              <Input
+                id="schoolId"
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+
+                  // Client-side file size check
+                  if (file.size > MAX_UPLOAD_BYTES) {
+                    setSchoolIdUploadError("File is too large. Maximum size is 5MB.");
+                    setIsUploadingSchoolId(false);
+                    setUploadProgress(0);
+                    // keep the selected file in state briefly so user can see name, but don't start upload
+                    handleInputChange("schoolIdFile", file);
+                    return;
+                  }
+
+                  // Start upload flow: resize client-side, then upload with XHR to show progress
+                  handleInputChange("schoolIdFile", file);
+                  setIsUploadingSchoolId(true);
+                  setSchoolIdUploadError(null);
+                  setUploadProgress(0);
+
+                  const reader = new FileReader();
+                  reader.onload = async () => {
+                    try {
+                      const img = document.createElement("img");
+                      img.src = reader.result as string;
+                      await new Promise<void>((res, rej) => {
+                        img.onload = () => res();
+                        img.onerror = () => rej(new Error("Image load error"));
+                      });
+
+                      // Resize logic: max 1200px on longest edge
+                      const maxSize = 1200;
+                      let { width, height } = img;
+                      if (width > maxSize || height > maxSize) {
+                        const ratio = width / height;
+                        if (ratio > 1) {
+                          width = maxSize;
+                          height = Math.round(maxSize / ratio);
+                        } else {
+                          height = maxSize;
+                          width = Math.round(maxSize * ratio);
+                        }
+                      }
+
+                      const canvas = document.createElement("canvas");
+                      canvas.width = width;
+                      canvas.height = height;
+                      const ctx = canvas.getContext("2d");
+                      if (!ctx) throw new Error("Canvas not supported");
+                      ctx.drawImage(img, 0, 0, width, height);
+
+                      // Convert to blob (jpeg) at 0.85 quality
+                      const blob: Blob | null = await new Promise((resolve) =>
+                        canvas.toBlob((b) => resolve(b), "image/jpeg", 0.85),
+                      );
+                      if (!blob) throw new Error("Failed to create image blob");
+
+                      // Upload via XMLHttpRequest to capture progress
+                      const form = new FormData();
+                      form.append("file", blob, file.name.replace(/\.[^.]+$/, ".jpg"));
+
+                      const xhr = new XMLHttpRequest();
+                      xhr.open("POST", "/api/upload-school-id");
+
+                      xhr.upload.onprogress = (evt) => {
+                        if (evt.lengthComputable) {
+                          const percent = Math.round((evt.loaded / evt.total) * 100);
+                          setUploadProgress(percent);
+                        }
+                      };
+
+                      xhr.onload = () => {
+                        setIsUploadingSchoolId(false);
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                          try {
+                            const body = JSON.parse(xhr.responseText);
+                            handleInputChange("schoolIdUrl", body.url);
+                            handleInputChange("schoolIdPublicId", body.public_id);
+                            // clear local File reference to avoid storing large objects in localStorage draft
+                            handleInputChange("schoolIdFile", undefined as unknown as File);
+                          } catch {
+                            setSchoolIdUploadError("Upload succeeded but response parsing failed");
+                          }
+                        } else {
+                          let errMsg = "Upload failed";
+                          try {
+                            const body = JSON.parse(xhr.responseText);
+                            errMsg = body.error || errMsg;
+                          } catch {
+                            // ignore parse errors
+                          }
+                          setSchoolIdUploadError(errMsg);
+                        }
+                      };
+
+                      xhr.onerror = () => {
+                        setIsUploadingSchoolId(false);
+                        setSchoolIdUploadError("Upload failed (network error)");
+                      };
+
+                      xhr.send(form);
+                    } catch (err) {
+                      console.error("School ID processing failed", err);
+                      setIsUploadingSchoolId(false);
+                      setSchoolIdUploadError((err as Error)?.message || "Upload failed");
+                    }
+                  };
+                  reader.readAsDataURL(file);
+                }}
+                className="hidden"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => document.getElementById("schoolId")?.click()}
+              >
+                Choose File
+              </Button>
+              {formData.schoolIdFile && (
+                <p className="text-sm text-green-600 mt-2">
+                  File selected: {formData.schoolIdFile.name}
+                </p>
+              )}
+              {formData.schoolIdUrl && (
+                <div className="mt-3 flex items-center space-x-3">
+                  <Image
+                    src={formData.schoolIdUrl as string}
+                    alt="Uploaded school ID"
+                    width={64}
+                    height={64}
+                    unoptimized
+                    className="w-16 h-16 object-cover rounded-md border"
+                  />
+                  <div className="text-sm">
+                    <p className="font-medium">School ID uploaded</p>
+                    {isUploadingSchoolId ? (
+                      <div className="space-y-1">
+                        <div className="text-xs text-gray-500">Uploading... {uploadProgress}%</div>
+                        <progress
+                          value={uploadProgress}
+                          max={100}
+                          className="w-40 h-2 rounded-full overflow-hidden"
+                        />
+                      </div>
+                    ) : schoolIdUploadError ? (
+                      <p className="text-xs text-red-500">{schoolIdUploadError}</p>
+                    ) : (
+                      <p className="text-xs text-gray-500">Tap &quot;Choose File&quot; to replace</p>
+                    )}
+                  </div>
+                </div>
+              )}
+              {/* If a file is selected but not yet uploaded (e.g., too large or waiting), show progress or message */}
+              {formData.schoolIdFile && !formData.schoolIdUrl && (
+                <div className="mt-2">
+                  {schoolIdUploadError ? (
+                    <p className="text-xs text-red-500">{schoolIdUploadError}</p>
+                  ) : isUploadingSchoolId ? (
+                    <div className="flex items-center space-x-3">
+                      <progress
+                        value={uploadProgress}
+                        max={100}
+                        className="w-40 h-2 rounded-full overflow-hidden"
+                      />
+                      <div className="text-xs text-gray-500">{uploadProgress}%</div>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-600">Selected: {formData.schoolIdFile.name}</p>
+                  )}
+                </div>
+              )}
+            </div>
+            {errors.schoolIdFile && (
+              <p className="text-red-500 text-sm">{errors.schoolIdFile}</p>
+            )}
           </div>
         </div>
       )}
@@ -849,7 +1073,7 @@ export default function OrderForm() {
         <h4 className="font-semibold text-gray-800">Emergency Contact</h4>
         <div className="grid md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="nameOfKin">Next of Kin Name *</Label>
+            <Label htmlFor="nameOfKin">Next of Kin Name (Optional)</Label>
             <Input
               id="nameOfKin"
               value={formData.nameOfKin}
@@ -862,7 +1086,9 @@ export default function OrderForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="kinNumber">Next of Kin Phone Number *</Label>
+            <Label htmlFor="kinNumber">
+              Next of Kin Phone Number (Optional)
+            </Label>
             <div className="flex">
               <span className="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-l-md">
                 +254
@@ -998,8 +1224,7 @@ export default function OrderForm() {
             </h5>
             <div className="space-y-1 text-sm">
               <p>
-                <strong>T-shirt:</strong>{" "}
-                {formData.tshirtType === "polo" ? "Polo" : "Round"} Neck
+                <strong>T-shirt:</strong> Round Neck
               </p>
               <p>
                 <strong>Size:</strong>{" "}
@@ -1062,8 +1287,7 @@ export default function OrderForm() {
             <h5 className="font-semibold text-lg">Total Amount</h5>
             <div className="text-sm text-gray-600">
               <p>
-                {formData.quantity}x{" "}
-                {formData.tshirtType === "polo" ? "Polo" : "Round"} Neck @ KES{" "}
+                {formData.quantity}x Round Neck @ KES{" "}
                 {formData.unitPrice.toLocaleString()} each
               </p>
               {formData.student === "yes" && (

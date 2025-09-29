@@ -11,15 +11,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Loader2,
-  CreditCard,
-  Smartphone,
-  ArrowLeft,
-  CheckCircle,
-} from "lucide-react";
+import { Loader2, CreditCard, ArrowLeft, CheckCircle } from "lucide-react";
 import { useMutation, useQuery, useAction } from "convex/react";
 import { api } from "../../../convex/_generated/api";
+// Label not needed here after payment selection removal
 
 interface OrderData {
   student: string;
@@ -42,6 +37,7 @@ interface OrderData {
   confirm: string;
   orderReference: string;
   paid: boolean;
+  schoolIdUrl?: string;
 }
 
 interface PaymentFormData {
@@ -71,6 +67,7 @@ export default function CheckoutPage() {
   const [error, setError] = useState<string | null>(null);
   const [paymentFormData, setPaymentFormData] =
     useState<PaymentFormData | null>(null);
+  // Single payment flow: no client selection between card and mpesa
 
   const createOrder = useMutation(api.orders.createOrder);
   const createPaymentRecord = useAction(api.orders.createPaymentRecord);
@@ -124,6 +121,7 @@ export default function CheckoutPage() {
         pickUp: orderData.pickUp,
         confirm: orderData.confirm,
         orderReference: orderData.orderReference,
+        schoolIdUrl: orderData.schoolIdUrl || undefined,
       });
 
       // Create payment record and get Jenga PGW form data
@@ -239,6 +237,9 @@ export default function CheckoutPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">
+            <p className="text-sm text-gray-600 mb-4">
+              Order Reference: {orderData?.orderReference}
+            </p>
             <Button onClick={() => router.push("/")} className="w-full">
               Return to Home
             </Button>
@@ -335,9 +336,11 @@ export default function CheckoutPage() {
                     KES {orderData.totalAmount.toLocaleString()}
                   </span>
                 </div>
-                <p className="text-sm text-gray-600 mt-2">
-                  Order Reference: {orderData.orderReference}
-                </p>
+                {paymentStatus?.status === "paid" ? (
+                  <p className="text-sm text-gray-600 mt-2">
+                    Order Reference: {orderData.orderReference}
+                  </p>
+                ) : null}
               </div>
             </CardContent>
           </Card>
@@ -353,28 +356,6 @@ export default function CheckoutPage() {
             <CardContent className="space-y-6">
               {!paymentFormData ? (
                 <>
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <div className="flex items-center space-x-3 mb-3">
-                      <Smartphone className="h-6 w-6 text-blue-600" />
-                      <span className="font-semibold">M-PESA Payment</span>
-                    </div>
-                    <p className="text-sm text-gray-700">
-                      You can pay using M-PESA STK Push or other supported
-                      payment methods.
-                    </p>
-                  </div>
-
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="flex items-center space-x-3 mb-3">
-                      <CreditCard className="h-6 w-6 text-gray-600" />
-                      <span className="font-semibold">Card Payment</span>
-                    </div>
-                    <p className="text-sm text-gray-700">
-                      Visa, Mastercard, and other supported card payments are
-                      available.
-                    </p>
-                  </div>
-
                   {error && (
                     <Alert variant="destructive">
                       <AlertDescription>{error}</AlertDescription>
@@ -389,15 +370,16 @@ export default function CheckoutPage() {
                     {isProcessing ? (
                       <>
                         <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                        Processing Payment...
+                        Processing...
                       </>
                     ) : (
-                      <>
-                        <CreditCard className="w-5 h-5 mr-2" />
-                        Proceed to Payment
-                      </>
+                      <>Pay KES {orderData.totalAmount.toLocaleString()}</>
                     )}
                   </Button>
+
+                  <p className="text-xs text-gray-500 mt-2">
+                    We&apos;ll prepare M-PESA or card payment automatically.
+                  </p>
                 </>
               ) : (
                 <>

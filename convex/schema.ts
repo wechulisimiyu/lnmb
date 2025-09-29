@@ -35,6 +35,10 @@ export default defineSchema({
 
     // Order reference for payment tracking
     orderReference: v.string(),
+    // Uploaded school ID image URL (Cloudinary)
+    schoolIdUrl: v.optional(v.string()),
+    // Cloudinary public id for the uploaded school ID (for later management)
+    schoolIdPublicId: v.optional(v.string()),
 
     // Timestamps
     createdAt: v.number(),

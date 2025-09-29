@@ -37,10 +37,7 @@ export function HomeHero() {
     return () => clearInterval(id);
   }, [slides.length]);
 
-  const scrollToSection = (href: string) => {
-    const el = document.querySelector(href);
-    if (el) el.scrollIntoView({ behavior: "smooth" });
-  };
+  // ...existing code...
 
   return (
     <section

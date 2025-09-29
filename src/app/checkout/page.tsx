@@ -44,6 +44,7 @@ interface OrderData {
   confirm: string;
   orderReference: string;
   paid: boolean;
+  schoolIdUrl?: string;
 }
 
 interface PaymentFormData {
@@ -73,7 +74,8 @@ export default function CheckoutPage() {
   const [error, setError] = useState<string | null>(null);
   const [paymentFormData, setPaymentFormData] =
     useState<PaymentFormData | null>(null);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>("mpesa");
+  const [selectedPaymentMethod, setSelectedPaymentMethod] =
+    useState<string>("mpesa");
 
   const createOrder = useMutation(api.orders.createOrder);
   const createPaymentRecord = useAction(api.orders.createPaymentRecord);
@@ -127,6 +129,7 @@ export default function CheckoutPage() {
         pickUp: orderData.pickUp,
         confirm: orderData.confirm,
         orderReference: orderData.orderReference,
+        schoolIdUrl: orderData.schoolIdUrl || undefined,
       });
 
       // Create payment record and get Jenga PGW form data
@@ -357,7 +360,9 @@ export default function CheckoutPage() {
               {!paymentFormData ? (
                 <>
                   <div className="space-y-4">
-                    <Label className="text-base font-semibold">Select Payment Method</Label>
+                    <Label className="text-base font-semibold">
+                      Select Payment Method
+                    </Label>
                     <RadioGroup
                       value={selectedPaymentMethod}
                       onValueChange={setSelectedPaymentMethod}
@@ -375,11 +380,15 @@ export default function CheckoutPage() {
                           <RadioGroupItem value="mpesa" id="mpesa" />
                           <Smartphone className="h-6 w-6 text-blue-600" />
                           <div className="flex-1">
-                            <Label htmlFor="mpesa" className="font-semibold cursor-pointer">
+                            <Label
+                              htmlFor="mpesa"
+                              className="font-semibold cursor-pointer"
+                            >
                               M-PESA Payment
                             </Label>
                             <p className="text-sm text-gray-700 mt-1">
-                              Pay using M-PESA STK Push or other mobile money methods
+                              Pay using M-PESA STK Push or other mobile money
+                              methods
                             </p>
                           </div>
                         </div>
@@ -397,11 +406,15 @@ export default function CheckoutPage() {
                           <RadioGroupItem value="card" id="card" />
                           <CreditCard className="h-6 w-6 text-gray-600" />
                           <div className="flex-1">
-                            <Label htmlFor="card" className="font-semibold cursor-pointer">
+                            <Label
+                              htmlFor="card"
+                              className="font-semibold cursor-pointer"
+                            >
                               Card Payment
                             </Label>
                             <p className="text-sm text-gray-700 mt-1">
-                              Visa, Mastercard, and other supported card payments
+                              Visa, Mastercard, and other supported card
+                              payments
                             </p>
                           </div>
                         </div>
@@ -432,7 +445,9 @@ export default function CheckoutPage() {
                         ) : (
                           <CreditCard className="w-5 h-5 mr-2" />
                         )}
-                        Proceed with {selectedPaymentMethod === "mpesa" ? "M-PESA" : "Card"} Payment
+                        Proceed with{" "}
+                        {selectedPaymentMethod === "mpesa" ? "M-PESA" : "Card"}{" "}
+                        Payment
                       </>
                     )}
                   </Button>

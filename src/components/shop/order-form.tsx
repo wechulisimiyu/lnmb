@@ -61,6 +61,8 @@ interface OrderFormData {
 
   // Step 2: Personal & Registration Details
   schoolIdFile?: File;
+  schoolIdUrl?: string;
+  schoolIdPublicId?: string;
   name: string;
   email: string;
   phone: string;
@@ -126,6 +128,13 @@ export default function OrderForm() {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploadingSchoolId, setIsUploadingSchoolId] = useState(false);
+  const [schoolIdUploadError, setSchoolIdUploadError] = useState<string | null>(
+    null,
+  );
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  // Maximum upload size (5MB)
+  const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
   const [universities, setUniversities] = useState<string[] | null>(null);
   const [uniQuery, setUniQuery] = useState("");
   const [uniPopoverOpen, setUniPopoverOpen] = useState(false);
@@ -177,21 +186,7 @@ export default function OrderForm() {
     value: string | number | boolean | File,
   ) => {
     // Auto-correct phone number format for phone and kinNumber fields
-    if ((field === "phone" || field === "kinNumber") && typeof value === "string") {
-      // Remove all non-digits
-      const digitsOnly = value.replace(/\D/g, "");
-      
-      // Handle different formats
-      if (digitsOnly.startsWith("0")) {
-        // Remove leading 0 for 0796105948 format
-        value = digitsOnly.slice(1);
-      } else if (digitsOnly.startsWith("254")) {
-        // Remove country code for +254796105948 format
-        value = digitsOnly.slice(3);
-      } else {
-        value = digitsOnly;
-      }
-    }
+    // Accept any UI format; normalize on validation/submit
 
     setFormData((prev) => ({ ...prev, [field]: value }));
     // Clear error when user starts typing
@@ -224,7 +219,18 @@ export default function OrderForm() {
       case STEPS.PERSONAL_DETAILS:
         if (!formData.name.trim()) newErrors.name = "Name is required";
         if (!formData.email.trim()) newErrors.email = "Email is required";
-        if (!formData.phone.trim())
+        // Normalize phone for validation without mutating UI immediately
+        const normalizeKenyaPhone = (raw: string) => {
+          let s = (raw || "").replace(/\D/g, "");
+          while (s.startsWith("0")) s = s.slice(1);
+          if (s.startsWith("254")) s = s.slice(3);
+          if (s.length === 9 && s.startsWith("7")) return `254${s}`;
+          return s;
+        };
+
+        const normalizedPhone = normalizeKenyaPhone(formData.phone as string);
+
+        if (!formData.phone || !formData.phone.toString().trim())
           newErrors.phone = "Phone number is required";
         // nameOfKin and kinNumber are now optional
         if (!formData.medicalCondition.trim())
@@ -236,20 +242,23 @@ export default function OrderForm() {
           newErrors.email = "Please enter a valid email address";
         }
 
-        // Phone validation (Kenyan format)
-        const phoneRegex = /^[7][0-9]{8}$/;
-        if (formData.phone && !phoneRegex.test(formData.phone)) {
+        // Phone validation (Kenyan format) using normalized 254-prefixed value
+        const phoneRegex = /^2547[0-9]{8}$/;
+        if (formData.phone && !phoneRegex.test(normalizedPhone)) {
           newErrors.phone =
-            "Please enter a valid phone number (format: 7XXXXXXXX)";
+            "Please enter a valid phone number (format: 2547XXXXXXXX)";
         }
-        if (formData.kinNumber && !phoneRegex.test(formData.kinNumber)) {
-          newErrors.kinNumber =
-            "Please enter a valid phone number (format: 7XXXXXXXX)";
+        if (formData.kinNumber) {
+          const normalizedKin = normalizeKenyaPhone(formData.kinNumber as string);
+          if (!phoneRegex.test(normalizedKin)) {
+            newErrors.kinNumber =
+              "Please enter a valid phone number (format: 2547XXXXXXXX)";
+          }
         }
 
-        // Student-specific validation
+        // Student-specific validation: accept either a selected File or an already uploaded URL
         if (formData.student === "yes") {
-          if (!formData.schoolIdFile)
+          if (!formData.schoolIdFile && !formData.schoolIdUrl)
             newErrors.schoolIdFile = "Please upload your school ID picture";
         }
         break;
@@ -274,7 +283,10 @@ export default function OrderForm() {
           // wait for DOM update then scroll form into view
           setTimeout(() => {
             if (formRef.current) {
-              formRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+              formRef.current.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+              });
             } else {
               // fallback to top of window
               window.scrollTo({ top: 0, behavior: "smooth" });
@@ -292,7 +304,10 @@ export default function OrderForm() {
         const prev = (s - 1) as Step;
         setTimeout(() => {
           if (formRef.current) {
-            formRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+            formRef.current.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
           } else {
             window.scrollTo({ top: 0, behavior: "smooth" });
           }
@@ -376,9 +391,55 @@ export default function OrderForm() {
         }
       }
 
+      // If student uploaded a school ID file, upload it first to Cloudinary
+      let schoolIdUrl: string | undefined = undefined;
+      if (formData.schoolIdFile) {
+        try {
+          const uploadForm = new FormData();
+          uploadForm.append("file", formData.schoolIdFile);
+
+          const res = await fetch("/api/upload-school-id", {
+            method: "POST",
+            body: uploadForm,
+          });
+
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err?.error || "Upload failed");
+          }
+
+          const body = await res.json();
+          schoolIdUrl = body.url;
+        } catch (uploadError) {
+          console.error("School ID upload failed", uploadError);
+          setErrors({
+            general: "Failed to upload school ID. Please try again.",
+          });
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      // Normalize phone and kinNumber before saving order
+      const normalizeKenyaPhone = (raw: string | undefined) => {
+        if (!raw) return "";
+        let s = raw.replace(/\D/g, "");
+        while (s.startsWith("0")) s = s.slice(1);
+        if (s.startsWith("254")) s = s.slice(3);
+        return s;
+      };
+
+  const normalizedPhone = normalizeKenyaPhone(formData.phone as string);
+  const normalizedKin = normalizeKenyaPhone(formData.kinNumber as string);
+
       // Prepare order data for checkout
       const orderData = {
         ...formData,
+        phone: normalizedPhone,
+        kinNumber: normalizedKin,
+        // Remove File from the saved order; include uploaded URL if available
+        schoolIdFile: undefined,
+        schoolIdUrl,
         university: universityToSave,
         universityUserEntered: userEntered,
         orderReference,
@@ -450,9 +511,7 @@ export default function OrderForm() {
           />
         </div>
         <div className="text-center">
-          <h3 className="font-semibold text-lg mb-2">
-            Round Neck T-shirt
-          </h3>
+          <h3 className="font-semibold text-lg mb-2">Round Neck T-shirt</h3>
           <div className="space-y-1">
             <div className="flex items-center justify-center space-x-2">
               <span className="text-xl font-bold text-blue-600">
@@ -697,10 +756,13 @@ export default function OrderForm() {
               <Input
                 type="number"
                 min={1}
+                max={3}
                 value={formData.quantity}
-                onChange={(e) =>
-                  handleInputChange("quantity", parseInt(e.target.value) || 1)
-                }
+                onChange={(e) => {
+                  const v = parseInt(e.target.value) || 1;
+                  const clamped = Math.min(3, Math.max(1, v));
+                  handleInputChange("quantity", clamped);
+                }}
                 className="w-20 text-center"
               />
               <Button
@@ -711,9 +773,10 @@ export default function OrderForm() {
                 onClick={() =>
                   handleInputChange(
                     "quantity",
-                    formData.quantity + 1,
+                    Math.min(3, formData.quantity + 1),
                   )
                 }
+                disabled={formData.quantity >= 3}
               >
                 +
               </Button>
@@ -732,9 +795,7 @@ export default function OrderForm() {
             <div>
               <p className="font-semibold">Order Summary</p>
               <p className="text-sm text-gray-600">
-                {formData.quantity}x{" "}
-                Round Neck T-shirt
-                ({formData.tshirtSize})
+                {formData.quantity}x Round Neck T-shirt ({formData.tshirtSize})
               </p>
               {formData.student === "yes" && (
                 <p className="text-sm text-green-600">
@@ -764,7 +825,7 @@ export default function OrderForm() {
       {formData.student === "yes" && (
         <div className="space-y-4 border-l-4 border-blue-200 pl-4">
           <h4 className="font-semibold text-gray-800">Student Information</h4>
-          
+
           <div className="space-y-2">
             <Label htmlFor="schoolId">School ID Picture *</Label>
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
@@ -778,9 +839,112 @@ export default function OrderForm() {
                 accept="image/*"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
-                  if (file) {
+                  if (!file) return;
+
+                  // Client-side file size check
+                  if (file.size > MAX_UPLOAD_BYTES) {
+                    setSchoolIdUploadError("File is too large. Maximum size is 5MB.");
+                    setIsUploadingSchoolId(false);
+                    setUploadProgress(0);
+                    // keep the selected file in state briefly so user can see name, but don't start upload
                     handleInputChange("schoolIdFile", file);
+                    return;
                   }
+
+                  // Start upload flow: resize client-side, then upload with XHR to show progress
+                  handleInputChange("schoolIdFile", file);
+                  setIsUploadingSchoolId(true);
+                  setSchoolIdUploadError(null);
+                  setUploadProgress(0);
+
+                  const reader = new FileReader();
+                  reader.onload = async () => {
+                    try {
+                      const img = document.createElement("img");
+                      img.src = reader.result as string;
+                      await new Promise<void>((res, rej) => {
+                        img.onload = () => res();
+                        img.onerror = () => rej(new Error("Image load error"));
+                      });
+
+                      // Resize logic: max 1200px on longest edge
+                      const maxSize = 1200;
+                      let { width, height } = img;
+                      if (width > maxSize || height > maxSize) {
+                        const ratio = width / height;
+                        if (ratio > 1) {
+                          width = maxSize;
+                          height = Math.round(maxSize / ratio);
+                        } else {
+                          height = maxSize;
+                          width = Math.round(maxSize * ratio);
+                        }
+                      }
+
+                      const canvas = document.createElement("canvas");
+                      canvas.width = width;
+                      canvas.height = height;
+                      const ctx = canvas.getContext("2d");
+                      if (!ctx) throw new Error("Canvas not supported");
+                      ctx.drawImage(img, 0, 0, width, height);
+
+                      // Convert to blob (jpeg) at 0.85 quality
+                      const blob: Blob | null = await new Promise((resolve) =>
+                        canvas.toBlob((b) => resolve(b), "image/jpeg", 0.85),
+                      );
+                      if (!blob) throw new Error("Failed to create image blob");
+
+                      // Upload via XMLHttpRequest to capture progress
+                      const form = new FormData();
+                      form.append("file", blob, file.name.replace(/\.[^.]+$/, ".jpg"));
+
+                      const xhr = new XMLHttpRequest();
+                      xhr.open("POST", "/api/upload-school-id");
+
+                      xhr.upload.onprogress = (evt) => {
+                        if (evt.lengthComputable) {
+                          const percent = Math.round((evt.loaded / evt.total) * 100);
+                          setUploadProgress(percent);
+                        }
+                      };
+
+                      xhr.onload = () => {
+                        setIsUploadingSchoolId(false);
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                          try {
+                            const body = JSON.parse(xhr.responseText);
+                            handleInputChange("schoolIdUrl", body.url);
+                            handleInputChange("schoolIdPublicId", body.public_id);
+                            // clear local File reference to avoid storing large objects in localStorage draft
+                            handleInputChange("schoolIdFile", undefined as unknown as File);
+                          } catch {
+                            setSchoolIdUploadError("Upload succeeded but response parsing failed");
+                          }
+                        } else {
+                          let errMsg = "Upload failed";
+                          try {
+                            const body = JSON.parse(xhr.responseText);
+                            errMsg = body.error || errMsg;
+                          } catch {
+                            // ignore parse errors
+                          }
+                          setSchoolIdUploadError(errMsg);
+                        }
+                      };
+
+                      xhr.onerror = () => {
+                        setIsUploadingSchoolId(false);
+                        setSchoolIdUploadError("Upload failed (network error)");
+                      };
+
+                      xhr.send(form);
+                    } catch (err) {
+                      console.error("School ID processing failed", err);
+                      setIsUploadingSchoolId(false);
+                      setSchoolIdUploadError((err as Error)?.message || "Upload failed");
+                    }
+                  };
+                  reader.readAsDataURL(file);
                 }}
                 className="hidden"
               />
@@ -795,6 +959,54 @@ export default function OrderForm() {
                 <p className="text-sm text-green-600 mt-2">
                   File selected: {formData.schoolIdFile.name}
                 </p>
+              )}
+              {formData.schoolIdUrl && (
+                <div className="mt-3 flex items-center space-x-3">
+                  <Image
+                    src={formData.schoolIdUrl as string}
+                    alt="Uploaded school ID"
+                    width={64}
+                    height={64}
+                    unoptimized
+                    className="w-16 h-16 object-cover rounded-md border"
+                  />
+                  <div className="text-sm">
+                    <p className="font-medium">School ID uploaded</p>
+                    {isUploadingSchoolId ? (
+                      <div className="space-y-1">
+                        <div className="text-xs text-gray-500">Uploading... {uploadProgress}%</div>
+                        <progress
+                          value={uploadProgress}
+                          max={100}
+                          className="w-40 h-2 rounded-full overflow-hidden"
+                        />
+                      </div>
+                    ) : schoolIdUploadError ? (
+                      <p className="text-xs text-red-500">{schoolIdUploadError}</p>
+                    ) : (
+                      <p className="text-xs text-gray-500">Tap &quot;Choose File&quot; to replace</p>
+                    )}
+                  </div>
+                </div>
+              )}
+              {/* If a file is selected but not yet uploaded (e.g., too large or waiting), show progress or message */}
+              {formData.schoolIdFile && !formData.schoolIdUrl && (
+                <div className="mt-2">
+                  {schoolIdUploadError ? (
+                    <p className="text-xs text-red-500">{schoolIdUploadError}</p>
+                  ) : isUploadingSchoolId ? (
+                    <div className="flex items-center space-x-3">
+                      <progress
+                        value={uploadProgress}
+                        max={100}
+                        className="w-40 h-2 rounded-full overflow-hidden"
+                      />
+                      <div className="text-xs text-gray-500">{uploadProgress}%</div>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-600">Selected: {formData.schoolIdFile.name}</p>
+                  )}
+                </div>
               )}
             </div>
             {errors.schoolIdFile && (
@@ -874,7 +1086,9 @@ export default function OrderForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="kinNumber">Next of Kin Phone Number (Optional)</Label>
+            <Label htmlFor="kinNumber">
+              Next of Kin Phone Number (Optional)
+            </Label>
             <div className="flex">
               <span className="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-l-md">
                 +254

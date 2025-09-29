@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 export default function ShopPage() {
   const router = useRouter();
-  
+
   useEffect(() => {
     router.replace("/register");
   }, [router]);

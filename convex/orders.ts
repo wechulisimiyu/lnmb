@@ -171,7 +171,7 @@ export const createPaymentRecord = action({
       customerEmail: args.customerEmail,
       customerPhone: args.customerPhone,
       countryCode: "KE",
-      callbackUrl: `${process.env.SITE_URL}/api/payment/callback`,
+      callbackUrl: `${process.env.SITE_URL}/api/pgw-webhook-4365c21f`,
       secondaryReference: args.orderReference,
       status: "pending",
       createdAt: now,

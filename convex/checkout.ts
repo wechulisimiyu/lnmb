@@ -101,7 +101,7 @@ class PaymentService {
           request.payment.details?.msisdn || request.customer.phoneNumber || "",
         date: new Date().toISOString().split("T")[0],
         callBackUrl:
-          request.payment.callbackUrl || `${siteUrl}/api/payment/callback`,
+          request.payment.callbackUrl || `${siteUrl}/api/pgw-webhook-4365c21f`,
         pushType: "STK",
       },
     };

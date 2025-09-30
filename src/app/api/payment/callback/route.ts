@@ -1,3 +1,12 @@
+/**
+ * DEPRECATED CALLBACK ENDPOINT
+ * 
+ * This endpoint is maintained for backward compatibility only.
+ * New integrations should use the secure webhook endpoint.
+ * 
+ * This endpoint will log deprecation warnings and may be removed in the future.
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "../../../../../convex/_generated/api";
@@ -53,6 +62,14 @@ function mapCallbackStatus(code: number): string {
   }
 }
 
+function logDeprecationWarning(method: string, data: any) {
+  console.warn(
+    `[DEPRECATED] /api/payment/callback ${method} endpoint is deprecated. ` +
+    `Use the secure webhook endpoint instead. ` +
+    `Reference: ${data.orderReference || data.transactionReference || "unknown"}`
+  );
+}
+
 // Handle Jenga PGW GET callback (redirect after payment)
 export async function GET(request: NextRequest) {
   try {
@@ -65,8 +82,8 @@ export async function GET(request: NextRequest) {
     const amount = searchParams.get("amount");
     const desc = searchParams.get("desc"); // Payment channel (MPESA, CARD, etc.)
     const date = searchParams.get("date");
-    // const hash = searchParams.get("hash"); // Unused for now
-    // const extraData = searchParams.get("extraData"); // Unused for now
+
+    logDeprecationWarning("GET", { orderReference, transactionId });
 
     console.log("Jenga Payment callback received:", {
       transactionId,
@@ -125,6 +142,8 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
+    logDeprecationWarning("POST", body);
+
     console.log("Payment callback POST received:", body);
 
     // Check if this is a Jenga PGW callback or legacy STK Push callback
@@ -134,11 +153,7 @@ export async function POST(request: NextRequest) {
         transactionId,
         status,
         orderReference,
-        // amount, // Unused for now
         desc,
-        // date, // Unused for now
-        // hash, // Unused for now
-        // extraData, // Unused for now
       }: JengaPaymentCallback = body;
 
       if (!orderReference) {

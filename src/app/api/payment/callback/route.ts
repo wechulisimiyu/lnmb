@@ -62,11 +62,14 @@ function mapCallbackStatus(code: number): string {
   }
 }
 
-function logDeprecationWarning(method: string, data: any) {
+function logDeprecationWarning(method: string, data: Record<string, unknown>) {
+  const ref =
+    (data && (data.orderReference || data.transactionReference)) ||
+    "unknown";
   console.warn(
     `[DEPRECATED] /api/payment/callback ${method} endpoint is deprecated. ` +
-    `Use the secure webhook endpoint instead. ` +
-    `Reference: ${data.orderReference || data.transactionReference || "unknown"}`
+      `Use the secure webhook endpoint instead. ` +
+      `Reference: ${String(ref)}`,
   );
 }
 

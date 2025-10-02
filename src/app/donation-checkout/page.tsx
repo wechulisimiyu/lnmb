@@ -62,7 +62,7 @@ export default function DonationCheckoutPage() {
 
     try {
       // Create a simplified order record for the donation
-      await createOrder({
+  await createOrder({
         student: "no",
         attending: "not-attending",
         tshirtType: "donation",
@@ -71,7 +71,8 @@ export default function DonationCheckoutPage() {
         totalAmount: donationData.totalAmount,
         name: donationData.name,
         email: donationData.email,
-        phone: donationData.phone,
+      // donationData.phone is already normalized to include country code
+      phone: donationData.phone,
         nameOfKin: "",
         kinNumber: "",
         medicalCondition: "None",
@@ -90,7 +91,8 @@ export default function DonationCheckoutPage() {
         customerFirstName: firstName,
         customerLastName: lastName,
         customerEmail: donationData.email,
-        customerPhone: `254${donationData.phone}`,
+              // donationData.phone is normalized to include the country code (254...)
+              customerPhone: donationData.phone,
         customerAddress: "Nairobi, Kenya",
         productDescription: `Donation - Leave No Medic Behind`,
       });
@@ -180,7 +182,7 @@ export default function DonationCheckoutPage() {
                   </div>
                   <div className="flex justify-between">
                     <span>Phone:</span>
-                    <span>+254{donationData.phone}</span>
+                          <span>+{donationData.phone}</span>
                   </div>
                 </div>
               </div>

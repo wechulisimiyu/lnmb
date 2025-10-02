@@ -48,15 +48,20 @@ export function verifyJengaSignature(
 /**
  * Validate required fields in callback payload
  */
-export function validateCallbackPayload(payload: any): {
+export function validateCallbackPayload(payload: unknown): {
   valid: boolean;
   missing: string[];
 } {
   const requiredFields = ["orderReference", "status"];
   const missing: string[] = [];
 
+  if (typeof payload !== "object" || payload === null) {
+    return { valid: false, missing: requiredFields };
+  }
+
+  const p = payload as Record<string, unknown>;
   for (const field of requiredFields) {
-    if (!payload[field]) {
+    if (!p[field]) {
       missing.push(field);
     }
   }
@@ -70,7 +75,7 @@ export function validateCallbackPayload(payload: any): {
 /**
  * Sanitize log data by removing sensitive information
  */
-export function sanitizeLogData(data: any): any {
+export function sanitizeLogData(data: Record<string, unknown>): Record<string, unknown> {
   const sensitiveFields = [
     "token",
     "hash",
@@ -79,15 +84,13 @@ export function sanitizeLogData(data: any): any {
     "mobileNumber",
   ];
 
-  const sanitized = { ...data };
+  const sanitized: Record<string, unknown> = { ...data };
 
   for (const field of sensitiveFields) {
     if (sanitized[field]) {
       // Keep first 4 chars for debugging, mask the rest
       const value = String(sanitized[field]);
-      sanitized[field] = value.length > 4 
-        ? `${value.substring(0, 4)}...` 
-        : "***";
+      sanitized[field] = value.length > 4 ? `${value.substring(0, 4)}...` : "***";
     }
   }
 
@@ -98,25 +101,20 @@ export function sanitizeLogData(data: any): any {
  * Security logger for payment events
  */
 export class PaymentSecurityLogger {
-  private static formatMessage(
-    level: string,
-    event: string,
-    data: any
-  ): string {
+  private static formatMessage(level: string, event: string, data: Record<string, unknown>): string {
     const timestamp = new Date().toISOString();
     const sanitized = sanitizeLogData(data);
     return `[${timestamp}] [${level}] [${event}] ${JSON.stringify(sanitized)}`;
   }
-
-  static logSecurityEvent(event: string, data: any) {
+  static logSecurityEvent(event: string, data: Record<string, unknown>) {
     console.log(this.formatMessage("SECURITY", event, data));
   }
 
-  static logSecurityError(event: string, data: any) {
+  static logSecurityError(event: string, data: Record<string, unknown>) {
     console.error(this.formatMessage("SECURITY_ERROR", event, data));
   }
 
-  static logSecurityWarning(event: string, data: any) {
+  static logSecurityWarning(event: string, data: Record<string, unknown>) {
     console.warn(this.formatMessage("SECURITY_WARNING", event, data));
   }
 }

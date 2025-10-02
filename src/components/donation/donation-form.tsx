@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import generateOrderReference from "@/lib/generateOrderReference";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -34,7 +35,17 @@ export default function DonationForm() {
   const [errors, setErrors] = useState<Partial<DonationFormData>>({});
 
   const handleInputChange = (field: keyof DonationFormData, value: string) => {
-    // Accept any UI format; we'll normalize on validate/submit
+    // For phone field, normalize live so users can type
+    if (field === "phone") {
+      let digits = value.replace(/\D/g, "");
+      if (digits.startsWith("254")) digits = digits.slice(3);
+      while (digits.startsWith("0")) digits = digits.slice(1);
+      digits = digits.slice(0, 9); // keep local part
+      setFormData((prev) => ({ ...prev, phone: digits }));
+      if (errors.phone) setErrors((prev) => ({ ...prev, phone: "" }));
+      return;
+    }
+
     setFormData((prev) => ({ ...prev, [field]: value }));
 
     // Clear errors when user starts typing
@@ -43,26 +54,22 @@ export default function DonationForm() {
     }
   };
 
+  // Reusable normalizer for Kenyan phone numbers. Returns a 254-prefixed number
+  // when the input looks like a Kenyan local number (9 digits starting with 7).
+  const normalizeKenyaPhone = (raw: string) => {
+    let s = (raw || "").replace(/\D/g, "");
+    while (s.startsWith("0")) s = s.slice(1);
+    if (s.startsWith("254")) s = s.slice(3);
+    if (s.length === 9 && s.startsWith("7")) return `254${s}`;
+    return s; // return digits-only fallback (may be validated later)
+  };
+
   const validateForm = (): boolean => {
     const newErrors: Partial<DonationFormData> = {};
 
     if (!formData.name.trim()) {
       newErrors.name = "Name is required";
     }
-
-    // Normalize phone for validation
-    const normalizeKenyaPhone = (raw: string) => {
-      let s = (raw || "").replace(/\D/g, "");
-      // strip leading zeros
-      while (s.startsWith("0")) s = s.slice(1);
-      // remove leading country code if present
-      if (s.startsWith("254")) s = s.slice(3);
-      // at this point s should be the 9-digit local number starting with 7
-      if (s.length === 9 && s.startsWith("7")) {
-        return `254${s}`;
-      }
-      return s; // return raw digits if not matching expected local format
-    };
 
     const normalizedPhone = normalizeKenyaPhone(formData.phone);
 
@@ -90,31 +97,18 @@ export default function DonationForm() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Use validateForm to populate errors and exit early if invalid
+    if (!validateForm()) return;
 
-    // Normalize phone before validating and saving
-    const normalizeKenyaPhone = (raw: string) => {
-      let s = (raw || "").replace(/\D/g, "");
-      while (s.startsWith("0")) s = s.slice(1);
-      if (s.startsWith("254")) s = s.slice(3);
-      return s;
-    };
-
+    // Build normalized full phone with country code
     const normalizedPhone = normalizeKenyaPhone(formData.phone);
 
-    // set normalized phone into formData for validation and saving
-    setFormData((prev) => ({ ...prev, phone: normalizedPhone }));
-
-    if (!validateForm()) {
-      return;
-    }
-
-    // Create donation order data similar to the t-shirt order
     const donationData = {
       name: formData.name,
       email: formData.email,
-      phone: formData.phone,
+      phone: normalizedPhone,
       totalAmount: Number(formData.amount),
-      orderReference: `DON-${Date.now()}`,
+      orderReference: generateOrderReference("DON"),
       type: "donation",
       // Add other required fields for checkout
       student: "no",
@@ -195,7 +189,7 @@ export default function DonationForm() {
                     id="phone"
                     value={formData.phone}
                     onChange={(e) => handleInputChange("phone", e.target.value)}
-                    placeholder="700568383"
+                    placeholder="700000000"
                     className="rounded-l-none"
                   />
                 </div>

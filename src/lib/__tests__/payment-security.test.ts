@@ -7,7 +7,7 @@ import crypto from "crypto";
 
 /**
  * Mock implementation of payment security functions for testing
- * (The actual implementations are in src/lib/payment-security.ts)
+ * (The actual implementations are in src/lib/paymentSecurity.ts)
  */
 
 function verifyJengaSignature(
@@ -38,7 +38,7 @@ function verifyJengaSignature(
   );
 }
 
-function validateCallbackPayload(payload: any): {
+function validateCallbackPayload(payload: Record<string, unknown>): {
   valid: boolean;
   missing: string[];
 } {
@@ -57,7 +57,7 @@ function validateCallbackPayload(payload: any): {
   };
 }
 
-function sanitizeLogData(data: any): any {
+function sanitizeLogData(data: Record<string, unknown>): Record<string, unknown> {
   const sensitiveFields = [
     "token",
     "hash",
@@ -66,7 +66,7 @@ function sanitizeLogData(data: any): any {
     "mobileNumber",
   ];
 
-  const sanitized = { ...data };
+  const sanitized: Record<string, unknown> = { ...data };
 
   for (const field of sensitiveFields) {
     if (sanitized[field]) {

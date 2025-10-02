@@ -141,7 +141,8 @@ export default function CheckoutPage() {
         customerFirstName: firstName,
         customerLastName: lastName,
         customerEmail: orderData.email,
-        customerPhone: `254${orderData.phone}`,
+        // orderData.phone is normalized and includes the country code (e.g. 2547...)
+        customerPhone: orderData.phone,
         customerAddress: "Nairobi, Kenya",
         productDescription,
       });
@@ -312,7 +313,7 @@ export default function CheckoutPage() {
                   </div>
                   <div className="flex justify-between">
                     <span>Phone:</span>
-                    <span>+254{orderData.phone}</span>
+                    <span>+{orderData.phone}</span>
                   </div>
                   {orderData.student === "yes" && (
                     <>

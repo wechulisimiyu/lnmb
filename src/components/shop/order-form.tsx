@@ -31,6 +31,7 @@ import {
   Upload,
 } from "lucide-react";
 import { matchUniversity } from "@/lib/normalizeUniversity";
+import generateOrderReference from "@/lib/generateOrderReference";
 import * as React from "react";
 import {
   Popover,
@@ -185,8 +186,18 @@ export default function OrderForm() {
     field: keyof OrderFormData,
     value: string | number | boolean | File,
   ) => {
-    // Auto-correct phone number format for phone and kinNumber fields
-    // Accept any UI format; normalize on validation/submit
+    // Live-normalize phone-like fields so users can type 070... or 2547...
+    if (field === "phone" || field === "kinNumber") {
+      if (typeof value === "string") {
+        let digits = value.replace(/\D/g, "");
+        if (digits.startsWith("254")) digits = digits.slice(3);
+        while (digits.startsWith("0")) digits = digits.slice(1);
+        digits = digits.slice(0, 9);
+        setFormData((prev) => ({ ...prev, [field]: digits }));
+        if (errors[field]) setErrors((prev) => ({ ...prev, [field]: "" }));
+        return;
+      }
+    }
 
     setFormData((prev) => ({ ...prev, [field]: value }));
     // Clear error when user starts typing
@@ -374,8 +385,8 @@ export default function OrderForm() {
     setIsSubmitting(true);
 
     try {
-      // Create order reference
-      const orderReference = `LNMB${Date.now()}${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
+  // Create order reference using shared generator
+  const orderReference = generateOrderReference("LNMB");
 
       // Try to normalize university client-side if we have the canonical list
       let universityToSave = formData.university;
@@ -426,6 +437,7 @@ export default function OrderForm() {
         let s = raw.replace(/\D/g, "");
         while (s.startsWith("0")) s = s.slice(1);
         if (s.startsWith("254")) s = s.slice(3);
+        if (s.length === 9 && s.startsWith("7")) return `254${s}`;
         return s;
       };
 

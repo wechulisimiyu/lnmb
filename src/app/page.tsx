@@ -11,7 +11,7 @@ export default function HomePage() {
     <div className="flex flex-col min-h-screen">
       <HomeHero />
       {/* <HomeMission /> */}
-      <HomeSocial />
+      {/* <HomeSocial /> */}
       {/* <HomeImpact /> */}
       {/* <HomeCTA /> */}
       {/* <HomeHighlights /> */}

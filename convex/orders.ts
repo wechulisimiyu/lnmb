@@ -77,9 +77,16 @@ export const createOrder = mutation({
       }
     }
 
+    // Server-side sanitization: ensure orderReference is alphanumeric and uppercase
+    const sanitizeReference = (ref?: string) => {
+      if (!ref) return "";
+      return ref.replace(/[^A-Z0-9]/gi, "").toUpperCase();
+    };
+
     const orderRecord = {
       ...args,
       university: normalizedUniversity,
+      orderReference: sanitizeReference(args.orderReference),
       paid: false,
       createdAt: now,
       updatedAt: now,
@@ -155,12 +162,19 @@ export const createPaymentRecord = action({
     // Generate payment token (external API call - this is why we need an action)
     const token = await generateAccessToken();
 
+    const sanitizeReference = (ref?: string) => {
+      if (!ref) return "";
+      return ref.replace(/[^A-Z0-9]/gi, "").toUpperCase();
+    };
+
+    const cleanRef = sanitizeReference(args.orderReference);
+
     const paymentData = {
       token,
       merchantCode: process.env.JENGA_MERCHANT_CODE!,
       currency: "KES",
       orderAmount: args.orderAmount,
-      orderReference: args.orderReference,
+      orderReference: cleanRef,
       productType: "Product",
       productDescription: args.productDescription,
       paymentTimeLimit: "15mins",
@@ -171,8 +185,8 @@ export const createPaymentRecord = action({
       customerEmail: args.customerEmail,
       customerPhone: args.customerPhone,
       countryCode: "KE",
-      callbackUrl: `${process.env.SITE_URL}/api/payment/callback`,
-      secondaryReference: args.orderReference,
+      callbackUrl: `${process.env.SITE_URL}/api/pgw-webhook-4365c21f`,
+      secondaryReference: cleanRef,
       status: "pending",
       createdAt: now,
       updatedAt: now,

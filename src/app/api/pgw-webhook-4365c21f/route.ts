@@ -126,8 +126,8 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get("status");
     const orderReference = searchParams.get("orderReference");
     const amount = searchParams.get("amount");
-    const desc = searchParams.get("desc");
-    const date = searchParams.get("date");
+  // const desc = searchParams.get("desc"); // not used on GET
+  // const date = searchParams.get("date"); // not used on GET
 
     PaymentSecurityLogger.logSecurityEvent("CALLBACK_GET_RECEIVED", {
       orderReference,
@@ -208,7 +208,6 @@ export async function POST(request: NextRequest) {
       status,
       orderReference,
       desc,
-      hash,
     }: JengaPaymentCallback = body;
 
     // Build callback URL for signature verification

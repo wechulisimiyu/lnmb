@@ -4,7 +4,7 @@ import HomeHero from "@/components/home/hero";
 // import HomeCTA from "@/components/home/cta"
 // HomeHighlights is intentionally not rendered on the homepage for now
 // import HomeHighlights from "@/components/home/highlights";
-import HomeSocial from "@/components/home/home-social";
+// import HomeSocial from "@/components/home/home-social";
 
 export default function HomePage() {
   return (

@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Menu, X, Heart } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import Image from "next/image";
 
 export function Navigation() {
@@ -45,12 +44,6 @@ export function Navigation() {
                 {item.label}
               </Link>
             ))}
-            <Link href="/donate">
-              <Button className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 text-sm">
-                <Heart className="w-4 h-4 mr-2" />
-                Donate
-              </Button>
-            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -77,12 +70,6 @@ export function Navigation() {
                   {item.label}
                 </Link>
               ))}
-              <Link href="/donate">
-                <Button className="bg-blue-500 hover:bg-blue-600 text-white font-semibold w-full mt-4">
-                  <Heart className="w-4 h-4 mr-2" />
-                  Donate Now
-                </Button>
-              </Link>
             </div>
           </div>
         )}

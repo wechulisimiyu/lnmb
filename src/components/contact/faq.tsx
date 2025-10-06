@@ -230,11 +230,7 @@ export function ContactFAQ() {
               <Link href="/buy-tshirt" className="underline font-medium">
                 page
               </Link>{" "}
-              to buy a t-shirt or{" "}
-              <Link href="/donate" className="underline font-medium">
-                donate
-              </Link>{" "}
-              to the fund.
+              to buy a t-shirt.
             </p>
             <p className="mt-2">
               LIPA NA MPESA PAYBILL: <b>247247</b>

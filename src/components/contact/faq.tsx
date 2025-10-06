@@ -175,18 +175,7 @@ export function ContactFAQ() {
           </AccordionTrigger>
           <AccordionContent>
             <p>
-              You can support LNMB by sending a donation of any amount to our
-              paybill number below:
-            </p>
-            <p className="mt-2">
-              LIPA NA MPESA PAYBILL: <b>247247</b>
-              <br />
-              ACC NO: <b>0170280594893</b>
-              <br />
-              ACC NAME: <b>PROF HASSAN SAIDI EDUCATION MEMORIAL FUND</b>
-            </p>
-            <p className="mt-2">
-              You can also rent a booth at a fee to be a vendor at the charity
+              You can rent a booth at a fee to be a vendor at the charity
               run. Visit{" "}
               <Link href="/vendors" className="underline font-medium">
                 here

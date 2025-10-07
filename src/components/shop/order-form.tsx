@@ -79,7 +79,7 @@ interface OrderFormData {
 
 // Pricing constants from PRD (authoritative)
 const PRICING = {
-  round: { regular: 1500, student: 850 },
+  round: { regular: 1500, student: 850 },     // updated regular and student price
 };
 
 const STEPS = {

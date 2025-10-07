@@ -630,7 +630,7 @@ export default function OrderForm() {
         {formData.student === "yes" && (
           <div className="p-3 bg-green-50 rounded-lg">
             <p className="text-green-700 text-sm">
-              🎓 Student discount activated! You save up to KES 650 per t-shirt.
+              🎓 Student discount activated! You saved up to KES 650 per t-shirt.
             </p>
           </div>
         )}

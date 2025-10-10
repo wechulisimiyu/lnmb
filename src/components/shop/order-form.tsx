@@ -231,39 +231,45 @@ export default function OrderForm() {
         if (!formData.name.trim()) newErrors.name = "Name is required";
         if (!formData.email.trim()) newErrors.email = "Email is required";
         // Normalize phone for validation without mutating UI immediately
-        const normalizeKenyaPhone = (raw: string) => {
-          let s = (raw || "").replace(/\D/g, "");
-          while (s.startsWith("0")) s = s.slice(1);
-          if (s.startsWith("254")) s = s.slice(3);
-          if (s.length === 9 && s.startsWith("7")) return `254${s}`;
-          return s;
-        };
+        const normalizeKenyaPhone = (raw: string | undefined) => {
+          if (!raw) return ""
+          const digits = (raw || "").replace(/\D/g, "")
+          // Already contains country code 254 or 257 (e.g. 2547xxxxxxxx)
+          if (digits.startsWith("254") || digits.startsWith("257")) {
+            // keep country + 9 digits if available
+            if (digits.length >= 12) return digits.slice(0, 12)
+            return digits
+          }
+          // Local numbers:
+          // 0XXXXXXXXX (10 digits) -> drop leading 0 and prefix 254
+          if (digits.length === 10 && digits.startsWith("0")) {
+            return `254${digits.slice(1)}`
+          }
+          // 9-digit local like 7XXXXXXXX or 1XXXXXXXX -> prefix 254
+          if (digits.length === 9) {
+            return `254${digits}`
+          }
+          return digits
+        }
 
-        const normalizedPhone = normalizeKenyaPhone(formData.phone as string);
+        const normalizedPhoneForValidation = normalizeKenyaPhone(formData.phone as string)
 
         if (!formData.phone || !formData.phone.toString().trim())
           newErrors.phone = "Phone number is required";
-        // nameOfKin and kinNumber are now optional
-        if (!formData.medicalCondition.trim())
-          newErrors.medicalCondition = "Medical condition field is required";
 
-        // Email validation
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (formData.email && !emailRegex.test(formData.email)) {
-          newErrors.email = "Please enter a valid email address";
-        }
+        // Accept +254 or +257 (country code) followed by 9 digits
+        const phoneRegex = /^(?:254|257)\d{9}$/;
 
-        // Phone validation (Kenyan format) using normalized 254-prefixed value
-        const phoneRegex = /^2547[0-9]{8}$/;
-        if (formData.phone && !phoneRegex.test(normalizedPhone)) {
+        if (formData.phone && !phoneRegex.test(normalizedPhoneForValidation)) {
           newErrors.phone =
-            "Please enter a valid phone number (format: 2547XXXXXXXX)";
+            "Please enter a valid phone number (examples: +254712345678, 0712345678, +257712345678)";
         }
+
         if (formData.kinNumber) {
-          const normalizedKin = normalizeKenyaPhone(formData.kinNumber as string);
+          const normalizedKin = normalizeKenyaPhone(formData.kinNumber as string)
           if (!phoneRegex.test(normalizedKin)) {
             newErrors.kinNumber =
-              "Please enter a valid phone number (format: 2547XXXXXXXX)";
+              "Please enter a valid phone number (examples: +254712345678, 0712345678)";
           }
         }
 
@@ -433,16 +439,23 @@ export default function OrderForm() {
 
       // Normalize phone and kinNumber before saving order
       const normalizeKenyaPhone = (raw: string | undefined) => {
-        if (!raw) return "";
-        let s = raw.replace(/\D/g, "");
-        while (s.startsWith("0")) s = s.slice(1);
-        if (s.startsWith("254")) s = s.slice(3);
-        if (s.length === 9 && s.startsWith("7")) return `254${s}`;
-        return s;
-      };
+        if (!raw) return ""
+        const digits = (raw || "").replace(/\D/g, "")
+        if (digits.startsWith("254") || digits.startsWith("257")) {
+          if (digits.length >= 12) return digits.slice(0, 12)
+          return digits
+        }
+        if (digits.length === 10 && digits.startsWith("0")) {
+          return `254${digits.slice(1)}`
+        }
+        if (digits.length === 9) {
+          return `254${digits}`
+        }
+        return digits
+      }
 
-  const normalizedPhone = normalizeKenyaPhone(formData.phone as string);
-  const normalizedKin = normalizeKenyaPhone(formData.kinNumber as string);
+  const normalizedPhone = normalizeKenyaPhone(formData.phone as string)
+  const normalizedKin = normalizeKenyaPhone(formData.kinNumber as string)
 
       // Prepare order data for checkout
       const orderData = {
@@ -1070,7 +1083,7 @@ export default function OrderForm() {
               id="phone"
               value={formData.phone}
               onChange={(e) => handleInputChange("phone", e.target.value)}
-              placeholder="700000000"
+              placeholder="000000000"
               className="rounded-l-none"
             />
           </div>
@@ -1109,7 +1122,7 @@ export default function OrderForm() {
                 id="kinNumber"
                 value={formData.kinNumber}
                 onChange={(e) => handleInputChange("kinNumber", e.target.value)}
-                placeholder="700000000"
+                placeholder="000000000"
                 className="rounded-l-none"
               />
             </div>

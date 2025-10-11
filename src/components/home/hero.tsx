@@ -37,8 +37,6 @@ export function HomeHero() {
     return () => clearInterval(id);
   }, [slides.length]);
 
-  // ...existing code...
-
   return (
     <section
       id="hero"
@@ -87,7 +85,7 @@ export function HomeHero() {
               </Button>
             </Link>
 
-            <Link href="/about">
+            <Link href="/story">
               <Button
                 size="lg"
                 variant="outline"

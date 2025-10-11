@@ -30,22 +30,21 @@ export function TeamMembers() {
     "2025": [],
     "2024": [],
     "2023": [
-      // Reordered to match requested priority:
-      { name: "Dr. Ruby Oswere", role: "Race Director", image: "Race Director.webp", email: "#", linkedin: "#", twitter: "#", color: "pink" },                         // 1. Race director
-      { name: "Peter Ogutu", role: "Deputy Race Director", image: "Deputy Race Director.webp", email: "#", linkedin: "#", twitter: "#", color: "orange" },             // 2. Deputy race director
-      { name: "Dr. Mwikali Wambua", role: "Publicity Lead", image: "Publicity Lead.webp", email: "#", linkedin: "#", twitter: "#", color: "purple" },                 // 3. Publicity
-      { name: "Dr. Bob Anthony", role: "Organising Lead", image: "Organising Lead.webp", email: "#", linkedin: "#", twitter: "#", color: "teal" },                    // 4. Organising lead
-      { name: "Dr. Lynn Maina", role: "Deputy Organising Lead", image: "Deputy Organising Lead.webp", email: "#", linkedin: "#", twitter: "#", color: "green" },    // 5. Deputy organising lead
-      { name: "Dr. Wechuli Simiyu", role: "ICT Lead", image: "ICT Lead.webp", email: "#", linkedin: "#", twitter: "#", color: "green" },                            // 6. ICT lead
-      { name: "Dr. Faizal Baraza", role: "Logistics Lead", image: "Logistics Lead.webp", email: "#", linkedin: "#", twitter: "#", color: "purple" },               // 7. Logistics lead
-      { name: "Dr. Taimur Khan", role: "Logistics Coordinator", image: "Logistics Coordinator.webp", email: "#", linkedin: "#", twitter: "#", color: "blue" },     // 8. Logistics coordinator
-      { name: "Dr. Sandra Lukorito", role: "Venue Manager", image: "Venue Manager.webp", email: "#", linkedin: "#", twitter: "#", color: "blue" },                  // 9. Venue manager
-      { name: "Dr. Brian Mwau", role: "Sales & Finance Coordinator", image: "Sales & Finance Coordinator.webp", email: "#", linkedin: "#", twitter: "#", color: "orange" }, // 10. Sale's coordinator
-      { name: "Keith Tongi", role: "Fitness Lead", image: "Fitness Lead.webp", email: "#", linkedin: "#", twitter: "#", color: "purple" },                         // 11. Fitness
-      { name: "Dr. Muinde Nthusi", role: "AMSUN Chairperson", image: "AMSUN Chairperson.webp", email: "#", linkedin: "#", twitter: "#", color: "blue" },           // 12. Amsun chairperson
-      { name: "Dr. Babu Abuto", role: "Treasurer", image: "Treasurer.webp", email: "#", linkedin: "#", twitter: "#", color: "green" },                              // 13. Amsun treasurer
-      { name: "Faith Kendi", role: "External Affairs", image: "External Affairs Team Leader.webp", email: "#", linkedin: "#", twitter: "#", color: "pink" },        // 14. External affairs
-      { name: "Dr. Melvin Mwenda", role: "AMSUN Organising Secretary", image: "AMSUN Organising Secretary.webp", email: "#", linkedin: "#", twitter: "#", color: "teal" } // 15. Organising secretary
+      { name: "Dr. Ruby Oswere", role: "Race Director", image: "Race Director.webp", email: "#", linkedin: "#", twitter: "#", color: "pink" },
+      { name: "Peter Ogutu", role: "Deputy Race Director", image: "Deputy Race Director.webp", email: "#", linkedin: "#", twitter: "#", color: "orange" },
+      { name: "Dr. Bob Anthony", role: "Organising Lead", image: "Organising Lead.webp", email: "#", linkedin: "#", twitter: "#", color: "teal" },
+      { name: "Dr. Lynn Maina", role: "Deputy Organising Lead", image: "Deputy Organising Lead.webp", email: "#", linkedin: "#", twitter: "#", color: "green" },
+      { name: "Keith Tongi", role: "Fitness Lead", image: "Fitness Lead.webp", email: "#", linkedin: "#", twitter: "#", color: "purple" },
+      { name: "Dr. Wechuli Simiyu", role: "ICT Lead", image: "ICT Lead.webp", email: "#", linkedin: "#", twitter: "#", color: "green" },
+      { name: "Dr. Melvin Mwenda", role: "AMSUN Organising Secretary", image: "AMSUN Organising Secretary.webp", email: "#", linkedin: "#", twitter: "#", color: "teal" },
+      { name: "Dr. Muinde Nthusi", role: "AMSUN Chairperson", image: "AMSUN Chairperson.webp", email: "#", linkedin: "#", twitter: "#", color: "blue" },
+      { name: "Dr. Babu Abuto", role: "Treasurer", image: "Treasurer.webp", email: "#", linkedin: "#", twitter: "#", color: "green" },
+      { name: "Dr. Mwikali Wambua", role: "Publicity Lead", image: "Publicity Lead.webp", email: "#", linkedin: "#", twitter: "#", color: "purple" },
+      { name: "Dr. Faizal Baraza", role: "Logistics Lead", image: "Logistics Lead.webp", email: "#", linkedin: "#", twitter: "#", color: "purple" },
+      { name: "Dr. Taimur Khan", role: "Logistics Coordinator", image: "Logistics Coordinator.webp", email: "#", linkedin: "#", twitter: "#", color: "blue" },
+      { name: "Faith Kendi", role: "External Affairs", image: "External Affairs Team Leader.webp", email: "#", linkedin: "#", twitter: "#", color: "pink" },
+      { name: "Dr. Brian Mwau", role: "Sales & Finance Coordinator", image: "Sales & Finance Coordinator.webp", email: "#", linkedin: "#", twitter: "#", color: "orange" },
+      { name: "Dr. Sandra Lukorito", role: "Venue Manager", image: "Venue Manager.webp", email: "#", linkedin: "#", twitter: "#", color: "blue" }
     ],
   };
 

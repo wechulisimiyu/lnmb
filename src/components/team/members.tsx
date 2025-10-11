@@ -52,16 +52,16 @@ export function TeamMembers() {
 
   return (
     <>
-      {/* Year Selection - Mobile Friendly */}
-      <div className="flex justify-center mb-8 sm:mb-12">
+      {/* Year Selection */}
+      <div className="flex justify-center mb-6 sm:mb-10">
         <div className="flex flex-wrap gap-2 sm:gap-3 justify-center">
           {years.map((year) => (
             <Button
               key={year}
               variant={expandedYear === year ? "default" : "outline"}
               onClick={() => setExpandedYear(expandedYear === year ? "" : year)}
-              className={`text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-3 ${
-                expandedYear === year ? "bg-blue-600 hover:bg-blue-700" : "bg-transparent"
+              className={`text-sm sm:text-base px-3 py-2 sm:px-5 sm:py-3 transition-all duration-200 ${
+                expandedYear === year ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-transparent"
               }`}
               size="sm"
             >
@@ -76,7 +76,7 @@ export function TeamMembers() {
       {expandedYear && (
         <div className="space-y-6 sm:space-y-8 mb-16">
           <div className="text-center mb-6 sm:mb-8">
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-900">{expandedYear} Team Members</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900">{expandedYear} Team Members</h2>
           </div>
 
           <div className="grid gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3">
@@ -87,47 +87,44 @@ export function TeamMembers() {
               return (
                 <div
                   key={index}
-                  className={`group relative overflow-hidden rounded-2xl ${colorClasses.bg} p-1 hover:shadow-2xl transition-all duration-300`}
+                  className={`group relative overflow-hidden rounded-2xl ${colorClasses.bg} p-1 hover:shadow-lg transition-all duration-300`}
                 >
-                  <div className="relative bg-background rounded-xl overflow-hidden h-full">
-                    <div className={`h-2 ${colorClasses.bgSolid}`}></div>
-
+                  <div className="bg-background rounded-xl overflow-hidden flex flex-col h-full">
                     {/* Profile Image */}
-                    <div className="relative">
+                    <div className="relative w-full">
                       <Image
                         src={`/images/team/2023/${member.image}`}
                         alt={member.name}
                         width={400}
                         height={400}
-                        className="w-full object-cover group-hover:scale-105 transition-transform duration-300 h-48 sm:h-56 lg:h-64"
+                        className="w-full object-cover group-hover:scale-105 transition-transform duration-300 h-56 sm:h-64 md:h-72"
                       />
                     </div>
 
-                    <div className="p-4 sm:p-6">
-                      <div className="space-y-4">
-                        <div>
-                          <h3
-                            className={`text-lg sm:text-xl font-bold text-foreground group-hover:${colorClasses.text} transition-colors`}
-                          >
-                            {member.name}
-                          </h3>
-                          <p className={`text-sm sm:text-base font-semibold ${colorClasses.text}`}>
-                            {member.role}
-                          </p>
-                        </div>
+                    {/* Info Section */}
+                    <div className="flex flex-col justify-between flex-grow p-4 sm:p-5 text-center">
+                      <div>
+                        <h3
+                          className={`text-lg sm:text-xl font-bold text-foreground group-hover:${colorClasses.text} transition-colors`}
+                        >
+                          {member.name}
+                        </h3>
+                        <p className={`text-sm sm:text-base font-semibold ${colorClasses.text}`}>
+                          {member.role}
+                        </p>
+                      </div>
 
-                        {/* Contact Actions */}
-                        <div className="flex justify-center space-x-4 pt-4 border-t border-slate-200">
-                          <a href={member.email} className="p-2 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50">
-                            <Mail className="w-4 h-4 sm:w-5 sm:h-5" />
-                          </a>
-                          <a href={member.linkedin} className="p-2 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50">
-                            <Linkedin className="w-4 h-4 sm:w-5 sm:h-5" />
-                          </a>
-                          <a href={member.twitter} className="p-2 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50">
-                            <Twitter className="w-4 h-4 sm:w-5 sm:h-5" />
-                          </a>
-                        </div>
+                      {/* Contact Icons */}
+                      <div className="flex justify-center gap-4 mt-4 border-t border-slate-200 pt-3">
+                        <a href={member.email} className="p-2 rounded-full text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition">
+                          <Mail className="w-4 h-4 sm:w-5 sm:h-5" />
+                        </a>
+                        <a href={member.linkedin} className="p-2 rounded-full text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition">
+                          <Linkedin className="w-4 h-4 sm:w-5 sm:h-5" />
+                        </a>
+                        <a href={member.twitter} className="p-2 rounded-full text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition">
+                          <Twitter className="w-4 h-4 sm:w-5 sm:h-5" />
+                        </a>
                       </div>
                     </div>
                   </div>

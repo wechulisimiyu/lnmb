@@ -63,12 +63,12 @@ export default function TallyOrderForm() {
         <CardHeader>
           <CardTitle className="text-2xl sm:text-3xl">Order Your T-shirt</CardTitle>
           <CardDescription>
-            Click the button below to open our order form and reserve your spot for the event
+            Click the button below to open our order form and reserve your spot for the run
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="bg-blue-50 p-6 rounded-lg space-y-4">
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <h3 className="font-semibold text-lg">What&apos;s Included:</h3>
               <ul className="space-y-2 text-sm text-gray-700">
                 <li className="flex items-start">
@@ -84,7 +84,7 @@ export default function TallyOrderForm() {
                   <span>Student discounts available</span>
                 </li>
               </ul>
-            </div>
+            </div> */}
             
             <div className="space-y-2">
               <h4 className="font-semibold">Pricing:</h4>
@@ -104,9 +104,9 @@ export default function TallyOrderForm() {
             Open Order Form
           </Button>
 
-          <p className="text-center text-sm text-gray-600">
+          {/* <p className="text-center text-sm text-gray-600">
             Secure payment processing • Fast checkout
-          </p>
+          </p> */}
         </CardContent>
       </Card>
     </div>

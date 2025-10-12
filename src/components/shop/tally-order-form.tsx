@@ -48,9 +48,7 @@ export default function TallyOrderForm() {
     
     if (typeof win.Tally !== "undefined" && win.Tally.openPopup) {
       // Open the Tally popup form for order
-      // TODO: Replace with your actual Tally form ID for the order form
-      // The current ID is a placeholder - update with the correct order form ID
-      win.Tally.openPopup("woJ22M", {
+      win.Tally.openPopup("3xOB5J", {
         layout: "modal",
         width: 700,
       });

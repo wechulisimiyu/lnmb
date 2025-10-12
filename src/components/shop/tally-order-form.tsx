@@ -47,12 +47,12 @@ export default function TallyOrderForm() {
     const win = window as WindowWithTally;
     
     if (typeof win.Tally !== "undefined" && win.Tally.openPopup) {
-      // Open the Tally popup form
-      // Note: Replace 'woJ22M' with your actual Tally form ID for the order form
+      // Open the Tally popup form for order
+      // TODO: Replace with your actual Tally form ID for the order form
+      // The current ID is a placeholder - update with the correct order form ID
       win.Tally.openPopup("woJ22M", {
         layout: "modal",
         width: 700,
-        autoClose: 3000,
       });
     } else {
       console.error("Tally is not loaded yet");

@@ -1,104 +1,244 @@
-# LNMB Charity Run Registration Flow - Implementation Summary
+# Implementation Summary: Webhook Error Handling & Sentry Integration
 
-## ✅ Completed Features
+## Changes Overview
 
-### 1. Enhanced Student Pricing System
+This implementation addresses the requirements from the problem statement:
 
-- **Dynamic Price Updates**: Real-time price changes when student toggle is enabled
-- **Student Discounts**:
-  - Polo T-shirt: KES 1,500 → KES 1,000 (Save KES 500)
-  - Round Neck T-shirt: KES 1,200 → KES 600 (Save KES 600)
-- **Visual Indicators**: Crossed-out original prices with green "Student Discount" badges
-- **Savings Display**: Shows exact savings amount per item
+1. ✅ Fixed deprecated callback functions
+2. ✅ Moved Jenga to use secure webhook path at all times
+3. ✅ Avoided throwing when payment is missing (log and return 200 or redirect)
+4. ✅ Added unit/integration tests that simulate production payloads
+5. ✅ Set up Sentry for Next.js with comprehensive logging and tracing
 
-### 2. University Selection System
+## Key Changes
 
-- **Lazy Loading**: Universities JSON only loaded when student toggle is enabled
-- **Searchable Combobox**: Type-ahead search through 29 Kenyan universities
-- **Manual Entry Fallback**: "My university isn't listed" option with free-text input
-- **Data Normalization**:
-  - Canonical selections: stored as-is
-  - Manual entries: stored as `Other: <user input>`
-- **Validation**: University selection required when student status is enabled
+### 1. Deprecated Callback Endpoint (`/api/payment/callback`)
 
-### 3. Cart Integration
+**Before:**
+- Attempted to process payments directly
+- Threw errors on missing data
+- No backward compatibility path
 
-- **Student Flag**: Cart items remember student status
-- **University Data**: University information persisted with cart items
-- **Price Consistency**: Student prices maintained throughout cart flow
+**After:**
+- Forwards all POST requests to secure webhook `/api/pgw-webhook-4365c21f`
+- Redirects all GET requests to secure webhook
+- Returns 200 status even on errors to prevent Jenga retries
+- Logs deprecation warnings using Sentry structured logging
+- Gracefully handles missing payment data
 
-### 4. Form Integration
-
-- **Order Form**: Already supports graduation year and registration number for students
-- **Validation**: Proper validation for student-specific required fields
-- **Server Integration**: Convex mutations handle university normalization server-side
-
-## 🧪 Testing Results
-
-### Pricing Logic Tests
-
-```
-✅ Polo regular price: 1500 (expected: 1500)
-✅ Round regular price: 1200 (expected: 1200)
-✅ Polo student price: 1000 (expected: 1000)
-✅ Round student price: 600 (expected: 600)
-✅ Polo savings: 500 (expected: 500)
-✅ Round savings: 600 (expected: 600)
-✅ Max savings: 600 (expected: 600)
+**Code:**
+```typescript
+// Always returns 200, never throws
+return NextResponse.json(
+  {
+    success: false,
+    message: "Callback received but processing failed",
+    error: error instanceof Error ? error.message : "Unknown error",
+  },
+  { status: 200 }
+);
 ```
 
-### University Normalization Tests
+### 2. Secure Webhook Endpoint (`/api/pgw-webhook-4365c21f`)
 
+**Enhancements:**
+- Added Sentry tracing for all requests
+- Checks if payment record exists before processing
+- Returns 200 even on validation/auth failures
+- Captures all errors with Sentry including context
+- Uses structured logging throughout
+
+**Error Handling:**
+```typescript
+// Return 200 to prevent retries even for invalid payloads
+if (!validation.valid) {
+  logger.warn("Invalid webhook payload", { missing: validation.missing });
+  return NextResponse.json(
+    { error: "Invalid payload", missing: validation.missing },
+    { status: 200 }
+  );
+}
 ```
-✅ All normalization tests passed.
+
+**Payment Record Check:**
+```typescript
+// Gracefully handle missing payment records
+if (!paymentExists) {
+  logger.warn("Payment record not found for order reference", {
+    orderReference,
+    status,
+    transactionId,
+  });
+  
+  return NextResponse.json(
+    {
+      success: true,
+      message: "Payment record not found - may arrive later",
+      orderReference,
+    },
+    { status: 200 }
+  );
+}
 ```
 
-## 📋 Key Implementation Details
+### 3. Integration Tests
 
-### Products Component (`src/components/shop/products.tsx`)
+**Location:** `src/app/api/pgw-webhook-4365c21f/__tests__/webhook.test.ts`
 
-- Added `studentPrice` property to product definitions
-- Implemented `getProductPrice()` and `formatPriceDisplay()` helper functions
-- Enhanced UI with price breakdown and savings indicators
-- Added validation preventing cart addition without university selection
-- Integrated university combobox with lazy-loaded canonical list
+**Test Coverage:**
+- ✅ Valid webhook payload generation
+- ✅ Hash verification
+- ✅ Different payment statuses (paid, pending, failed)
+- ✅ Hash tampering detection (amount, order reference)
+- ✅ Payload validation
+- ✅ Idempotency key generation
+- ✅ Production-like payload simulation
 
-### University Data (`src/data/universities.json`)
+**Test Results:**
+```
+✓ src/app/api/pgw-webhook-4365c21f/__tests__/webhook.test.ts (14 tests)
+  ✓ Webhook Payload Generation (3 tests)
+  ✓ Production Payload Simulation (4 tests)
+  ✓ Hash Tampering Detection (2 tests)
+  ✓ Payload Validation (2 tests)
+  ✓ Idempotency Key Generation (3 tests)
+```
 
-- 29 canonical Kenyan universities and training institutions
-- Includes KMTC and other medical/technical institutions
-- Supports aliases and normalization for common variations
+### 4. Sentry Integration
 
-### Server-Side Integration (`convex/orders.ts`)
+**Configuration Files Created:**
+- `instrumentation.ts` - Loads Sentry before app starts
+- `sentry.client.config.ts` - Browser-side configuration
+- `sentry.server.config.ts` - Server-side configuration
+- `sentry.edge.config.ts` - Edge runtime configuration
 
-- Server re-normalizes university names on order creation
-- Handles canonical matching and `Other: <input>` fallback
-- Maintains data consistency between client and server
+**Features Enabled:**
+- ✅ Automatic exception capture
+- ✅ Performance monitoring with spans
+- ✅ Structured logging with Sentry logger
+- ✅ Console logging integration
+- ✅ Error context and tags
+- ✅ Sensitive data sanitization
 
-## 🎯 User Experience Flow
+**PaymentSecurityLogger Enhancement:**
+```typescript
+export class PaymentSecurityLogger {
+  private static logger = Sentry.logger;
+  
+  static logSecurityError(event: string, data: Record<string, unknown>) {
+    const sanitized = sanitizeLogData(data);
+    this.logger.error(this.logger.fmt`[SECURITY_ERROR] ${event}`, sanitized);
+    
+    // Capture as Sentry exception for alerting
+    Sentry.captureException(new Error(`Security Error: ${event}`), {
+      tags: { type: "security_error", event },
+      extra: sanitized,
+    });
+  }
+}
+```
 
-1. **Product Selection**: Users see regular prices initially
-2. **Student Toggle**: Checking "I am a student" shows discounted prices immediately
-3. **University Selection**: Required combobox appears with search functionality
-4. **Price Feedback**: Real-time display of savings and discount badges
-5. **Validation**: Cannot add to cart without university selection (for students)
-6. **Cart Integration**: Student pricing and university data preserved
+**Checkout Flow Tracing:**
+```typescript
+const handleProcessPayment = async () => {
+  return Sentry.startSpan(
+    {
+      op: "ui.action",
+      name: "Process Payment",
+    },
+    async (span) => {
+      span.setAttribute("orderReference", orderData.orderReference);
+      span.setAttribute("totalAmount", orderData.totalAmount);
+      
+      // Payment processing logic
+      
+      span.setAttribute("success", true);
+    }
+  );
+};
+```
 
-## ✅ PRD Requirements Met
+### 5. Documentation
 
-- ✅ Progressive disclosure (student fields only shown when relevant)
-- ✅ Immediate feedback (real-time price updates and validation)
-- ✅ Mobile-first design (maintained existing responsive layout)
-- ✅ Error prevention (validation before cart addition)
-- ✅ Transparency (clear pricing breakdown and savings display)
-- ✅ University normalization (client and server-side)
-- ✅ Student pricing structure as specified in PRD
+**Created:**
+- `docs/SENTRY_SETUP.md` - Comprehensive Sentry setup guide including:
+  - Configuration overview
+  - Usage examples (exceptions, tracing, logging)
+  - Implementation details
+  - Testing instructions
+  - Best practices
+  - Troubleshooting
 
-## 📊 Implementation Status
+## Testing Instructions
 
-**Phase 1**: ✅ Complete - Enhanced Product Selection & Pricing  
-**Phase 2**: ✅ Complete - Registration Form (was already implemented)  
-**Phase 3**: ✅ Complete - Server-Side Integration (was already implemented)  
-**Phase 4**: ⏳ Pending - End-to-end testing (requires environment setup)
+### Run Tests
+```bash
+npm test
+```
 
-The core functionality specified in the PRD has been successfully implemented with all acceptance criteria met.
+### Expected Results
+- All 14 webhook integration tests should pass
+- Pre-existing test failures are unrelated to this implementation
+
+### Manual Testing
+
+1. **Test Deprecated Callback:**
+   ```bash
+   curl -X POST http://localhost:3000/api/payment/callback \
+     -H "Content-Type: application/json" \
+     -d '{"orderReference":"ORD123","status":"paid"}'
+   ```
+   Expected: Returns 200, forwards to secure webhook
+
+2. **Test Secure Webhook:**
+   ```bash
+   curl -X POST http://localhost:3000/api/pgw-webhook-4365c21f \
+     -H "Content-Type: application/json" \
+     -d '{"orderReference":"ORD123","status":"paid","hash":"abc123"}'
+   ```
+   Expected: Returns 200 with validation message
+
+## Migration Notes
+
+### For Existing Integrations
+
+1. **No immediate action required** - deprecated callback still works
+2. **Recommended:** Update webhook URL to `/api/pgw-webhook-4365c21f`
+3. **Ensure:** Signature generation is enabled in Jenga dashboard
+
+### Environment Variables
+
+No new required environment variables. Optional:
+- `SENTRY_ENVIRONMENT` - Set environment name
+- `SENTRY_RELEASE` - Set release version
+
+## Benefits
+
+1. **Reliability:** No more failed webhooks due to errors
+2. **Observability:** Complete visibility into payment flow with Sentry
+3. **Security:** Sensitive data automatically sanitized
+4. **Testing:** Comprehensive test coverage for webhook handling
+5. **Maintainability:** Clear separation between deprecated and current endpoints
+
+## Next Steps
+
+1. Monitor Sentry dashboard for any issues
+2. Consider removing deprecated endpoint after migration period
+3. Adjust Sentry sample rates based on traffic volume
+4. Add custom alerts for critical payment errors
+
+## Files Changed
+
+- `src/app/api/payment/callback/route.ts` - Deprecated endpoint
+- `src/app/api/pgw-webhook-4365c21f/route.ts` - Secure webhook
+- `src/lib/paymentSecurity.ts` - Security logger with Sentry
+- `src/app/checkout/page.tsx` - Checkout flow tracing
+- `next.config.ts` - Sentry integration
+- `instrumentation.ts` - Sentry initialization
+- `sentry.client.config.ts` - Client config
+- `sentry.server.config.ts` - Server config
+- `sentry.edge.config.ts` - Edge config
+- `vitest.config.ts` - Test configuration
+- `src/app/api/pgw-webhook-4365c21f/__tests__/webhook.test.ts` - Tests
+- `docs/SENTRY_SETUP.md` - Documentation
+- `package.json` - Added @sentry/nextjs dependency

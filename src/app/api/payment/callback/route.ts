@@ -199,31 +199,14 @@ export async function POST(request: NextRequest) {
 
       const status = mapCallbackStatus(stkBody.code);
 
-      // Try to update using the old checkout API if it exists, otherwise use orders API
-      try {
-        // Check if checkout API exists first
-        if (typeof api.checkout?.handlePaymentCallback !== "undefined") {
-          await convex.mutation(api.checkout.handlePaymentCallback, {
-            transactionId:
-              stkBody.telcoReference || stkBody.transactionReference,
-            status,
-            orderReference: stkBody.transactionReference,
-            amount: stkBody.requestAmount?.toString(),
-            desc: `${stkBody.telco} - ${stkBody.message}`,
-          });
-        } else {
-          throw new Error("Checkout API not available, using orders API");
-        }
-      } catch (error) {
-        // Fallback to orders API
-        console.log("Fallback to orders API due to:", error);
-        await convex.mutation(api.orders.updatePaymentStatus, {
-          orderReference: stkBody.transactionReference,
-          status,
-          transactionId: stkBody.telcoReference || stkBody.transactionReference,
-          paymentChannel: stkBody.telco,
-        });
-      }
+      // Update using the Orders API directly. Convex-side checkout handlers are
+      // deprecated; use orders.updatePaymentStatus for all callback updates.
+      await convex.mutation(api.orders.updatePaymentStatus, {
+        orderReference: stkBody.transactionReference,
+        status,
+        transactionId: stkBody.telcoReference || stkBody.transactionReference,
+        paymentChannel: stkBody.telco,
+      });
 
       return NextResponse.json({
         success: true,

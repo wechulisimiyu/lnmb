@@ -58,6 +58,7 @@ interface PaymentFormData {
   callbackUrl: string;
   countryCode: string;
   secondaryReference: string;
+  signature?: string;
 }
 
 export default function CheckoutPage() {
@@ -164,9 +165,10 @@ export default function CheckoutPage() {
     if (!paymentFormData || !orderData) return;
 
     // Create a form and submit to Jenga PGW
-    const form = document.createElement("form");
-    form.method = "POST";
-    form.action = "https://v3-uat.jengapgw.io/processPayment";
+  const form = document.createElement("form");
+  form.method = "POST";
+  // Allow override of Jenga process URL via public env var
+  form.action = (process.env.NEXT_PUBLIC_JENGA_PROCESS_URL as string) || "https://v3-uat.jengapgw.io/processPayment";
 
     const fields: Record<string, string> = {
       token: paymentFormData.token,
@@ -195,6 +197,15 @@ export default function CheckoutPage() {
       input.value = String(value);
       form.appendChild(input);
     });
+
+    // Include signature if present in payment data
+    if (paymentFormData.signature) {
+      const sig = document.createElement("input");
+      sig.type = "hidden";
+      sig.name = "signature";
+      sig.value = String(paymentFormData.signature);
+      form.appendChild(sig);
+    }
 
     document.body.appendChild(form);
     form.submit();

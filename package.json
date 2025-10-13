@@ -9,6 +9,8 @@
     "lint": "eslint",
     "format": "prettier --write .",
     "test": "vitest --environment=node",
+    "test:backend": "vitest --config vitest.config.ts",
+    "sign:test": "node -r ts-node/register scripts/test-signing.ts",
     "test:unit": "node -r ts-node/register src/lib/__tests__/normalizeRunner.ts"
   },
   "dependencies": {

@@ -28,6 +28,7 @@ yarn.lock           # yarn lockfile - ignored
 # misc
 .DS_Store
 *.pem
+*.pem.base64
 
 # debug
 npm-debug.log*

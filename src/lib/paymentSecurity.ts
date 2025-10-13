@@ -4,6 +4,7 @@
  */
 
 import crypto from "crypto";
+import * as Sentry from "@sentry/nextjs";
 
 /**
  * Verify Jenga PGW callback signature
@@ -99,22 +100,43 @@ export function sanitizeLogData(data: Record<string, unknown>): Record<string, u
 
 /**
  * Security logger for payment events
+ * Uses Sentry's structured logging for better observability
  */
 export class PaymentSecurityLogger {
+  private static logger = Sentry.logger;
+
   private static formatMessage(level: string, event: string, data: Record<string, unknown>): string {
     const timestamp = new Date().toISOString();
     const sanitized = sanitizeLogData(data);
     return `[${timestamp}] [${level}] [${event}] ${JSON.stringify(sanitized)}`;
   }
+  
   static logSecurityEvent(event: string, data: Record<string, unknown>) {
+    const sanitized = sanitizeLogData(data);
+    this.logger.info(this.logger.fmt`[SECURITY] ${event}`, sanitized);
+    // Also log to console for compatibility
     console.log(this.formatMessage("SECURITY", event, data));
   }
 
   static logSecurityError(event: string, data: Record<string, unknown>) {
+    const sanitized = sanitizeLogData(data);
+    this.logger.error(this.logger.fmt`[SECURITY_ERROR] ${event}`, sanitized);
+    // Capture as Sentry exception for alerting
+    Sentry.captureException(new Error(`Security Error: ${event}`), {
+      tags: {
+        type: "security_error",
+        event,
+      },
+      extra: sanitized,
+    });
+    // Also log to console for compatibility
     console.error(this.formatMessage("SECURITY_ERROR", event, data));
   }
 
   static logSecurityWarning(event: string, data: Record<string, unknown>) {
+    const sanitized = sanitizeLogData(data);
+    this.logger.warn(this.logger.fmt`[SECURITY_WARNING] ${event}`, sanitized);
+    // Also log to console for compatibility
     console.warn(this.formatMessage("SECURITY_WARNING", event, data));
   }
 }

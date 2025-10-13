@@ -58,6 +58,7 @@ interface PaymentFormData {
   callbackUrl: string;
   countryCode: string;
   secondaryReference: string;
+  signature?: string;
 }
 
 export default function CheckoutPage() {
@@ -198,11 +199,11 @@ export default function CheckoutPage() {
     });
 
     // Include signature if present in payment data
-    if ((paymentFormData as any).signature) {
+    if (paymentFormData.signature) {
       const sig = document.createElement("input");
       sig.type = "hidden";
       sig.name = "signature";
-      sig.value = String((paymentFormData as any).signature);
+      sig.value = String(paymentFormData.signature);
       form.appendChild(sig);
     }
 

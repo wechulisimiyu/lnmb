@@ -2,222 +2,157 @@
  * DEPRECATED CALLBACK ENDPOINT
  * 
  * This endpoint is maintained for backward compatibility only.
- * New integrations should use the secure webhook endpoint.
+ * New integrations should use the secure webhook endpoint at /api/pgw-webhook-4365c21f
  * 
- * This endpoint will log deprecation warnings and may be removed in the future.
+ * This endpoint redirects to the secure webhook for POST requests
+ * and handles GET requests as user redirects only.
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { ConvexHttpClient } from "convex/browser";
-import { api } from "../../../../../convex/_generated/api";
+import * as Sentry from "@sentry/nextjs";
 
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-
-// Jenga PGW callback interface
-interface JengaPaymentCallback {
-  transactionId?: string;
-  status?: string;
-  date?: string;
-  desc?: string; // Payment channel (CARD, EQUITEL, MPESA, AIRTEL)
-  amount?: string;
-  orderReference?: string;
-  hash?: string;
-  extraData?: string;
-}
-
-// Legacy STK Push callback interface (keeping for backward compatibility)
-interface STKPushCallback {
-  status: boolean;
-  code: number;
-  message: string;
-  transactionReference: string;
-  telcoReference: string;
-  mobileNumber: string;
-  currency: string;
-  requestAmount: number;
-  debitedAmount: number;
-  charge: number;
-  telco: string;
-}
-
-function mapCallbackStatus(code: number): string {
-  switch (code) {
-    case 0:
-      return "pending";
-    case 1:
-      return "failed";
-    case 2:
-      return "awaiting_settlement";
-    case 3:
-      return "paid"; // COMPLETED/CREDITED
-    case 4:
-      return "awaiting_settlement";
-    case 5:
-    case 6:
-      return "cancelled";
-    case 7:
-      return "failed"; // REJECTED
-    default:
-      return "failed";
-  }
-}
+const { logger } = Sentry;
 
 function logDeprecationWarning(method: string, data: Record<string, unknown>) {
   const ref =
     (data && (data.orderReference || data.transactionReference)) ||
     "unknown";
-  console.warn(
-    `[DEPRECATED] /api/payment/callback ${method} endpoint is deprecated. ` +
-      `Use the secure webhook endpoint instead. ` +
-      `Reference: ${String(ref)}`,
-  );
+  
+  logger.warn(logger.fmt`[DEPRECATED] /api/payment/callback ${method} endpoint is deprecated. Use /api/pgw-webhook-4365c21f instead`, {
+    method,
+    reference: String(ref),
+    endpoint: "/api/payment/callback",
+  });
 }
 
 // Handle Jenga PGW GET callback (redirect after payment)
+// GET requests are user redirects - forward them to the secure webhook endpoint
 export async function GET(request: NextRequest) {
-  try {
-    const searchParams = request.nextUrl.searchParams;
+  return Sentry.startSpan(
+    {
+      op: "http.server",
+      name: "GET /api/payment/callback (deprecated)",
+    },
+    async () => {
+      try {
+        const searchParams = request.nextUrl.searchParams;
+        
+        // Extract payment response parameters from Jenga PGW
+        const orderReference = searchParams.get("orderReference");
+        const transactionId = searchParams.get("transactionId");
 
-    // Extract payment response parameters from Jenga PGW
-    const transactionId = searchParams.get("transactionId");
-    const status = searchParams.get("status");
-    const orderReference = searchParams.get("orderReference");
-    const amount = searchParams.get("amount");
-    const desc = searchParams.get("desc"); // Payment channel (MPESA, CARD, etc.)
-    const date = searchParams.get("date");
+        logDeprecationWarning("GET", { orderReference, transactionId });
 
-    logDeprecationWarning("GET", { orderReference, transactionId });
+        // Build the secure webhook URL with all parameters
+        const secureWebhookUrl = new URL(
+          "/api/pgw-webhook-4365c21f",
+          request.url
+        );
+        
+        // Copy all search parameters to the secure webhook
+        searchParams.forEach((value, key) => {
+          secureWebhookUrl.searchParams.set(key, value);
+        });
 
-    console.log("Jenga Payment callback received:", {
-      transactionId,
-      status,
-      orderReference,
-      amount,
-      desc,
-      date,
-    });
+        logger.info("Redirecting deprecated GET callback to secure webhook", {
+          orderReference,
+          transactionId,
+          targetUrl: "/api/pgw-webhook-4365c21f",
+        });
 
-    if (!orderReference) {
-      return NextResponse.json(
-        { error: "Missing order reference" },
-        { status: 400 },
-      );
+        // Forward to the secure webhook endpoint
+        return NextResponse.redirect(secureWebhookUrl);
+      } catch (error) {
+        Sentry.captureException(error, {
+          tags: {
+            endpoint: "/api/payment/callback",
+            method: "GET",
+          },
+        });
+
+        logger.error("Error processing deprecated payment callback", {
+          error: error instanceof Error ? error.message : "Unknown error",
+        });
+
+        // Don't fail the user experience - redirect to result page with error
+        const redirectUrl = new URL("/checkout/result", request.url);
+        redirectUrl.searchParams.set("status", "error");
+        redirectUrl.searchParams.set("message", "Payment processing failed");
+
+        return NextResponse.redirect(redirectUrl);
+      }
     }
-
-    // Map Jenga status to our system status
-    let paymentStatus = "failed";
-    if (status === "paid") {
-      paymentStatus = "paid";
-    } else if (status === "pending") {
-      paymentStatus = "processing";
-    }
-
-    // Update payment status in Convex
-    await convex.mutation(api.orders.updatePaymentStatus, {
-      orderReference,
-      status: paymentStatus,
-      transactionId: transactionId || undefined,
-      paymentChannel: desc || undefined,
-    });
-
-    // Redirect user based on payment status
-    const redirectUrl = new URL("/checkout/result", request.url);
-    redirectUrl.searchParams.set("status", paymentStatus);
-    redirectUrl.searchParams.set("reference", orderReference);
-
-    if (transactionId) {
-      redirectUrl.searchParams.set("transactionId", transactionId);
-    }
-
-    return NextResponse.redirect(redirectUrl);
-  } catch (error) {
-    console.error("Error processing Jenga payment callback:", error);
-
-    const redirectUrl = new URL("/checkout/result", request.url);
-    redirectUrl.searchParams.set("status", "error");
-    redirectUrl.searchParams.set("message", "Payment processing failed");
-
-    return NextResponse.redirect(redirectUrl);
-  }
+  );
 }
 
+// Handle POST callback - forward to secure webhook endpoint
 export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
+  return Sentry.startSpan(
+    {
+      op: "http.server",
+      name: "POST /api/payment/callback (deprecated)",
+    },
+    async () => {
+      try {
+        const body = await request.json();
 
-    logDeprecationWarning("POST", body);
+        logDeprecationWarning("POST", body);
 
-    console.log("Payment callback POST received:", body);
+        logger.info("Forwarding deprecated POST callback to secure webhook", {
+          hasOrderReference: !!body.orderReference,
+          hasTransactionId: !!body.transactionId,
+        });
 
-    // Check if this is a Jenga PGW callback or legacy STK Push callback
-    if (body.orderReference || body.transactionId) {
-      // Handle Jenga PGW POST callback
-      const {
-        transactionId,
-        status,
-        orderReference,
-        desc,
-      }: JengaPaymentCallback = body;
+        // Forward to the secure webhook endpoint
+        const secureWebhookUrl = new URL(
+          "/api/pgw-webhook-4365c21f",
+          request.url
+        );
 
-      if (!orderReference) {
+        const response = await fetch(secureWebhookUrl.toString(), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Forwarded-From": "/api/payment/callback",
+          },
+          body: JSON.stringify(body),
+        });
+
+        const responseData = await response.json();
+
+        // Always return 200 to Jenga to acknowledge receipt
+        // even if processing fails - this prevents retries
         return NextResponse.json(
-          { error: "Missing order reference" },
-          { status: 400 },
+          {
+            success: true,
+            message: "Callback forwarded to secure webhook",
+            ...responseData,
+          },
+          { status: 200 }
+        );
+      } catch (error) {
+        Sentry.captureException(error, {
+          tags: {
+            endpoint: "/api/payment/callback",
+            method: "POST",
+          },
+        });
+
+        logger.error("Error forwarding deprecated payment callback", {
+          error: error instanceof Error ? error.message : "Unknown error",
+        });
+
+        // Return 200 even on error to prevent Jenga retries
+        // Log the error but don't fail the request
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Callback received but processing failed",
+            error: error instanceof Error ? error.message : "Unknown error",
+          },
+          { status: 200 }
         );
       }
-
-      // Map Jenga status to our system status
-      let paymentStatus = "failed";
-      if (status === "paid") {
-        paymentStatus = "paid";
-      } else if (status === "pending") {
-        paymentStatus = "processing";
-      }
-
-      // Update payment status in Convex
-      await convex.mutation(api.orders.updatePaymentStatus, {
-        orderReference,
-        status: paymentStatus,
-        transactionId: transactionId || undefined,
-        paymentChannel: desc || undefined,
-      });
-
-      return NextResponse.json({
-        success: true,
-        message: "Payment status updated",
-      });
-    } else {
-      // Handle legacy STK Push callback
-      const stkBody: STKPushCallback = body;
-
-      if (!stkBody.transactionReference) {
-        return NextResponse.json(
-          { error: "Missing transaction reference" },
-          { status: 400 },
-        );
-      }
-
-      const status = mapCallbackStatus(stkBody.code);
-
-      // Update using the Orders API directly. Convex-side checkout handlers are
-      // deprecated; use orders.updatePaymentStatus for all callback updates.
-      await convex.mutation(api.orders.updatePaymentStatus, {
-        orderReference: stkBody.transactionReference,
-        status,
-        transactionId: stkBody.telcoReference || stkBody.transactionReference,
-        paymentChannel: stkBody.telco,
-      });
-
-      return NextResponse.json({
-        success: true,
-        message: "STK Push callback processed",
-      });
     }
-  } catch (error) {
-    console.error("Error processing payment callback:", error);
-    return NextResponse.json(
-      { error: "Failed to process payment callback" },
-      { status: 500 },
-    );
-  }
+  );
 }

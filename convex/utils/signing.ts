@@ -1,3 +1,7 @@
+"use node";
+// This module uses Node built-ins (fs, path, crypto) so it must run in the
+// Node.js runtime inside Convex. The "use node" directive tells the Convex
+// bundler to allow Node APIs here.
 import fs from "fs";
 import path from "path";
 import crypto from "crypto";
@@ -40,14 +44,18 @@ export function verifyJengaSignatureBase64(signatureData: string, signatureBase6
   }, signature);
 }
 
-// Runtime sanity check: when running in production, warn if critical env vars are missing
-if (process.env.NODE_ENV === "production") {
-  const missing: string[] = [];
-  if (!process.env.JENGA_MERCHANT_CODE) missing.push("JENGA_MERCHANT_CODE");
-  if (!process.env.SITE_URL) missing.push("SITE_URL");
-  if (missing.length) {
-    throw new Error(
-      `Missing required environment variables for Jenga signing in production: ${missing.join(", ")}. Aborting startup to avoid signature mismatch.`,
-    );
+// Do not run expensive or throwing checks at module load time because the Convex
+// bundler analyzes modules during deployment. Export a validator function and
+// call it at runtime from actions that require these env vars.
+export function validateSigningEnvs(): void {
+  if (process.env.NODE_ENV === "production") {
+    const missing: string[] = [];
+    if (!process.env.JENGA_MERCHANT_CODE) missing.push("JENGA_MERCHANT_CODE");
+    if (!process.env.SITE_URL) missing.push("SITE_URL");
+    if (missing.length) {
+      throw new Error(
+        `Missing required environment variables for Jenga signing in production: ${missing.join(", ")}. Aborting to avoid signature mismatch.`,
+      );
+    }
   }
 }

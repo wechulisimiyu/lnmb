@@ -34,7 +34,7 @@ describe("createPaymentRecord action (integration-style)", () => {
       default: async () => "tok_test",
     }));
 
-    const mod = await import("../orders");
+  const mod = await import("../orders_node_actions");
 
     // Create a fake Convex action context with minimal runMutation and db
     const fakeCtx: any = {

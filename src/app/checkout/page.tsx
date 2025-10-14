@@ -71,7 +71,7 @@ export default function CheckoutPage() {
   // Single payment flow: no client selection between card and mpesa
 
   const createOrder = useMutation(api.orders.createOrder);
-  const createPaymentRecord = useAction(api.orders.createPaymentRecord);
+  const createPaymentRecord = useAction(api.orders_node_actions.createPaymentRecord);
   const paymentStatus = useQuery(
     api.orders.getPaymentStatus,
     orderData?.orderReference

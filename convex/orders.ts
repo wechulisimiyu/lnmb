@@ -1,10 +1,6 @@
 import { v } from "convex/values";
-import { mutation, query, action, internalMutation } from "./_generated/server";
+import { mutation, query, internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
-import generateAccessToken from "./utils/generateAccessToken";
-import crypto from "crypto";
-import fs from "fs";
-import path from "path";
 
 // Create a new order
 export const createOrder = mutation({
@@ -144,123 +140,8 @@ export const updateOrderPaymentStatus = mutation({
   },
 });
 
-// Create payment record for Jenga PGW (Action because it calls external API)
-export const createPaymentRecord = action({
-  args: {
-    orderReference: v.string(),
-    orderAmount: v.number(),
-    customerFirstName: v.string(),
-    customerLastName: v.string(),
-    customerEmail: v.string(),
-    customerPhone: v.string(),
-    customerAddress: v.string(),
-    productDescription: v.string(),
-  },
-  handler: async (
-    ctx,
-    args,
-  ): Promise<{ paymentId: string; paymentData: any }> => {
-    const now = Date.now();
-
-    // Generate payment token (external API call - this is why we need an action)
-    const token = await generateAccessToken();
-
-    const sanitizeReference = (ref?: string) => {
-      if (!ref) return "";
-      return ref.replace(/[^A-Z0-9]/gi, "").toUpperCase();
-    };
-
-    const cleanRef = sanitizeReference(args.orderReference);
-
-    const paymentData = {
-      token,
-      merchantCode: process.env.JENGA_MERCHANT_CODE!,
-      currency: "KES",
-      orderAmount: args.orderAmount,
-      orderReference: cleanRef,
-      productType: "Product",
-      productDescription: args.productDescription,
-      paymentTimeLimit: "15mins",
-      customerFirstName: args.customerFirstName,
-      customerLastName: args.customerLastName,
-      customerPostalCodeZip: "00100",
-      customerAddress: args.customerAddress,
-      customerEmail: args.customerEmail,
-      customerPhone: args.customerPhone,
-      countryCode: "KE",
-      callbackUrl: `${process.env.SITE_URL}/api/pgw-webhook-4365c21f`,
-      secondaryReference: cleanRef,
-      // Signature required when Jenga is in secure mode. Computed as
-      // merchantCode + orderReference + currency + orderAmount + callbackUrl
-      // We sign with RSA-SHA256 and return base64. Private key is read from
-      // JENGA_PRIVATE_KEY (env) or fallback to local privatekey.pem for dev.
-      signature: (() => {
-        try {
-          const merchantCode = process.env.JENGA_MERCHANT_CODE || "";
-          const currency = "KES";
-          const amount = String(args.orderAmount);
-          const callbackUrl = `${process.env.SITE_URL}/api/pgw-webhook-4365c21f`;
-          const signatureData = `${merchantCode}${cleanRef}${currency}${amount}${callbackUrl}`;
-
-          // Load private key: prefer base64 env, then raw PEM env, then a configured path, then repo privatekey.pem
-          let privateKey = undefined as string | undefined;
-
-          // 1) support base64-encoded PEM env var for single-line secrets
-          const base64Key = process.env.JENGA_PRIVATE_KEY_BASE64;
-          if (base64Key) {
-            try {
-              privateKey = Buffer.from(base64Key, "base64").toString("utf8");
-            } catch (e) {
-              // ignore decode errors and fall back
-            }
-          }
-
-          // 2) raw PEM env var
-          if (!privateKey && process.env.JENGA_PRIVATE_KEY) {
-            privateKey = process.env.JENGA_PRIVATE_KEY;
-          }
-
-          // 3) path to PEM file
-          if (!privateKey) {
-            const keyPath =
-              process.env.JENGA_PRIVATE_KEY_PATH ||
-              path.resolve(process.cwd(), "privatekey.pem");
-            if (fs.existsSync(keyPath)) {
-              privateKey = fs.readFileSync(keyPath, "utf8");
-            }
-          }
-
-          if (!privateKey) {
-            // No private key available — return empty signature so token-only flow still works
-            return "";
-          }
-
-          const signed = crypto.sign("RSA-SHA256", Buffer.from(signatureData), {
-            key: privateKey,
-            padding: crypto.constants.RSA_PKCS1_PADDING,
-          });
-
-          return signed.toString("base64");
-        } catch (e) {
-          return "";
-        }
-      })(),
-      status: "pending",
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    // Use runMutation to insert into database from action
-    const paymentId = await ctx.runMutation(
-      internal.orders.insertPaymentRecord,
-      {
-        paymentData,
-      },
-    );
-
-    return { paymentId, paymentData };
-  },
-});
+// createPaymentRecord action moved to `convex/orders_node_actions.ts` to keep
+// Node runtime APIs isolated. See that file for the action implementation.
 
 // Get payment status
 export const getPaymentStatus = query({

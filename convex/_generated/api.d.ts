@@ -15,7 +15,9 @@ import type {
 } from "convex/server";
 import type * as checkout from "../checkout.js";
 import type * as orders from "../orders.js";
+import type * as orders_node_actions from "../orders_node_actions.js";
 import type * as utils_generateAccessToken from "../utils/generateAccessToken.js";
+import type * as utils_signing from "../utils/signing.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -28,7 +30,9 @@ import type * as utils_generateAccessToken from "../utils/generateAccessToken.js
 declare const fullApi: ApiFromModules<{
   checkout: typeof checkout;
   orders: typeof orders;
+  orders_node_actions: typeof orders_node_actions;
   "utils/generateAccessToken": typeof utils_generateAccessToken;
+  "utils/signing": typeof utils_signing;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,

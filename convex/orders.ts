@@ -326,6 +326,7 @@ export const insertPaymentRecord = internalMutation({
       countryCode: v.string(),
       callbackUrl: v.string(),
       secondaryReference: v.string(),
+      signature: v.string(),
       status: v.string(),
       createdAt: v.number(),
       updatedAt: v.number(),

@@ -266,12 +266,39 @@ export const createPaymentRecord = action({
 export const getPaymentStatus = query({
   args: { reference: v.string() },
   handler: async (ctx, args) => {
-    const payment = await ctx.db
-      .query("payments")
-      .withIndex("by_reference", (q) => q.eq("orderReference", args.reference))
-      .first();
+    try {
+      const payment = await ctx.db
+        .query("payments")
+        .withIndex("by_reference", (q) => q.eq("orderReference", args.reference))
+        .first();
 
-    return payment;
+      return payment;
+    } catch (error) {
+      // Defensive logging to aid debugging on the server
+      try {
+        // Prefer console for server logs in Convex
+        console.error(`[getPaymentStatus] error for reference=${args.reference}:`, error);
+      } catch (e) {
+        // swallow
+      }
+
+      // If Sentry server SDK is available in the environment, capture the exception
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const Sentry = require("@sentry/node");
+        if (Sentry && Sentry.captureException) {
+          Sentry.captureException(error, {
+            tags: { function: "getPaymentStatus" },
+            extra: { reference: args.reference },
+          });
+        }
+      } catch (e) {
+        // ignore if Sentry isn't available
+      }
+
+      // Return null so callers can handle missing payment records gracefully
+      return null;
+    }
   },
 });
 

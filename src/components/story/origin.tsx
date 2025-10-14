@@ -25,7 +25,7 @@ export function StoryOrigin() {
               </p>
 
               <p>
-                This challenge doesn't just affect the individual student — it also threatens
+                This challenge doesn&#39;t just affect the individual student — it also threatens
                 the future of healthcare in Kenya. Every student lost to financial barriers
                 is a potential doctor who could have gone on to serve patients, families,
                 and communities in need. The loss extends beyond classrooms and wards; it
@@ -33,7 +33,7 @@ export function StoryOrigin() {
               </p>
 
               <p className="font-medium text-gray-900 border-l-4 border-emerald-500 pl-4 italic">
-                Equal access to education is not charity — it’s an investment in our
+                Equal access to education is not charity — it&rsquo;s an investment in our
                 collective future.
               </p>
             </div>
@@ -76,10 +76,10 @@ export function StoryOrigin() {
               continued to seek new ways to keep the vision alive and growing.
             </p>
 
-            <p>
+              <p>
               In 2022, one of the students at the time, Dr. Ruby Dina Oswere, proposed
               and pioneered a brilliant idea — to raise funds through an Annual Charity
-              Run. The idea took root and has since grown into LNMB’s biggest
+              Run. The idea took root and has since grown into LNMB&rsquo;s biggest
               fundraiser, uniting the community under one purpose and bringing a new
               sense of hope to the cause.
             </p>

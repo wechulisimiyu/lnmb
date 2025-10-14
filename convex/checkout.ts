@@ -73,8 +73,25 @@ interface PaymentRecord {
   updatedAt: number;
 }
 
+/*
+ DEPRECATION NOTICE
+
+ The code in this file implements an older Convex-based checkout / STK flow.
+ We are moving to the pattern where the Next.js frontend obtains the Jenga
+ token and POSTs a standard checkout form to Jenga's /processPayment endpoint
+ (client-side). The Convex-side checkout and STK push functions are retained
+ below only for backward compatibility and debugging, but they are deprecated.
+
+ - Do not add new behaviour here.
+ - If you need to restore server-side checkout logic, prefer creating a
+   clearly-named server action in a new file and document it explicitly.
+
+ The exported functions are annotated with @deprecated and will throw a
+ descriptive error at runtime to make accidental usage fail fast.
+*/
+
 class PaymentService {
-  private readonly baseUrl = "https://uat.finserve.africa";
+  private readonly baseUrl = process.env.JENGA_BASE_URL || "https://uat.finserve.africa";
   private readonly merchantAccountNumber = "0170280594893";
 
   private createSTKPayload(request: PaymentRequest): STKPayload {
@@ -105,20 +122,6 @@ class PaymentService {
         pushType: "STK",
       },
     };
-  }
-
-  // New signature formula: order.orderReference + payment.paymentCurrency + payment.details.msisdn + payment.details.paymentAmount
-  private generateSignatureData(request: PaymentRequest): string {
-    const orderRef = request.order.orderReference;
-    const currency =
-      request.payment.paymentCurrency || request.order.orderCurrency || "KES";
-    const msisdn =
-      request.payment.details?.msisdn || request.customer.phoneNumber || "";
-    const amount = String(
-      request.payment.details?.paymentAmount ?? request.order.orderAmount,
-    );
-
-    return `${orderRef}${currency}${msisdn}${amount}`;
   }
 
   /**
@@ -214,6 +217,10 @@ class PaymentService {
   }
 }
 
+/**
+ * @deprecated Convex-side checkout flow is deprecated. The frontend now posts
+ * directly to Jenga /processPayment. Keep this function for compatibility only.
+ */
 export const createPaymentRecord = mutation({
   args: {
     order: v.object({
@@ -249,6 +256,13 @@ export const createPaymentRecord = mutation({
     status: v.string(),
   },
   handler: async (ctx, args): Promise<string> => {
+    console.warn(
+      "Deprecated: convex/checkout.createPaymentRecord called — this Convex-side checkout is deprecated. Use the Next.js frontend /processPayment flow instead.",
+    );
+
+    /*
+    Original implementation (kept here as reference):
+
     const timestamp = Date.now();
 
     // sanitize orderReference for storage and future use
@@ -284,6 +298,11 @@ export const createPaymentRecord = mutation({
       createdAt: timestamp,
       updatedAt: timestamp,
     });
+    */
+
+    throw new Error(
+      "Deprecated: convex/checkout.createPaymentRecord is removed from active use. Use client-side checkout flow.",
+    );
   },
 });
 
@@ -334,6 +353,13 @@ export const triggerSTKPush = action({
     }),
   },
   handler: async (ctx, args): Promise<STKPushResponse> => {
+    console.warn(
+      "Deprecated: convex/checkout.triggerSTKPush called — STK push from Convex is deprecated. Use client-side Jenga checkout instead.",
+    );
+
+    /*
+    Original implementation (kept here as reference):
+
     const paymentService = new PaymentService();
 
     const paymentRequest: PaymentRequest = {
@@ -353,6 +379,11 @@ export const triggerSTKPush = action({
     }
 
     return stkResponse;
+    */
+
+    throw new Error(
+      "Deprecated: convex/checkout.triggerSTKPush is no longer supported.",
+    );
   },
 });
 
@@ -371,6 +402,13 @@ export const initiateCheckout = action({
     productDescription: v.optional(v.string()),
   },
   handler: async (ctx, args): Promise<CheckoutResponse> => {
+    console.warn(
+      "Deprecated: convex/checkout.initiateCheckout called — convex-side checkout is deprecated. Use frontend checkout form to post to Jenga.",
+    );
+
+    /*
+    Original implementation (kept here as reference):
+
     // Build structured payload from existing flat args for backward compatibility
     const rawOrderReference = `ORD${Date.now()}${Math.floor(Math.random() * 1000)}`;
     const sanitize = (ref: string) => ref.replace(/[^A-Za-z0-9-]/g, "");
@@ -434,6 +472,11 @@ export const initiateCheckout = action({
 
       throw error;
     }
+    */
+
+    throw new Error(
+      "Deprecated: convex/checkout.initiateCheckout is no longer supported.",
+    );
   },
 });
 
@@ -461,6 +504,13 @@ export const handlePaymentCallback = mutation({
     extraData: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    console.warn(
+      "Deprecated: convex/checkout.handlePaymentCallback called — callback handling should be via Next.js webhook route. This Convex handler is deprecated.",
+    );
+
+    /*
+    Original implementation (kept here as reference):
+
     await ctx.runMutation(api.checkout.updatePaymentStatus, {
       reference: args.orderReference,
       status: args.status,
@@ -468,6 +518,11 @@ export const handlePaymentCallback = mutation({
     });
 
     return { success: true, reference: args.orderReference };
+    */
+
+    throw new Error(
+      "Deprecated: convex/checkout.handlePaymentCallback is no longer supported. Use Next.js webhook route for handling Jenga callbacks.",
+    );
   },
 });
 

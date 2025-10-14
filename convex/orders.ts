@@ -1,7 +1,6 @@
 import { v } from "convex/values";
-import { mutation, query, action, internalMutation } from "./_generated/server";
+import { mutation, query, internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
-import generateAccessToken from "./utils/generateAccessToken";
 
 // Create a new order
 export const createOrder = mutation({
@@ -141,79 +140,46 @@ export const updateOrderPaymentStatus = mutation({
   },
 });
 
-// Create payment record for Jenga PGW (Action because it calls external API)
-export const createPaymentRecord = action({
-  args: {
-    orderReference: v.string(),
-    orderAmount: v.number(),
-    customerFirstName: v.string(),
-    customerLastName: v.string(),
-    customerEmail: v.string(),
-    customerPhone: v.string(),
-    customerAddress: v.string(),
-    productDescription: v.string(),
-  },
-  handler: async (
-    ctx,
-    args,
-  ): Promise<{ paymentId: string; paymentData: any }> => {
-    const now = Date.now();
-
-    // Generate payment token (external API call - this is why we need an action)
-    const token = await generateAccessToken();
-
-    const sanitizeReference = (ref?: string) => {
-      if (!ref) return "";
-      return ref.replace(/[^A-Z0-9]/gi, "").toUpperCase();
-    };
-
-    const cleanRef = sanitizeReference(args.orderReference);
-
-    const paymentData = {
-      token,
-      merchantCode: process.env.JENGA_MERCHANT_CODE!,
-      currency: "KES",
-      orderAmount: args.orderAmount,
-      orderReference: cleanRef,
-      productType: "Product",
-      productDescription: args.productDescription,
-      paymentTimeLimit: "15mins",
-      customerFirstName: args.customerFirstName,
-      customerLastName: args.customerLastName,
-      customerPostalCodeZip: "00100",
-      customerAddress: args.customerAddress,
-      customerEmail: args.customerEmail,
-      customerPhone: args.customerPhone,
-      countryCode: "KE",
-      callbackUrl: `${process.env.SITE_URL}/api/pgw-webhook-4365c21f`,
-      secondaryReference: cleanRef,
-      status: "pending",
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    // Use runMutation to insert into database from action
-    const paymentId = await ctx.runMutation(
-      internal.orders.insertPaymentRecord,
-      {
-        paymentData,
-      },
-    );
-
-    return { paymentId, paymentData };
-  },
-});
+// createPaymentRecord action moved to `convex/orders_node_actions.ts` to keep
+// Node runtime APIs isolated. See that file for the action implementation.
 
 // Get payment status
 export const getPaymentStatus = query({
   args: { reference: v.string() },
   handler: async (ctx, args) => {
-    const payment = await ctx.db
-      .query("payments")
-      .withIndex("by_reference", (q) => q.eq("orderReference", args.reference))
-      .first();
+    try {
+      const payment = await ctx.db
+        .query("payments")
+        .withIndex("by_reference", (q) => q.eq("orderReference", args.reference))
+        .first();
 
-    return payment;
+      return payment;
+    } catch (error) {
+      // Defensive logging to aid debugging on the server
+      try {
+        // Prefer console for server logs in Convex
+        console.error(`[getPaymentStatus] error for reference=${args.reference}:`, error);
+      } catch (e) {
+        // swallow
+      }
+
+      // If Sentry server SDK is available in the environment, capture the exception
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const Sentry = require("@sentry/node");
+        if (Sentry && Sentry.captureException) {
+          Sentry.captureException(error, {
+            tags: { function: "getPaymentStatus" },
+            extra: { reference: args.reference },
+          });
+        }
+      } catch (e) {
+        // ignore if Sentry isn't available
+      }
+
+      // Return null so callers can handle missing payment records gracefully
+      return null;
+    }
   },
 });
 
@@ -234,7 +200,19 @@ export const updatePaymentStatus = mutation({
       .first();
 
     if (!payment) {
-      throw new Error("Payment record not found");
+      // Log the missing payment record but don't throw - this can happen if webhook
+      // arrives before order/payment creation completes (race condition)
+      console.warn(
+        `[updatePaymentStatus] Payment record not found for orderReference: ${args.orderReference}`,
+        {
+          orderReference: args.orderReference,
+          status: args.status,
+          transactionId: args.transactionId,
+          paymentChannel: args.paymentChannel,
+        }
+      );
+      // Return null to indicate no update occurred
+      return null;
     }
 
     await ctx.db.patch(payment._id, {
@@ -348,6 +326,7 @@ export const insertPaymentRecord = internalMutation({
       countryCode: v.string(),
       callbackUrl: v.string(),
       secondaryReference: v.string(),
+      signature: v.string(),
       status: v.string(),
       createdAt: v.number(),
       updatedAt: v.number(),

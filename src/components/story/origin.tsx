@@ -1,61 +1,43 @@
 "use client";
 
-import Image from "next/image";
-
 export function StoryOrigin() {
   return (
     <section className="bg-gradient-to-b from-gray-50 to-white py-16 px-6 sm:px-12 lg:px-24">
-      <div className="max-w-6xl mx-auto space-y-20">
-        
-        {/* The Problem Section with Dr. Ruby's image side by side */}
-        <div className="grid md:grid-cols-2 gap-16 items-center">
-          {/* Text Content */}
-          <div className="space-y-8 bg-white bg-opacity-80 p-8 rounded-3xl shadow-lg">
-            <h2 className="text-4xl sm:text-5xl font-extrabold text-emerald-700 text-center md:text-left leading-tight">
-              The Problem
-            </h2>
+      <div className="max-w-5xl mx-auto space-y-20">
+        {/* The Problem Section */}
+        <div className="space-y-8">
+          <h2 className="text-4xl sm:text-5xl font-extrabold text-emerald-700 text-center">
+            The Problem
+          </h2>
 
-            <div className="space-y-6 text-gray-700 text-lg leading-relaxed">
-              <p>
-                Many bright and hardworking medical students in Kenya face the harsh
-                reality of financial hardship. Despite their potential, some are forced
-                to pause or even abandon their studies because they cannot afford tuition,
-                accommodation, or even basic necessities like daily meals. Behind every
-                struggling student lies a story of dedication met with difficulty, of
-                dreams slowed down not by ability but by circumstance.
-              </p>
+          <div className="space-y-6 text-gray-700 text-lg leading-relaxed">
+            <p>
+              Many bright and hardworking medical students in Kenya face the harsh
+              reality of financial hardship. Despite their potential, some are forced
+              to pause or even abandon their studies because they cannot afford tuition,
+              accommodation, or even basic necessities like daily meals. Behind every
+              struggling student lies a story of dedication met with difficulty, of
+              dreams slowed down not by ability but by circumstance.
+            </p>
 
-              <p>
-                This challenge doesn't just affect the individual student — it also threatens
-                the future of healthcare in Kenya. Every student lost to financial barriers
-                is a potential doctor who could have gone on to serve patients, families,
-                and communities in need. The loss extends beyond classrooms and wards; it
-                touches the lives of those who might one day depend on their care.
-              </p>
+            <p>
+              This challenge doesn’t just affect the individual student — it also threatens
+              the future of healthcare in Kenya. Every student lost to financial barriers
+              is a potential doctor who could have gone on to serve patients, families,
+              and communities in need. The loss extends beyond classrooms and wards; it
+              touches the lives of those who might one day depend on their care.
+            </p>
 
-              <p className="font-medium text-gray-900 border-l-4 border-emerald-500 pl-4 italic">
-                Equal access to education is not charity — it's an investment in our
-                collective future.
-              </p>
-            </div>
-          </div>
-
-          {/* Dr. Ruby's Image */}
-          <div className="w-full rounded-3xl overflow-hidden shadow-2xl">
-            <Image
-              src="/images/story/story-hero.webp"
-              alt="Dr. Ruby Dina Oswere "
-              width={1200}
-              height={675}
-              className="object-cover w-full h-auto transition-transform duration-500 hover:scale-105"
-              priority
-            />
+            <p className="font-medium text-gray-900 border-l-4 border-emerald-500 pl-4 italic">
+              Equal access to education is not charity — it’s an investment in our
+              collective future.
+            </p>
           </div>
         </div>
 
-        {/* Our Response Section Full Width */}
-        <div className="space-y-8 bg-white bg-opacity-80 p-8 rounded-3xl shadow-lg max-w-5xl mx-auto">
-          <h2 className="text-4xl sm:text-5xl font-extrabold text-emerald-700 text-center leading-tight">
+        {/* Our Response Section */}
+        <div className="space-y-8">
+          <h2 className="text-4xl sm:text-5xl font-extrabold text-emerald-700 text-center">
             Our Response
           </h2>
 

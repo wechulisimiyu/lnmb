@@ -28,6 +28,7 @@ yarn.lock           # yarn lockfile - ignored
 # misc
 .DS_Store
 *.pem
+*.pem.base64
 
 # debug
 npm-debug.log*
@@ -47,3 +48,5 @@ next-env.d.ts
 
 # Temporary files
 temp
+# Sentry Config File
+.env.sentry-build-plugin

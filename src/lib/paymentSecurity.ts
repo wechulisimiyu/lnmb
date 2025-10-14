@@ -4,6 +4,7 @@
  */
 
 import crypto from "crypto";
+import * as Sentry from "@sentry/nextjs";
 
 /**
  * Verify Jenga PGW callback signature
@@ -33,16 +34,24 @@ export function verifyJengaSignature(
   const signatureData = `${merchantCode}${params.orderReference}${currency}${params.amount}${params.callbackUrl}`;
   
   // Jenga PGW uses SHA-256 hash
-  const computedHash = crypto
-    .createHash("sha256")
-    .update(signatureData)
-    .digest("hex");
+  const computedHash = crypto.createHash("sha256").update(signatureData).digest("hex");
 
-  // Use timing-safe comparison to prevent timing attacks
-  return crypto.timingSafeEqual(
-    Buffer.from(receivedHash),
-    Buffer.from(computedHash)
-  );
+  try {
+    // Interpret hashes as hex. If receivedHash isn't valid hex or lengths differ,
+    // timingSafeEqual will throw or behave unexpectedly, so guard by comparing
+    // buffer lengths first and returning false for any mismatch.
+    const receivedBuf = Buffer.from(receivedHash, "hex");
+    const computedBuf = Buffer.from(computedHash, "hex");
+
+    if (receivedBuf.length !== computedBuf.length) {
+      return false;
+    }
+
+    return crypto.timingSafeEqual(receivedBuf, computedBuf);
+  } catch {
+    // Any parsing error or other issue should result in a safe 'false'
+    return false;
+  }
 }
 
 /**
@@ -99,22 +108,43 @@ export function sanitizeLogData(data: Record<string, unknown>): Record<string, u
 
 /**
  * Security logger for payment events
+ * Uses Sentry's structured logging for better observability
  */
 export class PaymentSecurityLogger {
+  private static logger = Sentry.logger;
+
   private static formatMessage(level: string, event: string, data: Record<string, unknown>): string {
     const timestamp = new Date().toISOString();
     const sanitized = sanitizeLogData(data);
     return `[${timestamp}] [${level}] [${event}] ${JSON.stringify(sanitized)}`;
   }
+  
   static logSecurityEvent(event: string, data: Record<string, unknown>) {
+    const sanitized = sanitizeLogData(data);
+    this.logger.info(this.logger.fmt`[SECURITY] ${event}`, sanitized);
+    // Also log to console for compatibility
     console.log(this.formatMessage("SECURITY", event, data));
   }
 
   static logSecurityError(event: string, data: Record<string, unknown>) {
+    const sanitized = sanitizeLogData(data);
+    this.logger.error(this.logger.fmt`[SECURITY_ERROR] ${event}`, sanitized);
+    // Capture as Sentry exception for alerting
+    Sentry.captureException(new Error(`Security Error: ${event}`), {
+      tags: {
+        type: "security_error",
+        event,
+      },
+      extra: sanitized,
+    });
+    // Also log to console for compatibility
     console.error(this.formatMessage("SECURITY_ERROR", event, data));
   }
 
   static logSecurityWarning(event: string, data: Record<string, unknown>) {
+    const sanitized = sanitizeLogData(data);
+    this.logger.warn(this.logger.fmt`[SECURITY_WARNING] ${event}`, sanitized);
+    // Also log to console for compatibility
     console.warn(this.formatMessage("SECURITY_WARNING", event, data));
   }
 }

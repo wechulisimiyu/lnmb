@@ -67,7 +67,7 @@ export function Governance() {
                     • Dr. Edwin Walong
                   </li>
                   <li className="hover:text-emerald-700 transition-colors">
-                    • Dr. Rub Oswere
+                    • Dr. Ruby Oswere
                   </li>
                   <li className="hover:text-emerald-700 transition-colors">
                     • Dr. Bob Anthony

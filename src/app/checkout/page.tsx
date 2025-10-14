@@ -14,7 +14,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, CreditCard, ArrowLeft, CheckCircle } from "lucide-react";
 import { useMutation, useQuery, useAction } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-// Label not needed here after payment selection removal
+import * as Sentry from "@sentry/nextjs";
 
 interface OrderData {
   student: string;
@@ -58,6 +58,7 @@ interface PaymentFormData {
   callbackUrl: string;
   countryCode: string;
   secondaryReference: string;
+  signature?: string;
 }
 
 export default function CheckoutPage() {
@@ -70,7 +71,7 @@ export default function CheckoutPage() {
   // Single payment flow: no client selection between card and mpesa
 
   const createOrder = useMutation(api.orders.createOrder);
-  const createPaymentRecord = useAction(api.orders.createPaymentRecord);
+  const createPaymentRecord = useAction(api.orders_node_actions.createPaymentRecord);
   const paymentStatus = useQuery(
     api.orders.getPaymentStatus,
     orderData?.orderReference
@@ -97,107 +98,167 @@ export default function CheckoutPage() {
   const handleProcessPayment = async () => {
     if (!orderData) return;
 
-    setIsProcessing(true);
-    setError(null);
+    return Sentry.startSpan(
+      {
+        op: "ui.action",
+        name: "Process Payment",
+      },
+      async (span) => {
+        setIsProcessing(true);
+        setError(null);
 
-    try {
-      // Create order in database
-      await createOrder({
-        student: orderData.student,
-        university: orderData.university,
-        graduationYear: orderData.graduationYear,
-        regNumber: orderData.regNumber,
-        attending: orderData.attending,
-        tshirtType: orderData.tshirtType,
-        tshirtSize: orderData.tshirtSize,
-        quantity: orderData.quantity,
-        totalAmount: orderData.totalAmount,
-        name: orderData.name,
-        email: orderData.email,
-        phone: orderData.phone,
-        nameOfKin: orderData.nameOfKin,
-        kinNumber: orderData.kinNumber,
-        medicalCondition: orderData.medicalCondition,
-        pickUp: orderData.pickUp,
-        confirm: orderData.confirm,
-        orderReference: orderData.orderReference,
-        schoolIdUrl: orderData.schoolIdUrl || undefined,
-      });
+        try {
+          span.setAttribute("orderReference", orderData.orderReference);
+          span.setAttribute("totalAmount", orderData.totalAmount);
 
-      // Create payment record and get Jenga PGW form data
-      const [firstName, ...lastNameParts] = orderData.name.split(" ");
-      const lastName = lastNameParts.join(" ") || firstName;
+          // Create order in database
+          await createOrder({
+            student: orderData.student,
+            university: orderData.university,
+            graduationYear: orderData.graduationYear,
+            regNumber: orderData.regNumber,
+            attending: orderData.attending,
+            tshirtType: orderData.tshirtType,
+            tshirtSize: orderData.tshirtSize,
+            quantity: orderData.quantity,
+            totalAmount: orderData.totalAmount,
+            name: orderData.name,
+            email: orderData.email,
+            phone: orderData.phone,
+            nameOfKin: orderData.nameOfKin,
+            kinNumber: orderData.kinNumber,
+            medicalCondition: orderData.medicalCondition,
+            pickUp: orderData.pickUp,
+            confirm: orderData.confirm,
+            orderReference: orderData.orderReference,
+            schoolIdUrl: orderData.schoolIdUrl || undefined,
+          });
 
-      // Sanitize product description for Jenga PGW (only allow alphanumeric, hyphen, quotation mark, forward slash, back slash, underscore, space)
-      const rawDescription = `${orderData.tshirtType} T-shirt ${orderData.tshirtSize} x${orderData.quantity} - Leave No Medic Behind Charity Run`;
-      const productDescription = rawDescription.replace(
-        /[^a-zA-Z0-9\-"\/\\_\s]/g,
-        "",
-      );
+          // Create payment record and get Jenga PGW form data
+          const [firstName, ...lastNameParts] = orderData.name.split(" ");
+          const lastName = lastNameParts.join(" ") || firstName;
 
-      const paymentRecord = await createPaymentRecord({
-        orderReference: orderData.orderReference,
-        orderAmount: orderData.totalAmount,
-        customerFirstName: firstName,
-        customerLastName: lastName,
-        customerEmail: orderData.email,
-        // orderData.phone is normalized and includes the country code (e.g. 2547...)
-        customerPhone: orderData.phone,
-        customerAddress: "Nairobi, Kenya",
-        productDescription,
-      });
+          // Sanitize product description for Jenga PGW (only allow alphanumeric, hyphen, quotation mark, forward slash, back slash, underscore, space)
+          const rawDescription = `${orderData.tshirtType} T-shirt ${orderData.tshirtSize} x${orderData.quantity} - Leave No Medic Behind Charity Run`;
+          const productDescription = rawDescription.replace(
+            /[^a-zA-Z0-9\-"\/\\_\s]/g,
+            "",
+          );
 
-      // Set payment form data for submission to Jenga PGW
-      setPaymentFormData(paymentRecord.paymentData);
+          const paymentRecord = await createPaymentRecord({
+            orderReference: orderData.orderReference,
+            orderAmount: orderData.totalAmount,
+            customerFirstName: firstName,
+            customerLastName: lastName,
+            customerEmail: orderData.email,
+            // orderData.phone is normalized and includes the country code (e.g. 2547...)
+            customerPhone: orderData.phone,
+            customerAddress: "Nairobi, Kenya",
+            productDescription,
+          });
 
-      // Clear localStorage
-      localStorage.removeItem("pendingOrder");
-    } catch (error) {
-      console.error("Error processing payment:", error);
-      setError("Failed to process payment. Please try again.");
-    } finally {
-      setIsProcessing(false);
-    }
+          // Set payment form data for submission to Jenga PGW
+          setPaymentFormData(paymentRecord.paymentData);
+
+          // Clear localStorage
+          localStorage.removeItem("pendingOrder");
+
+          span.setAttribute("success", true);
+          Sentry.logger.info("Payment processing completed successfully", {
+            orderReference: orderData.orderReference,
+          });
+        } catch (error) {
+          span.setAttribute("success", false);
+          Sentry.captureException(error, {
+            tags: {
+              component: "checkout",
+              operation: "handleProcessPayment",
+            },
+            extra: {
+              orderReference: orderData.orderReference,
+            },
+          });
+          
+          Sentry.logger.error("Error processing payment", {
+            error: error instanceof Error ? error.message : "Unknown error",
+            orderReference: orderData.orderReference,
+          });
+
+          console.error("Error processing payment:", error);
+          setError("Failed to process payment. Please try again.");
+        } finally {
+          setIsProcessing(false);
+        }
+      }
+    );
   };
 
   const submitToJengaPGW = () => {
     if (!paymentFormData || !orderData) return;
 
-    // Create a form and submit to Jenga PGW
-    const form = document.createElement("form");
-    form.method = "POST";
-    form.action = "https://v3-uat.jengapgw.io/processPayment";
+    return Sentry.startSpan(
+      {
+        op: "ui.action",
+        name: "Submit to Jenga PGW",
+      },
+      (span) => {
+        span.setAttribute("orderReference", orderData.orderReference);
+        span.setAttribute("hasSignature", !!paymentFormData.signature);
 
-    const fields: Record<string, string> = {
-      token: paymentFormData.token,
-      merchantCode: paymentFormData.merchantCode,
-      currency: paymentFormData.currency,
-      orderAmount: String(paymentFormData.orderAmount),
-      orderReference: paymentFormData.orderReference,
-      productType: paymentFormData.productType,
-      productDescription: paymentFormData.productDescription,
-      paymentTimeLimit: paymentFormData.paymentTimeLimit,
-      customerFirstName: paymentFormData.customerFirstName,
-      customerLastName: paymentFormData.customerLastName,
-      customerPostalCodeZip: paymentFormData.customerPostalCodeZip || "",
-      customerAddress: paymentFormData.customerAddress || "",
-      customerEmail: paymentFormData.customerEmail,
-      customerPhone: paymentFormData.customerPhone,
-      callbackUrl: paymentFormData.callbackUrl,
-      countryCode: paymentFormData.countryCode || "",
-      secondaryReference: paymentFormData.secondaryReference || "",
-    };
+        Sentry.logger.info("Submitting payment form to Jenga PGW", {
+          orderReference: orderData.orderReference,
+          amount: paymentFormData.orderAmount,
+        });
 
-    Object.entries(fields).forEach(([name, value]) => {
-      const input = document.createElement("input");
-      input.type = "hidden";
-      input.name = name;
-      input.value = String(value);
-      form.appendChild(input);
-    });
+        // Create a form and submit to Jenga PGW
+      const form = document.createElement("form");
+      form.method = "POST";
+      // Allow override of Jenga process URL via public env var
+      form.action = (process.env.NEXT_PUBLIC_JENGA_PROCESS_URL as string) || "https://v3-uat.jengapgw.io/processPayment";
 
-    document.body.appendChild(form);
-    form.submit();
+        const fields: Record<string, string> = {
+          token: paymentFormData.token,
+          merchantCode: paymentFormData.merchantCode,
+          currency: paymentFormData.currency,
+          orderAmount: String(paymentFormData.orderAmount),
+          orderReference: paymentFormData.orderReference,
+          productType: paymentFormData.productType,
+          productDescription: paymentFormData.productDescription,
+          paymentTimeLimit: paymentFormData.paymentTimeLimit,
+          customerFirstName: paymentFormData.customerFirstName,
+          customerLastName: paymentFormData.customerLastName,
+          customerPostalCodeZip: paymentFormData.customerPostalCodeZip || "",
+          customerAddress: paymentFormData.customerAddress || "",
+          customerEmail: paymentFormData.customerEmail,
+          customerPhone: paymentFormData.customerPhone,
+          callbackUrl: paymentFormData.callbackUrl,
+          countryCode: paymentFormData.countryCode || "",
+          secondaryReference: paymentFormData.secondaryReference || "",
+        };
+
+        Object.entries(fields).forEach(([name, value]) => {
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = name;
+          input.value = String(value);
+          form.appendChild(input);
+        });
+
+        // Include signature if present in payment data
+        if (paymentFormData.signature) {
+          const sig = document.createElement("input");
+          sig.type = "hidden";
+          sig.name = "signature";
+          sig.value = String(paymentFormData.signature);
+          form.appendChild(sig);
+        }
+
+        document.body.appendChild(form);
+        form.submit();
+
+        span.setAttribute("submitted", true);
+      }
+    );
   };
 
   const getTshirtTypeDisplay = (type: string) => {

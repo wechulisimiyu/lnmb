@@ -1,5 +1,4 @@
 "use client";
-
 import Image from "next/image";
 
 export function StoryOrigin() {
@@ -7,7 +6,7 @@ export function StoryOrigin() {
     <section className="bg-gradient-to-b from-gray-50 to-white py-16 px-6 sm:px-12 lg:px-24">
       <div className="max-w-6xl mx-auto space-y-20">
         
-        {/* The Problem Section with Dr. Ruby's image side by side */}
+        {/* The Problem Section with image side by side */}
         <div className="grid md:grid-cols-2 gap-16 items-center">
           {/* Text Content */}
           <div className="space-y-8 bg-white bg-opacity-80 p-8 rounded-3xl shadow-lg">
@@ -40,7 +39,7 @@ export function StoryOrigin() {
             </div>
           </div>
 
-          {/* Dr. Ruby's Image */}
+          {/* Image */}
           <div className="w-full rounded-3xl overflow-hidden shadow-2xl">
             <Image
               src="/images/story/story-hero.webp"

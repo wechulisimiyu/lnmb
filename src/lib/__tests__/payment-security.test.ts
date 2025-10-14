@@ -36,7 +36,7 @@ function verifyJengaSignature(
     const computedBuf = Buffer.from(computedHash, "hex");
     if (receivedBuf.length !== computedBuf.length) return false;
     return crypto.timingSafeEqual(receivedBuf, computedBuf);
-  } catch (e) {
+  } catch {
     return false;
   }
 }

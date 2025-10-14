@@ -3,7 +3,7 @@
  * Simulates production payloads to ensure proper handling
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect } from "vitest";
 import crypto from "crypto";
 
 /**
@@ -258,7 +258,8 @@ describe("Jenga Webhook Integration Tests", () => {
       
       requiredFields.forEach(field => {
         expect(payload).toHaveProperty(field);
-        expect((payload as any)[field]).toBeTruthy();
+        const value = (payload as Record<string, unknown>)[field];
+        expect(value).toBeTruthy();
       });
     });
 

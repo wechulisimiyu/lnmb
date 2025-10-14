@@ -48,7 +48,7 @@ export function verifyJengaSignature(
     }
 
     return crypto.timingSafeEqual(receivedBuf, computedBuf);
-  } catch (e) {
+  } catch {
     // Any parsing error or other issue should result in a safe 'false'
     return false;
   }

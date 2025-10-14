@@ -124,9 +124,10 @@ export async function GET(request: NextRequest) {
     async () => {
       try {
         // Support both NextRequest (with nextUrl) and standard Request objects used in tests
-        const urlObj = (request as any).nextUrl
-          ? (request as any).nextUrl
-          : new URL((request as any).url);
+        // Support both NextRequest (with nextUrl) and standard Request objects used in tests
+        const urlObj = (request as unknown as { nextUrl?: URL; url?: string }).nextUrl
+          ? (request as unknown as { nextUrl: URL }).nextUrl
+          : new URL((request as unknown as { url: string }).url);
         const searchParams = urlObj.searchParams;
 
         // Extract payment response parameters
@@ -220,7 +221,18 @@ export async function POST(request: NextRequest) {
     },
     async () => {
       try {
-        const body = await request.json();
+        const rawBody: unknown = await request.json();
+
+        // Narrow the parsed body to an object before using
+        if (!rawBody || typeof rawBody !== "object") {
+          PaymentSecurityLogger.logSecurityWarning("CALLBACK_POST_INVALID_TYPE", {
+            bodyType: typeof rawBody,
+          });
+
+          return NextResponse.json({ success: false, error: "Invalid payload" }, { status: 200 });
+        }
+
+        const body = rawBody as JengaPaymentCallback;
 
         PaymentSecurityLogger.logSecurityEvent("CALLBACK_POST_RECEIVED", {
           orderReference: body.orderReference,

@@ -34,7 +34,7 @@ export function StoryOrigin() {
               </p>
 
               <p className="font-medium text-gray-900 border-l-4 border-emerald-500 pl-4 italic">
-                Equal access to education is not charity — it’s an investment in our
+                Equal access to education is not charity — it's an investment in our
                 collective future.
               </p>
             </div>
@@ -44,7 +44,7 @@ export function StoryOrigin() {
           <div className="w-full rounded-3xl overflow-hidden shadow-2xl">
             <Image
               src="/images/story/story-hero.webp"
-              alt="Dr. Ruby Dina Oswere"
+              alt="Dr. Ruby Dina Oswere "
               width={1200}
               height={675}
               className="object-cover w-full h-auto transition-transform duration-500 hover:scale-105"

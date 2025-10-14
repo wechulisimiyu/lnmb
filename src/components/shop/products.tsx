@@ -40,7 +40,7 @@ export function ShopProducts() {
       name: "Polo Neck T-Shirt",
       price: 1500,
       studentPrice: 1000,
-      image: "/images/shop/lnmb-tshirt-2025.webp",
+      image: "/images/shop/lnmb-tshirt-2025.webp?v=2", // Add version number
       description: "Classic polo neck with embroidered logo",
       sizes: ["S", "M", "L", "XL"],
     },
@@ -49,7 +49,7 @@ export function ShopProducts() {
       name: "Round Neck T-Shirt",
       price: 1200,
       studentPrice: 600,
-      image: "/images/shop/lnmb-tshirt-2025.webp",
+      image: "/images/shop/lnmb-tshirt-2025.webp?v=2", // Add version number
       description: "Comfortable round neck tee",
       sizes: ["S", "M", "L", "XL"],
     },

@@ -1,6 +1,24 @@
 "use client";
+import { useState, useEffect } from "react";
 
 export function StoryHero() {
+  const [isVisible, setIsVisible] = useState(false);
+
+  // Simple scroll fade-in effect for image and text
+  useEffect(() => {
+    function onScroll() {
+      const section = document.getElementById("story-hero-section");
+      if (!section) return;
+      const rect = section.getBoundingClientRect();
+      if (rect.top < window.innerHeight * 0.85) {
+        setIsVisible(true);
+      }
+    }
+    window.addEventListener("scroll", onScroll);
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
     <section className="px-6 py-16 sm:py-20 bg-gradient-to-b from-gray-50 to-white">
       <div className="mx-auto max-w-4xl">

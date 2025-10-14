@@ -62,12 +62,26 @@ export function HomeHero() {
       {/* Content container */}
       <div className="relative z-20 container mx-auto px-6 py-16 lg:py-28 flex items-center justify-center">
         <div className="w-full max-w-4xl text-center text-white">
-          {/* <Badge className="bg-blue-800/90 text-white px-3 py-1 text-sm sm:px-4 sm:py-2">SUPPORTING MEDICAL STUDENTS</Badge> */}
-
           <h1 className="mt-6 text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight">
-            Leave No
+            Leave <span className="text-red-500">No</span>
             <span className="block text-blue-500">Medic Behind</span>
           </h1>
+          
+          {/* Strides of Compassion heading */}
+          <div className="mb-3 mt-3 flex flex-col items-center">
+            <span
+              className="block text-3xl sm:text-4xl font-semibold text-blue-900"
+              style={{
+                fontFamily: "'Pacifico', cursive, 'Brush Script MT', sans-serif",
+                letterSpacing: "0.02em",
+              }}
+            >
+              Strides of
+            </span>
+            <span className="block text-3xl sm:text-4xl font-extrabold text-red-600 tracking-wide -mt-1">
+              Compassion
+            </span>
+          </div>
 
           <p className="mt-4 text-lg sm:text-xl text-white max-w-2xl mx-auto lg:max-w-xl">
             Join our annual charity run to support medical students with

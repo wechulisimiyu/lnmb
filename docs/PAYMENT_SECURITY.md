@@ -24,12 +24,17 @@ This document outlines the security measures implemented for the Jenga Payment G
 
 **Implementation:**
 - Webhook endpoint uses unpredictable path: `/api/pgw-webhook-4365c21f`
-- Old endpoint `/api/payment/callback` is deprecated and logs warnings
+- **DEPRECATED endpoint `/api/payment/callback` has been REMOVED** (no backward compatibility)
 - HTTPS enforced through deployment platform (Vercel/production environment)
+- All callbacks now use the secure webhook with signature verification
 
-**Locations:**
-- New secure endpoint: `src/app/api/pgw-webhook-4365c21f/route.ts`
-- Deprecated endpoint: `src/app/api/payment/callback/route.ts` (maintained for backward compatibility)
+**Location:**
+- Secure endpoint: `src/app/api/pgw-webhook-4365c21f/route.ts`
+
+**Important:** Update your Jenga PGW dashboard to use only the secure webhook URL:
+```
+https://your-domain.com/api/pgw-webhook-4365c21f
+```
 
 ### 3. Request Validation ✅
 

@@ -34,16 +34,24 @@ export function verifyJengaSignature(
   const signatureData = `${merchantCode}${params.orderReference}${currency}${params.amount}${params.callbackUrl}`;
   
   // Jenga PGW uses SHA-256 hash
-  const computedHash = crypto
-    .createHash("sha256")
-    .update(signatureData)
-    .digest("hex");
+  const computedHash = crypto.createHash("sha256").update(signatureData).digest("hex");
 
-  // Use timing-safe comparison to prevent timing attacks
-  return crypto.timingSafeEqual(
-    Buffer.from(receivedHash),
-    Buffer.from(computedHash)
-  );
+  try {
+    // Interpret hashes as hex. If receivedHash isn't valid hex or lengths differ,
+    // timingSafeEqual will throw or behave unexpectedly, so guard by comparing
+    // buffer lengths first and returning false for any mismatch.
+    const receivedBuf = Buffer.from(receivedHash, "hex");
+    const computedBuf = Buffer.from(computedHash, "hex");
+
+    if (receivedBuf.length !== computedBuf.length) {
+      return false;
+    }
+
+    return crypto.timingSafeEqual(receivedBuf, computedBuf);
+  } catch (e) {
+    // Any parsing error or other issue should result in a safe 'false'
+    return false;
+  }
 }
 
 /**

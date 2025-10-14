@@ -15,7 +15,6 @@ import { Loader2, CreditCard, ArrowLeft, CheckCircle } from "lucide-react";
 import { useMutation, useQuery, useAction } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import * as Sentry from "@sentry/nextjs";
-// Label not needed here after payment selection removal
 
 interface OrderData {
   student: string;

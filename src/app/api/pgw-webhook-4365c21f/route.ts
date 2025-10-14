@@ -23,13 +23,8 @@ import * as Sentry from "@sentry/nextjs";
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 const { logger } = Sentry;
 
-// Environment variable validation
-const MERCHANT_CODE = process.env.JENGA_MERCHANT_CODE;
+// Site URL (can default to localhost for tests)
 const SITE_URL = process.env.SITE_URL || "http://localhost:3000";
-
-if (!MERCHANT_CODE) {
-  console.error("CRITICAL: JENGA_MERCHANT_CODE environment variable is not set");
-}
 
 // Jenga PGW callback interface
 interface JengaPaymentCallback {
@@ -68,7 +63,8 @@ function verifyWebhookAuthenticity(
     };
   }
 
-  // Verify signature
+  // Verify signature - read merchant code at call time so tests can mock env
+  const MERCHANT_CODE = process.env.JENGA_MERCHANT_CODE;
   if (!MERCHANT_CODE) {
     PaymentSecurityLogger.logSecurityError("MISSING_MERCHANT_CODE", {
       message: "Cannot verify signature without merchant code",
@@ -84,7 +80,7 @@ function verifyWebhookAuthenticity(
       callbackUrl,
     },
     body.hash,
-    MERCHANT_CODE
+    MERCHANT_CODE!
   );
 
   if (!signatureValid) {
@@ -127,7 +123,11 @@ export async function GET(request: NextRequest) {
     },
     async () => {
       try {
-        const searchParams = request.nextUrl.searchParams;
+        // Support both NextRequest (with nextUrl) and standard Request objects used in tests
+        const urlObj = (request as any).nextUrl
+          ? (request as any).nextUrl
+          : new URL((request as any).url);
+        const searchParams = urlObj.searchParams;
 
         // Extract payment response parameters
         const transactionId = searchParams.get("transactionId");
@@ -247,7 +247,7 @@ export async function POST(request: NextRequest) {
 
           // Return 200 to prevent retries even for invalid payloads
           return NextResponse.json(
-            { error: "Invalid payload", missing: validation.missing },
+            { success: false, error: "Invalid payload", missing: validation.missing },
             { status: 200 }
           );
         }
@@ -322,7 +322,7 @@ export async function POST(request: NextRequest) {
 
           // Return 200 to prevent retries even for auth failures
           return NextResponse.json(
-            { error: "Webhook authentication failed", reason: authCheck.reason },
+            { success: false, error: "Webhook authentication failed", reason: authCheck.reason },
             { status: 200 }
           );
         }
@@ -427,7 +427,7 @@ export async function POST(request: NextRequest) {
 
         // Return 200 even on error to prevent Jenga retries
         return NextResponse.json(
-          { error: "Failed to process payment callback" },
+          { success: false, error: "Failed to process payment callback" },
           { status: 200 }
         );
       }

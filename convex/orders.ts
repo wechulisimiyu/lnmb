@@ -292,7 +292,19 @@ export const updatePaymentStatus = mutation({
       .first();
 
     if (!payment) {
-      throw new Error("Payment record not found");
+      // Log the missing payment record but don't throw - this can happen if webhook
+      // arrives before order/payment creation completes (race condition)
+      console.warn(
+        `[updatePaymentStatus] Payment record not found for orderReference: ${args.orderReference}`,
+        {
+          orderReference: args.orderReference,
+          status: args.status,
+          transactionId: args.transactionId,
+          paymentChannel: args.paymentChannel,
+        }
+      );
+      // Return null to indicate no update occurred
+      return null;
     }
 
     await ctx.db.patch(payment._id, {

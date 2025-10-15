@@ -65,6 +65,7 @@ interface OrderFormData {
   universityUserEntered?: boolean;
   unitPrice: number;
   totalAmount: number;
+  salesAgentName?: string;  // NEW: Optional sales agent field
 
   // Step 2: Personal & Registration Details
   schoolIdFile?: File;
@@ -118,6 +119,7 @@ export default function OrderForm() {
     universityUserEntered: false,
     unitPrice: 0,
     totalAmount: 0,
+    salesAgentName: "",  // NEW: Initialize sales agent field
 
     // Step 2: Personal & Registration Details
     schoolIdFile: undefined,
@@ -288,6 +290,20 @@ export default function OrderForm() {
     // Clear error when user starts typing
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: "" }));
+    }
+  };
+
+  // Normalize sales agent name when field loses focus
+  const handleSalesAgentBlur = () => {
+    if (formData.salesAgentName) {
+      const normalized = formData.salesAgentName
+        .trim()
+        .toLowerCase()
+        .split(" ")
+        .filter(word => word.length > 0) // Remove empty strings from multiple spaces
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
+      setFormData((prev) => ({ ...prev, salesAgentName: normalized }));
     }
   };
 
@@ -1005,6 +1021,23 @@ export default function OrderForm() {
           </div>
         </div>
       )}
+
+      {/* Sales Agent Field */}
+      <div className="space-y-2">
+        <Label htmlFor="salesAgentName">Assisted by (Optional)</Label>
+        <Input
+          id="salesAgentName"
+          type="text"
+          placeholder="Sales agent name"
+          value={formData.salesAgentName || ""}
+          onChange={(e) => handleInputChange("salesAgentName", e.target.value)}
+          onBlur={handleSalesAgentBlur}
+          className="max-w-md"
+        />
+        <p className="text-sm text-gray-500">
+          If a sales agent helped you with your order, enter their name here
+        </p>
+      </div>
     </div>
   );
 
@@ -1435,6 +1468,11 @@ export default function OrderForm() {
               {formData.student === "yes" && formData.university && (
                 <p>
                   <strong>University:</strong> {formData.university}
+                </p>
+              )}
+              {formData.salesAgentName && (
+                <p>
+                  <strong>Assisted by:</strong> {formData.salesAgentName}
                 </p>
               )}
             </div>

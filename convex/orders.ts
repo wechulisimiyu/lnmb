@@ -15,6 +15,7 @@ export const createOrder = mutation({
     tshirtSize: v.string(),
     quantity: v.number(),
     totalAmount: v.number(),
+    salesAgentName: v.optional(v.string()),
     name: v.string(),
     email: v.string(),
     phone: v.string(),

@@ -368,32 +368,44 @@ export async function POST(request: NextRequest) {
           paymentStatus = "processing";
         }
 
-        // Update payment status in database
+        // Update payment status in database using the new handlePaymentCallback mutation
         try {
-          await convex.mutation(api.orders.updatePaymentStatus, {
+          const result = await convex.mutation(api.orders.handlePaymentCallback, {
             orderReference: orderReference!,
             status: paymentStatus,
             transactionId: transactionId || undefined,
-            paymentChannel: desc || undefined,
+            amount: body.amount,
+            hash: body.hash,
+            desc: desc || undefined,
+            extraData: body.extraData,
           });
+
+          if (!result.success) {
+            logger.warn("Payment callback handler returned failure", {
+              orderReference,
+              message: result.message,
+            });
+          }
 
           PaymentSecurityLogger.logSecurityEvent("CALLBACK_PROCESSED", {
             orderReference,
             status: paymentStatus,
             transactionId,
             channel: desc,
+            handlerSuccess: result.success,
           });
 
-          logger.info("Payment status updated successfully", {
+          logger.info("Payment callback processed", {
             orderReference,
             status: paymentStatus,
             transactionId,
+            handlerSuccess: result.success,
           });
         } catch (error) {
           Sentry.captureException(error, {
             tags: {
               endpoint: "/api/pgw-webhook-4365c21f",
-              operation: "updatePaymentStatus",
+              operation: "handlePaymentCallback",
             },
             extra: {
               orderReference,
@@ -401,7 +413,7 @@ export async function POST(request: NextRequest) {
             },
           });
 
-          logger.error("Failed to update payment status", {
+          logger.error("Failed to process payment callback", {
             orderReference,
             error: error instanceof Error ? error.message : "Unknown error",
           });
@@ -410,7 +422,7 @@ export async function POST(request: NextRequest) {
           return NextResponse.json(
             {
               success: false,
-              message: "Failed to update payment status",
+              message: "Failed to process payment callback",
               error: error instanceof Error ? error.message : "Unknown error",
             },
             { status: 200 }

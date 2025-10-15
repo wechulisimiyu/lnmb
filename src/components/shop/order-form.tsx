@@ -49,16 +49,23 @@ import {
 } from "@/components/ui/command";
 import Image from "next/image";
 
+interface CartItem {
+  size: string;
+  quantity: number;
+}
+
 interface OrderFormData {
   // Step 1: Product Selection
   tshirtType: string;
   tshirtSize: string;
   quantity: number;
+  cartItems: CartItem[];  // NEW: Support multiple sizes
   student: string;
   university?: string;
   universityUserEntered?: boolean;
   unitPrice: number;
   totalAmount: number;
+  salesAgentName?: string;  // NEW: Optional sales agent field
 
   // Step 2: Personal & Registration Details
   schoolIdFile?: File;
@@ -106,11 +113,13 @@ export default function OrderForm() {
     tshirtType: "round",
     tshirtSize: "",
     quantity: 1,
+    cartItems: [],  // NEW: Initialize empty cart
     student: "",
     university: "",
     universityUserEntered: false,
     unitPrice: 0,
     totalAmount: 0,
+    salesAgentName: "",  // NEW: Initialize sales agent field
 
     // Step 2: Personal & Registration Details
     schoolIdFile: undefined,
@@ -153,14 +162,18 @@ export default function OrderForm() {
   useEffect(() => {
     const isStudent = formData.student === "yes";
     const unitPrice = getUnitPrice(formData.tshirtType, isStudent);
-    const totalAmount = unitPrice * formData.quantity;
+    
+    // Calculate total from cart items
+    const cartTotal = formData.cartItems.reduce((sum, item) => {
+      return sum + (unitPrice * item.quantity);
+    }, 0);
 
     setFormData((prev) => ({
       ...prev,
       unitPrice,
-      totalAmount,
+      totalAmount: cartTotal,
     }));
-  }, [formData.tshirtType, formData.student, formData.quantity]);
+  }, [formData.tshirtType, formData.student, formData.cartItems]);
 
   // Save draft to localStorage
   useEffect(() => {
@@ -181,6 +194,80 @@ export default function OrderForm() {
       console.error("Failed to load draft:", error);
     }
   }, []);
+
+  // Cart management functions
+  const addToCart = () => {
+    if (!formData.tshirtSize || formData.quantity < 1) {
+      setErrors((prev) => ({
+        ...prev,
+        tshirtSize: !formData.tshirtSize ? "Please select a size" : "",
+        quantity: formData.quantity < 1 ? "Please enter a valid quantity" : "",
+      }));
+      return;
+    }
+
+    setFormData((prev) => {
+      const existingItemIndex = prev.cartItems.findIndex(
+        (item) => item.size === prev.tshirtSize
+      );
+
+      let newCartItems;
+      if (existingItemIndex >= 0) {
+        // Update existing item quantity
+        newCartItems = [...prev.cartItems];
+        newCartItems[existingItemIndex] = {
+          ...newCartItems[existingItemIndex],
+          quantity: newCartItems[existingItemIndex].quantity + prev.quantity,
+        };
+      } else {
+        // Add new item
+        newCartItems = [
+          ...prev.cartItems,
+          { size: prev.tshirtSize, quantity: prev.quantity },
+        ];
+      }
+
+      // Reset size and quantity after adding
+      return {
+        ...prev,
+        cartItems: newCartItems,
+        tshirtSize: "",
+        quantity: 1,
+      };
+    });
+
+    // Clear any errors
+    setErrors((prev) => ({
+      ...prev,
+      tshirtSize: "",
+      quantity: "",
+    }));
+  };
+
+  const removeFromCart = (size: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      cartItems: prev.cartItems.filter((item) => item.size !== size),
+    }));
+  };
+
+  const updateCartItemQuantity = (size: string, quantity: number) => {
+    if (quantity < 1) {
+      removeFromCart(size);
+      return;
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      cartItems: prev.cartItems.map((item) =>
+        item.size === size ? { ...item, quantity } : item
+      ),
+    }));
+  };
+
+  const getTotalQuantity = () => {
+    return formData.cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  };
 
   const handleInputChange = (
     field: keyof OrderFormData,
@@ -206,6 +293,20 @@ export default function OrderForm() {
     }
   };
 
+  // Normalize sales agent name when field loses focus
+  const handleSalesAgentBlur = () => {
+    if (formData.salesAgentName) {
+      const normalized = formData.salesAgentName
+        .trim()
+        .toLowerCase()
+        .split(" ")
+        .filter(word => word.length > 0) // Remove empty strings from multiple spaces
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
+      setFormData((prev) => ({ ...prev, salesAgentName: normalized }));
+    }
+  };
+
   // Step-specific validation
   const validateStep = (step: Step): boolean => {
     const newErrors: Record<string, string> = {};
@@ -214,10 +315,8 @@ export default function OrderForm() {
       case STEPS.PRODUCT_SELECTION:
         if (!formData.tshirtType)
           newErrors.tshirtType = "Please select t-shirt type";
-        if (!formData.tshirtSize)
-          newErrors.tshirtSize = "Please select t-shirt size";
-        if (formData.quantity < 1 || formData.quantity > 3)
-          newErrors.quantity = "Quantity must be between 1 and 3";
+        if (formData.cartItems.length === 0)
+          newErrors.cart = "Please add at least one item to your cart";
         if (!formData.student)
           newErrors.student = "Please select if you are a student";
 
@@ -457,11 +556,21 @@ export default function OrderForm() {
   const normalizedPhone = normalizeKenyaPhone(formData.phone as string)
   const normalizedKin = normalizeKenyaPhone(formData.kinNumber as string)
 
+      // Serialize cart items into a format that fits existing schema
+      // tshirtSize will be comma-separated like "M:2,L:3,XL:1"
+      // quantity will be total quantity
+      const cartSummary = formData.cartItems
+        .map((item) => `${item.size}:${item.quantity}`)
+        .join(",");
+      const totalQuantity = getTotalQuantity();
+
       // Prepare order data for checkout
       const orderData = {
         ...formData,
         phone: normalizedPhone,
         kinNumber: normalizedKin,
+        tshirtSize: cartSummary,  // Store cart as serialized string
+        quantity: totalQuantity,   // Store total quantity
         // Remove File from the saved order; include uploaded URL if available
         schoolIdFile: undefined,
         schoolIdUrl,
@@ -736,111 +845,199 @@ export default function OrderForm() {
 
       {/* Size and Quantity Selection */}
       {formData.tshirtType && (
-        <div className="grid md:grid-cols-2 gap-4 items-center">
-          <div className="space-y-2">
-            <Label htmlFor="tshirtSize">Size *</Label>
-            <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
-              {["XS", "S", "M", "L", "XL", "XXL", "XXXL"].map((size) => (
-                <button
-                  key={size}
-                  type="button"
-                  className={`h-9 flex items-center justify-center px-3 text-sm rounded-md border transition-colors leading-none ${
-                    formData.tshirtSize === size
-                      ? "bg-blue-600 text-white border-blue-600"
-                      : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
-                  }`}
-                  onClick={() => handleInputChange("tshirtSize", size)}
-                >
-                  {size}
-                </button>
-              ))}
+        <div className="space-y-4">
+          <div className="grid md:grid-cols-2 gap-4 items-end">
+            <div className="space-y-2">
+              <Label htmlFor="tshirtSize">Size *</Label>
+              <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+                {["XS", "S", "M", "L", "XL", "XXL", "XXXL"].map((size) => (
+                  <button
+                    key={size}
+                    type="button"
+                    className={`h-9 flex items-center justify-center px-3 text-sm rounded-md border transition-colors leading-none ${
+                      formData.tshirtSize === size
+                        ? "bg-blue-600 text-white border-blue-600"
+                        : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
+                    }`}
+                    onClick={() => handleInputChange("tshirtSize", size)}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
+              {errors.tshirtSize && (
+                <p className="text-red-500 text-sm">{errors.tshirtSize}</p>
+              )}
             </div>
-            {errors.tshirtSize && (
-              <p className="text-red-500 text-sm">{errors.tshirtSize}</p>
-            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="quantity">Quantity *</Label>
+              <div className="flex items-center space-x-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="leading-none"
+                  onClick={() =>
+                    handleInputChange(
+                      "quantity",
+                      Math.max(1, formData.quantity - 1),
+                    )
+                  }
+                  disabled={formData.quantity <= 1}
+                >
+                  -
+                </Button>
+                <Input
+                  type="number"
+                  min={1}
+                  value={formData.quantity}
+                  onChange={(e) => {
+                    const v = parseInt(e.target.value) || 1;
+                    const clamped = Math.max(1, v);
+                    handleInputChange("quantity", clamped);
+                  }}
+                  className="w-20 text-center"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="leading-none"
+                  onClick={() =>
+                    handleInputChange(
+                      "quantity",
+                      formData.quantity + 1,
+                    )
+                  }
+                >
+                  +
+                </Button>
+              </div>
+              {errors.quantity && (
+                <p className="text-red-500 text-sm">{errors.quantity}</p>
+              )}
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="quantity">Quantity *</Label>
-            <div className="flex items-center space-x-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="leading-none"
-                onClick={() =>
-                  handleInputChange(
-                    "quantity",
-                    Math.max(1, formData.quantity - 1),
-                  )
-                }
-                disabled={formData.quantity <= 1}
-              >
-                -
-              </Button>
-              <Input
-                type="number"
-                min={1}
-                max={3}
-                value={formData.quantity}
-                onChange={(e) => {
-                  const v = parseInt(e.target.value) || 1;
-                  const clamped = Math.min(3, Math.max(1, v));
-                  handleInputChange("quantity", clamped);
-                }}
-                className="w-20 text-center"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="leading-none"
-                onClick={() =>
-                  handleInputChange(
-                    "quantity",
-                    Math.min(3, formData.quantity + 1),
-                  )
-                }
-                disabled={formData.quantity >= 3}
-              >
-                +
-              </Button>
-            </div>
-            {errors.quantity && (
-              <p className="text-red-500 text-sm">{errors.quantity}</p>
-            )}
+          {/* Add to Cart Button */}
+          <div className="flex justify-center">
+            <Button
+              type="button"
+              onClick={addToCart}
+              className="w-full md:w-auto"
+              disabled={!formData.tshirtSize || formData.quantity < 1}
+            >
+              <ShoppingCart className="mr-2 h-4 w-4" />
+              Add to Cart
+            </Button>
           </div>
+        </div>
+      )}
+
+      {/* Cart Display */}
+      {formData.cartItems.length > 0 && (
+        <div className="bg-blue-50 p-4 rounded-lg space-y-3">
+          <div className="flex justify-between items-center">
+            <p className="font-semibold">Your Cart</p>
+            <Badge variant="secondary">{getTotalQuantity()} items</Badge>
+          </div>
+          <div className="space-y-2">
+            {formData.cartItems.map((item) => (
+              <div
+                key={item.size}
+                className="flex items-center justify-between bg-white p-3 rounded-md"
+              >
+                <div className="flex items-center space-x-3">
+                  <span className="font-medium">Size {item.size}</span>
+                  <span className="text-gray-600">× {item.quantity}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      updateCartItemQuantity(item.size, item.quantity - 1)
+                    }
+                  >
+                    -
+                  </Button>
+                  <span className="w-8 text-center">{item.quantity}</span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      updateCartItemQuantity(item.size, item.quantity + 1)
+                    }
+                  >
+                    +
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeFromCart(item.size)}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    Remove
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+          {errors.cart && (
+            <p className="text-red-500 text-sm">{errors.cart}</p>
+          )}
         </div>
       )}
 
       {/* Price Summary */}
-      {formData.tshirtType && formData.quantity > 0 && (
-        <div className="bg-blue-50 p-4 rounded-lg">
+      {formData.cartItems.length > 0 && (
+        <div className="bg-green-50 border border-green-200 p-4 rounded-lg">
           <div className="flex justify-between items-center">
             <div>
-              <p className="font-semibold">Order Summary</p>
+              <p className="font-semibold">Order Total</p>
               <p className="text-sm text-gray-600">
-                {formData.quantity}x Round Neck T-shirt ({formData.tshirtSize})
+                {getTotalQuantity()} t-shirt{getTotalQuantity() !== 1 ? 's' : ''} ({formData.cartItems.map(item => `${item.quantity}×${item.size}`).join(', ')})
               </p>
               {formData.student === "yes" && (
                 <p className="text-sm text-green-600">
-                  Student discount applied
+                  ✓ Student discount applied
                 </p>
               )}
             </div>
             <div className="text-right">
-              <p className="text-2xl font-bold text-blue-800">
+              <p className="text-2xl font-bold text-green-800">
                 KES {formData.totalAmount.toLocaleString()}
               </p>
-              {formData.student === "yes" && formData.unitPrice > 0 && (
+              {formData.unitPrice > 0 && (
                 <p className="text-sm text-gray-600">
-                  (KES {formData.unitPrice.toLocaleString()} each)
+                  KES {formData.unitPrice.toLocaleString()} each
                 </p>
               )}
             </div>
           </div>
         </div>
       )}
+
+      {/* Sales Agent Field */}
+      <div className="space-y-2">
+        <Label htmlFor="salesAgentName">Assisted by (Optional)</Label>
+        <Input
+          id="salesAgentName"
+          type="text"
+          placeholder="Sales agent name"
+          value={formData.salesAgentName || ""}
+          onChange={(e) => handleInputChange("salesAgentName", e.target.value)}
+          onBlur={handleSalesAgentBlur}
+          className="max-w-md"
+        />
+        <p className="text-sm text-gray-500">
+          If a sales agent helped you with your order, enter their name here
+        </p>
+      </div>
     </div>
   );
 
@@ -1252,12 +1449,17 @@ export default function OrderForm() {
                 <strong>T-shirt:</strong> Round Neck
               </p>
               <p>
-                <strong>Size:</strong>{" "}
-                {formData.tshirtSize?.charAt(0).toUpperCase() +
-                  formData.tshirtSize?.slice(1)}
+                <strong>Items:</strong>
               </p>
+              <ul className="list-disc list-inside ml-4 space-y-1">
+                {formData.cartItems.map((item) => (
+                  <li key={item.size}>
+                    Size {item.size} × {item.quantity}
+                  </li>
+                ))}
+              </ul>
               <p>
-                <strong>Quantity:</strong> {formData.quantity}
+                <strong>Total Quantity:</strong> {getTotalQuantity()}
               </p>
               <p>
                 <strong>Student:</strong>{" "}
@@ -1266,6 +1468,11 @@ export default function OrderForm() {
               {formData.student === "yes" && formData.university && (
                 <p>
                   <strong>University:</strong> {formData.university}
+                </p>
+              )}
+              {formData.salesAgentName && (
+                <p>
+                  <strong>Assisted by:</strong> {formData.salesAgentName}
                 </p>
               )}
             </div>
@@ -1310,13 +1517,16 @@ export default function OrderForm() {
         <div className="flex justify-between items-center">
           <div>
             <h5 className="font-semibold text-lg">Total Amount</h5>
-            <div className="text-sm text-gray-600">
-              <p>
-                {formData.quantity}x Round Neck @ KES{" "}
-                {formData.unitPrice.toLocaleString()} each
-              </p>
+            <div className="text-sm text-gray-600 space-y-1">
+              {formData.cartItems.map((item) => (
+                <p key={item.size}>
+                  {item.quantity}×{item.size} @ KES{" "}
+                  {formData.unitPrice.toLocaleString()} each = KES{" "}
+                  {(item.quantity * formData.unitPrice).toLocaleString()}
+                </p>
+              ))}
               {formData.student === "yes" && (
-                <p className="text-green-600">Student discount applied</p>
+                <p className="text-green-600 font-medium">✓ Student discount applied</p>
               )}
               <p>
                 <strong>Attendance:</strong>{" "}

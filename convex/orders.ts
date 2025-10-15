@@ -263,6 +263,70 @@ export const getAllPayments = query({
   },
 });
 
+// Handle payment gateway callback (webhook)
+export const handlePaymentCallback = mutation({
+  args: {
+    transactionId: v.optional(v.string()),
+    status: v.string(),
+    orderReference: v.string(),
+    amount: v.optional(v.string()),
+    hash: v.optional(v.string()),
+    desc: v.optional(v.string()),
+    extraData: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    // Defensive logging for incoming callback
+    try {
+      console.info("[handlePaymentCallback] received callback", {
+        orderReference: args.orderReference,
+        status: args.status,
+        transactionId: args.transactionId,
+      });
+    } catch (e) {
+      // ignore
+    }
+
+    // Try to find matching payment record using index by_reference if available
+    const payment = await ctx.db
+      .query("payments")
+      .withIndex("by_reference", (q) => q.eq("orderReference", args.orderReference))
+      .first();
+
+    if (!payment) {
+      // If payment not found, log and return an explicit result so caller can retry or investigate
+      console.warn(`[handlePaymentCallback] payment record not found for reference: ${args.orderReference}`);
+      return { success: false, message: "payment record not found", reference: args.orderReference };
+    }
+
+    // Patch the payment record with new status and transactionId
+    await ctx.db.patch(payment._id, {
+      status: args.status,
+      transactionId: args.transactionId,
+      updatedAt: Date.now(),
+    });
+
+    // If payment is marked as paid, mark the linked order as paid too
+    if (args.status === "paid") {
+      const order = await ctx.db
+        .query("orders")
+        .withIndex("by_reference", (q) => q.eq("orderReference", args.orderReference))
+        .first();
+
+      if (order) {
+        await ctx.db.patch(order._id, {
+          paid: true,
+          updatedAt: Date.now(),
+        });
+      } else {
+        // Log but continue - order may be inserted later due to race condition
+        console.warn(`[handlePaymentCallback] order not found for reference: ${args.orderReference}`);
+      }
+    }
+
+    return { success: true, reference: args.orderReference };
+  },
+});
+
 // Get order statistics (for admin dashboard)
 export const getOrderStats = query({
   args: {},

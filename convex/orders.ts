@@ -244,20 +244,68 @@ export const updatePaymentStatus = mutation({
   },
 });
 
-// Get all orders (for admin)
+// Get all orders (for admin/director)
 export const getAllOrders = query({
-  args: {},
-  handler: async (ctx) => {
+  args: {
+    token: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Verify session
+    const session = await ctx.db
+      .query("sessions")
+      .withIndex("by_token", (q) => q.eq("token", args.token))
+      .first();
+
+    if (!session || session.expiresAt < Date.now()) {
+      throw new Error("Unauthorized: Invalid or expired session");
+    }
+
+    // Get user
+    const user = await ctx.db.get(session.userId);
+
+    if (!user || !user.isActive) {
+      throw new Error("Unauthorized: User not found or inactive");
+    }
+
+    // Check if user has admin or director role
+    if (user.role !== "admin" && user.role !== "director") {
+      throw new Error("Unauthorized: Insufficient permissions");
+    }
+
     const orders = await ctx.db.query("orders").order("desc").collect();
 
     return orders;
   },
 });
 
-// Get all payments (for admin)
+// Get all payments (for admin/director)
 export const getAllPayments = query({
-  args: {},
-  handler: async (ctx) => {
+  args: {
+    token: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Verify session
+    const session = await ctx.db
+      .query("sessions")
+      .withIndex("by_token", (q) => q.eq("token", args.token))
+      .first();
+
+    if (!session || session.expiresAt < Date.now()) {
+      throw new Error("Unauthorized: Invalid or expired session");
+    }
+
+    // Get user
+    const user = await ctx.db.get(session.userId);
+
+    if (!user || !user.isActive) {
+      throw new Error("Unauthorized: User not found or inactive");
+    }
+
+    // Check if user has admin or director role
+    if (user.role !== "admin" && user.role !== "director") {
+      throw new Error("Unauthorized: Insufficient permissions");
+    }
+
     const payments = await ctx.db.query("payments").order("desc").collect();
 
     return payments;
@@ -328,10 +376,34 @@ export const handlePaymentCallback = mutation({
   },
 });
 
-// Get order statistics (for admin dashboard)
+// Get order statistics (for admin/director dashboard)
 export const getOrderStats = query({
-  args: {},
-  handler: async (ctx) => {
+  args: {
+    token: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Verify session
+    const session = await ctx.db
+      .query("sessions")
+      .withIndex("by_token", (q) => q.eq("token", args.token))
+      .first();
+
+    if (!session || session.expiresAt < Date.now()) {
+      throw new Error("Unauthorized: Invalid or expired session");
+    }
+
+    // Get user
+    const user = await ctx.db.get(session.userId);
+
+    if (!user || !user.isActive) {
+      throw new Error("Unauthorized: User not found or inactive");
+    }
+
+    // Check if user has admin or director role
+    if (user.role !== "admin" && user.role !== "director") {
+      throw new Error("Unauthorized: Insufficient permissions");
+    }
+
     const orders = await ctx.db.query("orders").collect();
     const payments = await ctx.db.query("payments").collect();
 

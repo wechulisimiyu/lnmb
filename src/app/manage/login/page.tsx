@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,9 +15,15 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [userAgent, setUserAgent] = useState("");
   const router = useRouter();
 
   const login = useMutation(api.auth.login);
+
+  useEffect(() => {
+    // Capture user agent on mount
+    setUserAgent(navigator.userAgent);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,7 +31,11 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const result = await login({ email, password });
+      const result = await login({ 
+        email, 
+        password,
+        userAgent,
+      });
       
       // Store token in localStorage
       localStorage.setItem("authToken", result.token);
@@ -99,6 +109,8 @@ export default function LoginPage() {
               {isLoading ? "Logging in..." : "Login"}
             </Button>
           </form>
+
+          {/* OAuth integration coming soon - see docs/AUTH_OAUTH.md for setup instructions */}
         </CardContent>
       </Card>
     </div>

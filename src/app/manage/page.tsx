@@ -120,7 +120,10 @@ export default function ManagePage() {
   const handleLogout = async () => {
     if (authToken) {
       try {
-        await logout({ token: authToken });
+        await logout({ 
+          token: authToken,
+          userAgent: navigator.userAgent,
+        });
       } catch (error) {
         console.error("Logout error:", error);
       }

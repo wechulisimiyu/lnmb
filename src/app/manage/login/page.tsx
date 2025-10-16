@@ -33,8 +33,9 @@ export default function LoginPage() {
 
       // Redirect to manage page
       router.push("/manage");
-    } catch (err: any) {
-      setError(err.message || "Login failed. Please try again.");
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Login failed. Please try again.";
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }

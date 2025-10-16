@@ -13,8 +13,6 @@ import {
   Award,
   ShoppingCart,
   Plus,
-  Edit,
-  Trash2,
   Eye,
   BarChart3,
   DollarSign,
@@ -26,10 +24,47 @@ import {
   Shield,
 } from "lucide-react";
 
+interface User {
+  _id: string;
+  name: string;
+  email: string;
+  role: "admin" | "director";
+}
+
+interface Order {
+  _id: string;
+  orderReference: string;
+  name: string;
+  email: string;
+  phone: string;
+  tshirtType: string;
+  tshirtSize: string;
+  quantity: number;
+  totalAmount: number;
+  paid: boolean;
+  createdAt: number;
+}
+
+interface Payment {
+  _id: string;
+  orderReference: string;
+  customerFirstName?: string;
+  customerLastName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  phoneNumber?: string;
+  currency?: string;
+  orderAmount?: number;
+  amount?: number;
+  status: string;
+  transactionId?: string;
+  createdAt: number;
+}
+
 export default function ManagePage() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [authToken, setAuthToken] = useState<string | null>(null);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const router = useRouter();
 
   // Get current user
@@ -534,7 +569,7 @@ export default function ManagePage() {
                     </thead>
                     <tbody>
                       {orders &&
-                        orders.map((order: any) => (
+                        orders.map((order: Order) => (
                           <tr key={order._id} className="border-t">
                             <td className="p-3 sm:p-4">
                               <code className="text-xs bg-gray-100 px-2 py-1 rounded">
@@ -662,7 +697,7 @@ export default function ManagePage() {
                     </thead>
                     <tbody>
                       {payments &&
-                        payments.map((payment: any) => (
+                        payments.map((payment: Payment) => (
                           <tr key={payment._id} className="border-t">
                             <td className="p-3 sm:p-4">
                               <code className="text-xs bg-gray-100 px-2 py-1 rounded">

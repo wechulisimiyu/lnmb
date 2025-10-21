@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import type { LucideIcon } from "lucide-react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +18,6 @@ import {
   BarChart3,
   DollarSign,
   Calendar,
-  GraduationCap,
   Package,
   CreditCard,
   LogOut,
@@ -145,67 +145,176 @@ export default function ManagePage() {
     );
   }
 
-  // Mock data for other sections (same as before)
-  const stats = {
-    totalMembers: 24,
-    totalHighlights: 15,
-    totalProducts: 8,
-    totalRevenue: orderStats?.totalRevenue || 45250,
-    monthlyOrders: orderStats?.monthlyOrders || 156,
-    activeYears: 5,
+  const totalOrders =
+    orderStats?.totalOrders ?? (orders ? orders.length : 0);
+  const paidOrders =
+    orderStats?.paidOrders ??
+    (orders ? orders.filter((order) => order.paid).length : 0);
+  const successfulPayments =
+    orderStats?.successfulPayments ??
+    (payments ? payments.filter((payment) => payment.status === "paid").length : 0);
+  const pendingPayments =
+    orderStats?.pendingPayments ??
+    (payments ? payments.filter((payment) => payment.status === "pending").length : 0);
+  const totalRevenue =
+    orderStats?.totalRevenue ??
+    (orders
+      ? orders
+          .filter((order) => order.paid)
+          .reduce((sum, order) => sum + order.totalAmount, 0)
+      : 0);
+  const monthlyOrders =
+    orderStats?.monthlyOrders ??
+    (orders
+      ? orders.filter((order) => {
+          const orderDate = new Date(order.createdAt);
+          const now = new Date();
+          return (
+            orderDate.getMonth() === now.getMonth() &&
+            orderDate.getFullYear() === now.getFullYear()
+          );
+        }).length
+      : 0);
+  const itemsSold = orders
+    ? orders.reduce((sum, order) => sum + order.quantity, 0)
+    : 0;
+  const uniqueCustomers = orders
+    ? new Set(
+        orders
+          .map((order) => order.email)
+          .filter((email): email is string => Boolean(email))
+      ).size
+    : 0;
+  const outstandingBalance = orders
+    ? orders
+        .filter((order) => !order.paid)
+        .reduce((sum, order) => sum + order.totalAmount, 0)
+    : 0;
+  const averageOrderValue =
+    paidOrders > 0 ? Math.round(totalRevenue / paidOrders) : 0;
+  const pendingOrders = Math.max(totalOrders - paidOrders, 0);
+
+  const formatCurrency = (value: number) => `KES ${value.toLocaleString()}`;
+
+  type OverviewCard = {
+    label: string;
+    value: string;
+    icon: LucideIcon;
+    iconClass: string;
   };
+
+  const overviewCards: OverviewCard[] = [
+    {
+      label: "Total Revenue",
+      value: formatCurrency(totalRevenue),
+      icon: DollarSign,
+      iconClass: "text-green-600",
+    },
+    {
+      label: "Monthly Orders",
+      value: monthlyOrders.toLocaleString(),
+      icon: Calendar,
+      iconClass: "text-blue-600",
+    },
+    {
+      label: "Items Sold",
+      value: itemsSold.toLocaleString(),
+      icon: ShoppingCart,
+      iconClass: "text-purple-600",
+    },
+    {
+      label: "Pending Orders",
+      value: pendingOrders.toLocaleString(),
+      icon: Package,
+      iconClass: "text-amber-600",
+    },
+    {
+      label: "Unique Customers",
+      value: uniqueCustomers.toLocaleString(),
+      icon: Users,
+      iconClass: "text-slate-600",
+    },
+    {
+      label: "Average Order Value",
+      value: formatCurrency(averageOrderValue),
+      icon: BarChart3,
+      iconClass: "text-indigo-600",
+    },
+    {
+      label: "Outstanding Balance",
+      value: formatCurrency(outstandingBalance),
+      icon: CreditCard,
+      iconClass: "text-rose-600",
+    },
+  ];
 
   // Generate recent activity from orders and payments
   const generateRecentActivity = () => {
-    const activities = [];
+    type Activity = {
+      action: string;
+      user: string;
+      time: string;
+      type: string;
+      timestamp: number;
+    };
+
+    const describeTimeAgo = (timestamp: number) => {
+      const diff = Date.now() - timestamp;
+      const minutes = Math.floor(diff / (1000 * 60));
+      if (minutes < 1) {
+        return "Just now";
+      }
+      if (minutes < 60) {
+        return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
+      }
+      const hours = Math.floor(minutes / 60);
+      if (hours < 24) {
+        return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+      }
+      const days = Math.floor(hours / 24);
+      return `${days} day${days === 1 ? "" : "s"} ago`;
+    };
+
+    const activities: Activity[] = [];
 
     if (orders && orders.length > 0) {
-      const recentOrders = orders.slice(0, 2);
-      recentOrders.forEach((order) => {
-        const timeAgo = Math.floor(
-          (Date.now() - order.createdAt) / (1000 * 60 * 60)
-        );
+      orders.slice(0, 5).forEach((order) => {
         activities.push({
           action: `New order for ${order.tshirtType} (${order.quantity}x)`,
           user: order.name,
-          time: timeAgo < 1 ? "Just now" : `${timeAgo} hours ago`,
+          time: describeTimeAgo(order.createdAt),
           type: "order",
+          timestamp: order.createdAt,
         });
       });
     }
 
     if (payments && payments.length > 0) {
-      const recentPayments = payments.slice(0, 2);
-      recentPayments.forEach((payment) => {
-        const timeAgo = Math.floor(
-          (Date.now() - payment.createdAt) / (1000 * 60 * 60)
-        );
-        const amount = payment.orderAmount || payment.amount || 0;
+      payments.slice(0, 5).forEach((payment) => {
+        const amount = payment.orderAmount ?? payment.amount ?? 0;
+        const name = [payment.customerFirstName, payment.customerLastName]
+          .filter(Boolean)
+          .join(" ") || "Unknown User";
+        let activityType = "payment-pending";
+        if (payment.status === "paid") {
+          activityType = "payment-success";
+        } else if (payment.status !== "pending") {
+          activityType = "payment-other";
+        }
         activities.push({
-          action: `Payment ${payment.status} - KES ${amount.toLocaleString()}`,
-          user: `${payment.customerFirstName || "Unknown"} ${payment.customerLastName || "User"}`,
-          time: timeAgo < 1 ? "Just now" : `${timeAgo} hours ago`,
-          type: payment.status === "paid" ? "payment-success" : "payment-pending",
+          action: `Payment ${payment.status} - ${formatCurrency(amount)}`,
+          user: name,
+          time: describeTimeAgo(payment.createdAt),
+          type: activityType,
+          timestamp: payment.createdAt,
         });
       });
     }
 
-    activities.push(
-      {
-        action: "New team member added",
-        user: "Admin",
-        time: "2 hours ago",
-        type: "team",
-      },
-      {
-        action: "Product updated",
-        user: "Admin",
-        time: "4 hours ago",
-        type: "product",
-      }
-    );
-
-    return activities.slice(0, 6);
+    return activities
+      .sort((a, b) => b.timestamp - a.timestamp)
+      .slice(0, 6)
+      .map(({ timestamp, ...rest }) => rest);
   };
 
   const recentActivity = generateRecentActivity();
@@ -306,107 +415,23 @@ export default function ManagePage() {
           <TabsContent value="dashboard" className="space-y-4 sm:space-y-6">
             {/* Stats Grid - Mobile Responsive */}
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
-              {isAdmin && (
-                <>
-                  <Card>
-                    <CardContent className="p-3 sm:p-4 lg:p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-xs sm:text-sm text-slate-600">
-                            Team Members
-                          </p>
-                          <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
-                            {stats.totalMembers}
-                          </p>
-                        </div>
-                        <Users className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600" />
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardContent className="p-3 sm:p-4 lg:p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-xs sm:text-sm text-slate-600">
-                            Highlights
-                          </p>
-                          <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
-                            {stats.totalHighlights}
-                          </p>
-                        </div>
-                        <Award className="w-6 h-6 sm:w-8 sm:h-8 text-green-600" />
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="col-span-2 lg:col-span-1">
-                    <CardContent className="p-3 sm:p-4 lg:p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-xs sm:text-sm text-slate-600">
-                            Products
-                          </p>
-                          <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
-                            {stats.totalProducts}
-                          </p>
-                        </div>
-                        <ShoppingCart className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </>
-              )}
-
-              <Card>
-                <CardContent className="p-3 sm:p-4 lg:p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs sm:text-sm text-slate-600">
-                        Revenue
-                      </p>
-                      <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
-                        KES {stats.totalRevenue.toLocaleString()}
-                      </p>
-                    </div>
-                    <DollarSign className="w-6 h-6 sm:w-8 sm:h-8 text-green-600" />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-3 sm:p-4 lg:p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs sm:text-sm text-slate-600">
-                        Monthly Orders
-                      </p>
-                      <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
-                        {stats.monthlyOrders}
-                      </p>
-                    </div>
-                    <Calendar className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600" />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {isAdmin && (
-                <Card>
+              {overviewCards.map(({ label, value, icon: Icon, iconClass }) => (
+                <Card key={label}>
                   <CardContent className="p-3 sm:p-4 lg:p-6">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-xs sm:text-sm text-slate-600">
-                          Active Years
+                          {label}
                         </p>
                         <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
-                          {stats.activeYears}
+                          {value}
                         </p>
                       </div>
-                      <GraduationCap className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600" />
+                      <Icon className={`w-6 h-6 sm:w-8 sm:h-8 ${iconClass}`} />
                     </div>
                   </CardContent>
                 </Card>
-              )}
+              ))}
             </div>
 
             {/* Order Stats Grid */}
@@ -419,7 +444,7 @@ export default function ManagePage() {
                         Total Orders
                       </p>
                       <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
-                        {orderStats?.totalOrders || 0}
+                        {totalOrders.toLocaleString()}
                       </p>
                     </div>
                     <Package className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600" />
@@ -435,7 +460,7 @@ export default function ManagePage() {
                         Paid Orders
                       </p>
                       <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
-                        {orderStats?.paidOrders || 0}
+                        {paidOrders.toLocaleString()}
                       </p>
                     </div>
                     <Package className="w-6 h-6 sm:w-8 sm:h-8 text-green-600" />
@@ -451,7 +476,7 @@ export default function ManagePage() {
                         Successful Payments
                       </p>
                       <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
-                        {orderStats?.successfulPayments || 0}
+                        {successfulPayments.toLocaleString()}
                       </p>
                     </div>
                     <CreditCard className="w-6 h-6 sm:w-8 sm:h-8 text-green-600" />
@@ -467,7 +492,7 @@ export default function ManagePage() {
                         Pending Payments
                       </p>
                       <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
-                        {orderStats?.pendingPayments || 0}
+                        {pendingPayments.toLocaleString()}
                       </p>
                     </div>
                     <CreditCard className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-600" />
@@ -485,41 +510,43 @@ export default function ManagePage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3 sm:space-y-4">
-                  {recentActivity.map((activity, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-3 bg-secondary rounded-lg"
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div
-                          className={`w-2 h-2 rounded-full ${
-                            activity.type === "team"
-                              ? "bg-primary"
-                              : activity.type === "product"
-                                ? "bg-purple-600"
-                                : activity.type === "order"
-                                  ? "bg-blue-600"
-                                  : activity.type === "payment-success"
-                                    ? "bg-green-600"
-                                    : activity.type === "payment-pending"
-                                      ? "bg-yellow-600"
-                                      : "bg-brand-success"
-                          }`}
-                        ></div>
-                        <div>
-                          <p className="font-medium text-foreground text-sm sm:text-base">
-                            {activity.action}
-                          </p>
-                          <p className="text-xs sm:text-sm text-slate-600">
-                            by {activity.user}
-                          </p>
+                  {recentActivity.length > 0 ? (
+                    recentActivity.map((activity, index) => (
+                      <div
+                        key={`${activity.action}-${activity.time}-${index}`}
+                        className="flex items-center justify-between p-3 bg-secondary rounded-lg"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div
+                            className={`w-2 h-2 rounded-full ${
+                              activity.type === "order"
+                                ? "bg-blue-600"
+                                : activity.type === "payment-success"
+                                  ? "bg-green-600"
+                                  : activity.type === "payment-pending"
+                                    ? "bg-yellow-600"
+                                    : "bg-slate-400"
+                            }`}
+                          ></div>
+                          <div>
+                            <p className="font-medium text-foreground text-sm sm:text-base">
+                              {activity.action}
+                            </p>
+                            <p className="text-xs sm:text-sm text-slate-600">
+                              by {activity.user}
+                            </p>
+                          </div>
                         </div>
+                        <span className="text-xs sm:text-sm text-slate-500">
+                          {activity.time}
+                        </span>
                       </div>
-                      <span className="text-xs sm:text-sm text-slate-500">
-                        {activity.time}
-                      </span>
+                    ))
+                  ) : (
+                    <div className="p-6 text-center text-slate-500 text-sm">
+                      No recent activity yet.
                     </div>
-                  ))}
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -533,10 +560,10 @@ export default function ManagePage() {
               </h2>
               <div className="flex gap-2">
                 <Badge variant="outline">
-                  {orderStats?.totalOrders || 0} Total Orders
+                  {totalOrders.toLocaleString()} Total Orders
                 </Badge>
                 <Badge variant="outline" className="bg-green-50 text-green-700">
-                  {orderStats?.paidOrders || 0} Paid
+                  {paidOrders.toLocaleString()} Paid
                 </Badge>
               </div>
             </div>
@@ -658,13 +685,13 @@ export default function ManagePage() {
               </h2>
               <div className="flex gap-2">
                 <Badge variant="outline">
-                  {orderStats?.successfulPayments || 0} Successful
+                  {successfulPayments.toLocaleString()} Successful
                 </Badge>
                 <Badge
                   variant="outline"
                   className="bg-yellow-50 text-yellow-700"
                 >
-                  {orderStats?.pendingPayments || 0} Pending
+                  {pendingPayments.toLocaleString()} Pending
                 </Badge>
               </div>
             </div>

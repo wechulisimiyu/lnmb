@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { CheckCircle, XCircle, Clock, AlertTriangle } from "lucide-react";
+import { CheckCircle, XCircle, Clock, AlertTriangle, Inbox } from "lucide-react";
 
 function PaymentResultContent() {
   const router = useRouter();
@@ -121,7 +121,7 @@ function PaymentResultContent() {
       case "error":
         return <AlertTriangle className="h-16 w-16 text-red-500" />;
       default:
-        return <AlertTriangle className="h-16 w-16 text-gray-500" />;
+        return <Inbox className="h-16 w-16 text-gray-500" />;
     }
   };
 
@@ -136,7 +136,7 @@ function PaymentResultContent() {
       case "error":
         return "Payment Error";
       default:
-        return "Payment Status Unknown";
+        return "Check your email";
     }
   };
 
@@ -153,7 +153,7 @@ function PaymentResultContent() {
       case "error":
         return "An error occurred while processing your payment. Please contact support for assistance.";
       default:
-        return "We couldn't determine the status of your payment. Please contact support with your order reference.";
+        return "You will receive an email confirmation shortly with your order details.";
     }
   };
 

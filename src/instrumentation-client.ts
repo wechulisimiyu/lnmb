@@ -9,24 +9,40 @@
 if (typeof window !== "undefined") {
   try {
     // Only create a shim when the native bridge is missing
-    const w = window as any;
+    type WebkitWindow = Window & {
+      webkit?: {
+        messageHandlers?: Record<
+          string,
+          { postMessage: (...args: unknown[]) => void }
+        >;
+      };
+    };
+
+    const w = window as unknown as WebkitWindow;
     if (!w.webkit || !w.webkit.messageHandlers) {
       // Keep window.webkit if it exists, otherwise create a minimal object
       // that won't interfere with native bridges that register later.
       // The structure mirrors the expected API: messageHandlers.{handler}.postMessage
-      // Each handler is a no-op that accepts a single message parameter.
+      // Each handler is a no-op that accepts any args but does nothing with them.
       w.webkit = w.webkit || {};
-      w.webkit.messageHandlers = new Proxy({}, {
-        get: function (_target, _prop) {
-          // Return a faux handler with a postMessage no-op
-          return { postMessage: (_msg: unknown) => { /* no-op */ } };
+      w.webkit.messageHandlers = new Proxy(
+        {},
+        {
+          get: function () {
+            // Return a faux handler with a postMessage no-op that consumes args
+            return {
+              postMessage: (...args: unknown[]) => {
+                void args;
+              },
+            };
+          },
         },
-      });
+      );
     }
   } catch (e) {
     // Swallow any unexpected errors during shim installation to avoid
     // causing additional issues in client runtime.
-    // eslint-disable-next-line no-console
+
     console.warn("Failed to install webkit.messageHandlers shim", e);
   }
 }

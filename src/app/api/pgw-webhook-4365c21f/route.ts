@@ -416,7 +416,10 @@ export async function POST(request: NextRequest) {
           );
 
           // Log the mutation result so we can see if Convex accepted/processed it
-          logger.info("[pgw-webhook] convex mutation result", { orderReference, result });
+          logger.info("[pgw-webhook] convex mutation result", {
+            orderReference,
+            result,
+          });
 
           if (!result || !result.success) {
             logger.warn("Payment callback handler returned failure or null", {

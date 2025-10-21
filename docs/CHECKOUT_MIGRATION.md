@@ -80,21 +80,22 @@ In production, prefer storing the PEM in your secret manager as multiline (set `
 1. Add `JENGA_PRIVATE_KEY_PATH=./privatekey.pem` to `.env.local`.
 2. Start the app: `pnpm dev`.
 3. Create an order in the UI and click the payment button. Inspect the form POST
-  to confirm `token`, `signature`, and other fields are present.
+   to confirm `token`, `signature`, and other fields are present.
 4. Use Jenga sandbox/UAT for end-to-end verification.
 
 ## Migration checklist
 
 - [ ] Ensure `.env.local` contains Jenga credentials and private key info.
 - [ ] Update any external integrations that relied on Convex checkout endpoints
-  to point to the new Next.js flow where applicable.
+      to point to the new Next.js flow where applicable.
 - [ ] Remove references to deprecated Convex functions in your codebase.
 
 ## If you want help
 
 I can:
- - Add a migration script to automatically update any code referencing the old
-   `convex/checkout` exports to use the `orders` or Next.js endpoints.
- - Add `vitest.config.ts` so backend tests run without frontend PostCSS/Vite
-   interfering.
- - Implement `JENGA_PRIVATE_KEY_BASE64` support for storing PEMs as single-line env vars.
+
+- Add a migration script to automatically update any code referencing the old
+  `convex/checkout` exports to use the `orders` or Next.js endpoints.
+- Add `vitest.config.ts` so backend tests run without frontend PostCSS/Vite
+  interfering.
+- Implement `JENGA_PRIVATE_KEY_BASE64` support for storing PEMs as single-line env vars.

@@ -1,6 +1,6 @@
 /**
  * Integration tests for the secure Jenga Payment Gateway webhook
- * 
+ *
  * These tests simulate actual production payloads from Jenga PGW
  */
 
@@ -17,7 +17,12 @@ process.env.SITE_URL = "https://test.example.com";
 // Mock Convex client
 vi.mock("convex/browser", () => ({
   ConvexHttpClient: vi.fn().mockImplementation(() => ({
-    query: vi.fn().mockResolvedValue({ _id: "payment123", orderReference: "LNMB1760382255555S8W1" }),
+    query: vi
+      .fn()
+      .mockResolvedValue({
+        _id: "payment123",
+        orderReference: "LNMB1760382255555S8W1",
+      }),
     mutation: vi.fn().mockResolvedValue("payment123"),
   })),
 }));
@@ -36,7 +41,9 @@ vi.mock("@sentry/nextjs", () => ({
 // Mock payment security functions
 vi.mock("@/lib/paymentSecurity", () => ({
   verifyJengaSignature: vi.fn().mockReturnValue(true),
-  validateCallbackPayload: vi.fn().mockReturnValue({ valid: true, missing: [] }),
+  validateCallbackPayload: vi
+    .fn()
+    .mockReturnValue({ valid: true, missing: [] }),
   PaymentSecurityLogger: {
     logSecurityEvent: vi.fn(),
     logSecurityWarning: vi.fn(),
@@ -72,18 +79,18 @@ describe("Jenga PGW Webhook - Production Payload", () => {
       `https://test.example.com/api/pgw-webhook-4365c21f?${searchParams.toString()}`,
       {
         method: "GET",
-      }
+      },
     );
 
     // Import the route handler
     const { GET } = await import("@/app/api/pgw-webhook-4365c21f/route");
 
-  // Execute the handler
-  const response = await GET(request as unknown as NextRequest);
+    // Execute the handler
+    const response = await GET(request as unknown as NextRequest);
 
     // Should redirect to result page
     expect(response.status).toBe(307); // Redirect status
-    
+
     const location = response.headers.get("location");
     expect(location).toContain("/checkout/result");
     expect(location).toContain("reference=LNMB1760382255555S8W1");
@@ -110,14 +117,14 @@ describe("Jenga PGW Webhook - Production Payload", () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
-      }
+      },
     );
 
-  // Import the route handler (this constructs the mocked Convex client instance)
-  const { POST } = await import("@/app/api/pgw-webhook-4365c21f/route");
+    // Import the route handler (this constructs the mocked Convex client instance)
+    const { POST } = await import("@/app/api/pgw-webhook-4365c21f/route");
 
-  // Execute the handler
-  const response = await POST(request as unknown as NextRequest);
+    // Execute the handler
+    const response = await POST(request as unknown as NextRequest);
     const data = await response.json();
 
     // Should return success
@@ -150,10 +157,10 @@ describe("Jenga PGW Webhook - Production Payload", () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
-      }
+      },
     );
 
-  const response = await POST(request as unknown as NextRequest);
+    const response = await POST(request as unknown as NextRequest);
     const data = await response.json();
 
     // Should return 200 and not throw (the Convex mutation in convex/orders.ts is defensive)
@@ -184,11 +191,11 @@ describe("Jenga PGW Webhook - Production Payload", () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
-      }
+      },
     );
 
     const { POST } = await import("@/app/api/pgw-webhook-4365c21f/route");
-  const response = await POST(request as unknown as NextRequest);
+    const response = await POST(request as unknown as NextRequest);
     const data = await response.json();
 
     // Should return 200 (not 401) to prevent Jenga retries
@@ -211,11 +218,18 @@ describe("Jenga PGW Webhook - Production Payload", () => {
     // Ensure Convex mock returns success for updates
     const convexMockModuleUnknown = (await import("convex/browser")) as unknown;
     const convexMockModule = convexMockModuleUnknown as {
-      ConvexHttpClient: ((...args: unknown[]) => unknown) & { mockImplementation?: (impl: (...args: unknown[]) => unknown) => void };
+      ConvexHttpClient: ((...args: unknown[]) => unknown) & {
+        mockImplementation?: (impl: (...args: unknown[]) => unknown) => void;
+      };
     };
     // @ts-expect-error - testing environment provides vi.fn mocks
     convexMockModule.ConvexHttpClient.mockImplementation(() => ({
-      query: vi.fn().mockResolvedValue({ _id: "payment123", orderReference: "LNMB1760382255555S8W1" }),
+      query: vi
+        .fn()
+        .mockResolvedValue({
+          _id: "payment123",
+          orderReference: "LNMB1760382255555S8W1",
+        }),
       mutation: vi.fn().mockResolvedValue("payment123"),
     }));
 
@@ -230,9 +244,9 @@ describe("Jenga PGW Webhook - Production Payload", () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
-      }
+      },
     );
-  const response1 = await POST(request1 as unknown as NextRequest);
+    const response1 = await POST(request1 as unknown as NextRequest);
     const data1 = await response1.json();
     expect(data1.success).toBe(true);
     expect(data1.duplicate).not.toBe(true); // First call should not be marked duplicate
@@ -246,9 +260,9 @@ describe("Jenga PGW Webhook - Production Payload", () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
-      }
+      },
     );
-  const response2 = await POST(request2 as unknown as NextRequest);
+    const response2 = await POST(request2 as unknown as NextRequest);
     const data2 = await response2.json();
     expect(data2.success).toBe(true);
     expect(data2.duplicate).toBe(true);

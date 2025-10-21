@@ -1,7 +1,11 @@
 import fs from "fs";
 import path from "path";
 import { describe, test, expect } from "vitest";
-import { computeJengaSignatureBase64, loadPrivateKeyFromEnvOrFile, verifyJengaSignatureBase64 } from "../signing";
+import {
+  computeJengaSignatureBase64,
+  loadPrivateKeyFromEnvOrFile,
+  verifyJengaSignatureBase64,
+} from "../signing";
 
 describe("Jenga signing helper", () => {
   const merchantCode = "TESTMERCH";
@@ -17,7 +21,10 @@ describe("Jenga signing helper", () => {
     const privateKey = loadPrivateKeyFromEnvOrFile();
     expect(privateKey).toBeDefined();
 
-    const signatureBase64 = computeJengaSignatureBase64(signatureData, privateKey!);
+    const signatureBase64 = computeJengaSignatureBase64(
+      signatureData,
+      privateKey!,
+    );
     expect(typeof signatureBase64).toBe("string");
     expect(signatureBase64.length).toBeGreaterThan(0);
 
@@ -25,7 +32,11 @@ describe("Jenga signing helper", () => {
     const pubPath = path.resolve(process.cwd(), "publickey.pem");
     if (fs.existsSync(pubPath)) {
       const pub = fs.readFileSync(pubPath, "utf8");
-      const ok = verifyJengaSignatureBase64(signatureData, signatureBase64, pub);
+      const ok = verifyJengaSignatureBase64(
+        signatureData,
+        signatureBase64,
+        pub,
+      );
       expect(ok).toBe(true);
     } else {
       // if no public key in repo the test is still useful for generation

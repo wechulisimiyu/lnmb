@@ -175,8 +175,8 @@ export function ContactFAQ() {
           </AccordionTrigger>
           <AccordionContent>
             <p>
-              You can rent a booth at a fee to be a vendor at the charity
-              run. Visit{" "}
+              You can rent a booth at a fee to be a vendor at the charity run.
+              Visit{" "}
               <Link href="/vendors" className="underline font-medium">
                 here
               </Link>{" "}

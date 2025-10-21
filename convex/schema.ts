@@ -19,8 +19,7 @@ export default defineSchema({
     // 2FA fields (for future implementation)
     twoFactorEnabled: v.optional(v.boolean()),
     twoFactorSecret: v.optional(v.string()),
-  })
-    .index("by_email", ["email"]),
+  }).index("by_email", ["email"]),
 
   // Session tokens for authentication
   sessions: defineTable({
@@ -94,10 +93,11 @@ export default defineSchema({
 
     // Order reference for payment tracking
     orderReference: v.string(),
-    // Uploaded school ID image URL (Cloudinary)
-    schoolIdUrl: v.optional(v.string()),
+    // Uploaded school ID image URL (Cloudinary) - nullable for compatibility
+    // Allow string, null, or undefined so old orders and new null values are accepted
+    schoolIdUrl: v.optional(v.union(v.string(), v.null())),
     // Cloudinary public id for the uploaded school ID (for later management)
-    schoolIdPublicId: v.optional(v.string()),
+    schoolIdPublicId: v.optional(v.union(v.string(), v.null())),
 
     // Timestamps
     createdAt: v.number(),

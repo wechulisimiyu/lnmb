@@ -1,7 +1,9 @@
 # Visual Changes: Order Form UI
 
 ## Before (Old Multi-Step Form)
+
 The previous OrderForm was a complex multi-step wizard with:
+
 - Step 1: Product Selection (t-shirt type, size, quantity, student status)
 - Step 2: Personal Details (name, email, phone, next of kin, medical info)
 - Step 3: Attendance & Liability (event attendance, terms confirmation)
@@ -14,6 +16,7 @@ The previous OrderForm was a complex multi-step wizard with:
 ## After (Tally Popup Button)
 
 ### Visual Layout
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  [Badge: Get a T-Shirt or 2]                                │
@@ -52,15 +55,18 @@ The previous OrderForm was a complex multi-step wizard with:
 ### Component Breakdown
 
 **Card Component:**
+
 - Centered with max-width of 4xl
 - White background with shadow
 - Rounded corners
 
 **Header Section:**
+
 - Title: "Order Your T-shirt" (2xl/3xl responsive)
 - Subtitle: Instructions text in gray
 
 **Content Section:**
+
 1. **Information Box** (Light blue background):
    - Features list with checkmarks
    - Pricing details
@@ -99,6 +105,7 @@ The previous OrderForm was a complex multi-step wizard with:
    - Could redirect to confirmation page
 
 ### Color Scheme
+
 - Primary button: Blue (theme primary color)
 - Info box background: `bg-blue-50` (light blue)
 - Text colors:
@@ -107,12 +114,14 @@ The previous OrderForm was a complex multi-step wizard with:
   - Features: `text-gray-700` (slightly darker gray)
 
 ### Responsive Behavior
+
 - Title scales: `text-2xl sm:text-3xl`
 - Card adapts to screen width with max-width constraint
 - Button remains full width on all screen sizes
 - All text and spacing responsive
 
 ### Accessibility
+
 - Button has clear label and icon
 - Semantic HTML structure
 - Card component follows proper heading hierarchy
@@ -120,14 +129,14 @@ The previous OrderForm was a complex multi-step wizard with:
 
 ## Key Differences
 
-| Aspect | Before | After |
-|--------|--------|-------|
-| Lines of Code | 1,374 | 117 |
-| User Steps | 4 steps | 1 click |
-| Validation | Client-side React | Tally handles |
-| Payment | Internal checkout page | Tally integration |
-| Maintenance | Code changes needed | Update in Tally dashboard |
-| Mobile UX | Custom responsive | Tally optimized |
+| Aspect        | Before                 | After                     |
+| ------------- | ---------------------- | ------------------------- |
+| Lines of Code | 1,374                  | 117                       |
+| User Steps    | 4 steps                | 1 click                   |
+| Validation    | Client-side React      | Tally handles             |
+| Payment       | Internal checkout page | Tally integration         |
+| Maintenance   | Code changes needed    | Update in Tally dashboard |
+| Mobile UX     | Custom responsive      | Tally optimized           |
 
 ## Benefits for Users
 

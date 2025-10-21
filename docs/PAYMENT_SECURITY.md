@@ -9,6 +9,7 @@ This document outlines the security measures implemented for the Jenga Payment G
 ### 1. Webhook Signature Verification ✅
 
 **Implementation:**
+
 - All POST webhook requests verify the `hash` field sent by Jenga PGW
 - Signature formula: `merchantCode + orderReference + currency + orderAmount + callbackUrl`
 - Uses SHA-256 hashing as per Jenga documentation
@@ -18,20 +19,24 @@ This document outlines the security measures implemented for the Jenga Payment G
 **Location:** `src/lib/payment-security.ts` - `verifyJengaSignature()`
 
 **Configuration Required:**
+
 - `JENGA_MERCHANT_CODE` environment variable must be set
 
 ### 2. Endpoint Security ✅
 
 **Implementation:**
+
 - Webhook endpoint uses unpredictable path: `/api/pgw-webhook-4365c21f`
 - **DEPRECATED endpoint `/api/payment/callback` has been REMOVED** (no backward compatibility)
 - HTTPS enforced through deployment platform (Vercel/production environment)
 - All callbacks now use the secure webhook with signature verification
 
 **Location:**
+
 - Secure endpoint: `src/app/api/pgw-webhook-4365c21f/route.ts`
 
 **Important:** Update your Jenga PGW dashboard to use only the secure webhook URL:
+
 ```
 https://your-domain.com/api/pgw-webhook-4365c21f
 ```
@@ -39,6 +44,7 @@ https://your-domain.com/api/pgw-webhook-4365c21f
 ### 3. Request Validation ✅
 
 **Implementation:**
+
 - Validates required fields: `orderReference`, `status`
 - Rejects malformed or incomplete requests with 400 status
 - Structured payload validation before processing
@@ -48,6 +54,7 @@ https://your-domain.com/api/pgw-webhook-4365c21f
 ### 4. Idempotency Checks ✅
 
 **Implementation:**
+
 - Prevents duplicate processing of the same transaction
 - Uses SHA-256 hash of `orderReference + transactionId` as idempotency key
 - In-memory storage with 1-hour TTL (recommend Redis for production scale)
@@ -56,6 +63,7 @@ https://your-domain.com/api/pgw-webhook-4365c21f
 **Location:** `src/app/api/pgw-webhook-4365c21f/route.ts` - `checkIdempotency()`
 
 **Production Note:** For production environments with multiple server instances, implement idempotency using:
+
 - Redis with TTL
 - Database table with unique constraint on idempotency key
 - Distributed cache service
@@ -63,6 +71,7 @@ https://your-domain.com/api/pgw-webhook-4365c21f
 ### 5. Secure Logging ✅
 
 **Implementation:**
+
 - Structured security event logging
 - Automatic sanitization of sensitive data (PII, tokens, hashes)
 - Logs rejection reasons for debugging
@@ -71,12 +80,14 @@ https://your-domain.com/api/pgw-webhook-4365c21f
 **Location:** `src/lib/payment-security.ts` - `PaymentSecurityLogger` class
 
 **What's Logged:**
+
 - Signature verification failures
 - Missing required fields
 - Duplicate transaction attempts
 - Successful webhook processing
 
 **What's NOT Logged:**
+
 - Full tokens or API keys
 - Customer email addresses (masked)
 - Phone numbers (masked)
@@ -85,12 +96,14 @@ https://your-domain.com/api/pgw-webhook-4365c21f
 ### 6. Key Management ✅
 
 **Implementation:**
+
 - All secrets stored in environment variables
 - No hardcoded credentials in source code
 - Environment sample file with security notes
 - Validation for missing critical environment variables
 
 **Required Environment Variables:**
+
 ```bash
 JENGA_MERCHANT_CODE=xxx        # Required for signature verification
 JENGA_CONSUMER_SECRET=xxx      # Required for token generation
@@ -103,6 +116,7 @@ SITE_URL=https://your-domain  # Must match production domain
 ### 7. Comprehensive Testing ✅
 
 **Implementation:**
+
 - Unit tests for signature verification (valid, invalid, tampered)
 - Tests for payload validation
 - Tests for data sanitization
@@ -112,6 +126,7 @@ SITE_URL=https://your-domain  # Must match production domain
 **Location:** `src/lib/__tests__/payment-security.test.ts`
 
 **Test Coverage:**
+
 - ✅ Valid signature verification
 - ✅ Invalid signature rejection
 - ✅ Missing required fields detection
@@ -130,13 +145,13 @@ SITE_URL=https://your-domain  # Must match production domain
 
 ```typescript
 // Example implementation when IP ranges are available
-const JENGA_IP_RANGES = process.env.JENGA_IP_RANGES?.split(',') || [];
+const JENGA_IP_RANGES = process.env.JENGA_IP_RANGES?.split(",") || [];
 
 function validateSourceIP(request: NextRequest): boolean {
-  const forwardedFor = request.headers.get('x-forwarded-for');
-  const ip = forwardedFor?.split(',')[0] || request.ip;
-  
-  return JENGA_IP_RANGES.some(range => ipInRange(ip, range));
+  const forwardedFor = request.headers.get("x-forwarded-for");
+  const ip = forwardedFor?.split(",")[0] || request.ip;
+
+  return JENGA_IP_RANGES.some((range) => ipInRange(ip, range));
 }
 ```
 
@@ -156,11 +171,13 @@ Before deploying to production:
 ## Webhook URL Configuration
 
 **Development:**
+
 ```
 http://localhost:3000/api/pgw-webhook-4365c21f
 ```
 
 **Production:**
+
 ```
 https://your-domain.com/api/pgw-webhook-4365c21f
 ```

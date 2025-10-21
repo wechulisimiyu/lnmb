@@ -25,8 +25,9 @@ export const createOrder = mutation({
     pickUp: v.optional(v.string()),
     confirm: v.string(),
     orderReference: v.string(),
-    schoolIdUrl: v.optional(v.string()),
-    schoolIdPublicId: v.optional(v.string()),
+    // school ID image fields are optional and may be null for simplified UX
+    schoolIdUrl: v.optional(v.union(v.string(), v.null())),
+    schoolIdPublicId: v.optional(v.union(v.string(), v.null())),
   },
   handler: async (ctx, args) => {
     const now = Date.now();
@@ -151,7 +152,9 @@ export const getPaymentStatus = query({
     try {
       const payment = await ctx.db
         .query("payments")
-        .withIndex("by_reference", (q) => q.eq("orderReference", args.reference))
+        .withIndex("by_reference", (q) =>
+          q.eq("orderReference", args.reference),
+        )
         .first();
 
       return payment;
@@ -159,7 +162,10 @@ export const getPaymentStatus = query({
       // Defensive logging to aid debugging on the server
       try {
         // Prefer console for server logs in Convex
-        console.error(`[getPaymentStatus] error for reference=${args.reference}:`, error);
+        console.error(
+          `[getPaymentStatus] error for reference=${args.reference}:`,
+          error,
+        );
       } catch (e) {
         // swallow
       }
@@ -210,7 +216,7 @@ export const updatePaymentStatus = mutation({
           status: args.status,
           transactionId: args.transactionId,
           paymentChannel: args.paymentChannel,
-        }
+        },
       );
       // Return null to indicate no update occurred
       return null;
@@ -338,13 +344,21 @@ export const handlePaymentCallback = mutation({
     // Try to find matching payment record using index by_reference if available
     const payment = await ctx.db
       .query("payments")
-      .withIndex("by_reference", (q) => q.eq("orderReference", args.orderReference))
+      .withIndex("by_reference", (q) =>
+        q.eq("orderReference", args.orderReference),
+      )
       .first();
 
     if (!payment) {
       // If payment not found, log and return an explicit result so caller can retry or investigate
-      console.warn(`[handlePaymentCallback] payment record not found for reference: ${args.orderReference}`);
-      return { success: false, message: "payment record not found", reference: args.orderReference };
+      console.warn(
+        `[handlePaymentCallback] payment record not found for reference: ${args.orderReference}`,
+      );
+      return {
+        success: false,
+        message: "payment record not found",
+        reference: args.orderReference,
+      };
     }
 
     // Patch the payment record with new status and transactionId
@@ -358,7 +372,9 @@ export const handlePaymentCallback = mutation({
     if (args.status === "paid") {
       const order = await ctx.db
         .query("orders")
-        .withIndex("by_reference", (q) => q.eq("orderReference", args.orderReference))
+        .withIndex("by_reference", (q) =>
+          q.eq("orderReference", args.orderReference),
+        )
         .first();
 
       if (order) {
@@ -368,7 +384,9 @@ export const handlePaymentCallback = mutation({
         });
       } else {
         // Log but continue - order may be inserted later due to race condition
-        console.warn(`[handlePaymentCallback] order not found for reference: ${args.orderReference}`);
+        console.warn(
+          `[handlePaymentCallback] order not found for reference: ${args.orderReference}`,
+        );
       }
     }
 

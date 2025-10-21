@@ -70,7 +70,7 @@ export default function ManagePage() {
   // Get current user
   const currentUser = useQuery(
     api.auth.getCurrentUser,
-    authToken ? { token: authToken } : "skip"
+    authToken ? { token: authToken } : "skip",
   );
 
   const logout = useMutation(api.auth.logout);
@@ -106,21 +106,21 @@ export default function ManagePage() {
   // Fetch data from Convex with auth token
   const orders = useQuery(
     api.orders.getAllOrders,
-    authToken ? { token: authToken } : "skip"
+    authToken ? { token: authToken } : "skip",
   );
   const payments = useQuery(
     api.orders.getAllPayments,
-    authToken ? { token: authToken } : "skip"
+    authToken ? { token: authToken } : "skip",
   );
   const orderStats = useQuery(
     api.orders.getOrderStats,
-    authToken ? { token: authToken } : "skip"
+    authToken ? { token: authToken } : "skip",
   );
 
   const handleLogout = async () => {
     if (authToken) {
       try {
-        await logout({ 
+        await logout({
           token: authToken,
           userAgent: navigator.userAgent,
         });
@@ -145,17 +145,20 @@ export default function ManagePage() {
     );
   }
 
-  const totalOrders =
-    orderStats?.totalOrders ?? (orders ? orders.length : 0);
+  const totalOrders = orderStats?.totalOrders ?? (orders ? orders.length : 0);
   const paidOrders =
     orderStats?.paidOrders ??
     (orders ? orders.filter((order) => order.paid).length : 0);
   const successfulPayments =
     orderStats?.successfulPayments ??
-    (payments ? payments.filter((payment) => payment.status === "paid").length : 0);
+    (payments
+      ? payments.filter((payment) => payment.status === "paid").length
+      : 0);
   const pendingPayments =
     orderStats?.pendingPayments ??
-    (payments ? payments.filter((payment) => payment.status === "pending").length : 0);
+    (payments
+      ? payments.filter((payment) => payment.status === "pending").length
+      : 0);
   const totalRevenue =
     orderStats?.totalRevenue ??
     (orders
@@ -182,7 +185,7 @@ export default function ManagePage() {
     ? new Set(
         orders
           .map((order) => order.email)
-          .filter((email): email is string => Boolean(email))
+          .filter((email): email is string => Boolean(email)),
       ).size
     : 0;
   const outstandingBalance = orders
@@ -292,9 +295,10 @@ export default function ManagePage() {
     if (payments && payments.length > 0) {
       payments.slice(0, 5).forEach((payment) => {
         const amount = payment.orderAmount ?? payment.amount ?? 0;
-        const name = [payment.customerFirstName, payment.customerLastName]
-          .filter(Boolean)
-          .join(" ") || "Unknown User";
+        const name =
+          [payment.customerFirstName, payment.customerLastName]
+            .filter(Boolean)
+            .join(" ") || "Unknown User";
         let activityType = "payment-pending";
         if (payment.status === "paid") {
           activityType = "payment-success";
@@ -341,7 +345,9 @@ export default function ManagePage() {
                 <Shield className="w-4 h-4 text-slate-600" />
                 <div className="text-sm">
                   <p className="font-medium">{user.name}</p>
-                  <p className="text-xs text-slate-600 capitalize">{user.role}</p>
+                  <p className="text-xs text-slate-600 capitalize">
+                    {user.role}
+                  </p>
                 </div>
               </div>
               <Button
@@ -783,15 +789,21 @@ export default function ManagePage() {
                                   {payment.transactionId}
                                 </code>
                               ) : (
-                                <span className="text-xs text-slate-400">-</span>
+                                <span className="text-xs text-slate-400">
+                                  -
+                                </span>
                               )}
                             </td>
                             <td className="p-3 sm:p-4">
                               <p className="text-sm">
-                                {new Date(payment.createdAt).toLocaleDateString()}
+                                {new Date(
+                                  payment.createdAt,
+                                ).toLocaleDateString()}
                               </p>
                               <p className="text-xs text-slate-600">
-                                {new Date(payment.createdAt).toLocaleTimeString()}
+                                {new Date(
+                                  payment.createdAt,
+                                ).toLocaleTimeString()}
                               </p>
                             </td>
                             <td className="p-3 sm:p-4">
@@ -839,7 +851,10 @@ export default function ManagePage() {
               </TabsContent>
 
               {/* Highlights Management Tab - Simplified mock */}
-              <TabsContent value="highlights" className="space-y-4 sm:space-y-6">
+              <TabsContent
+                value="highlights"
+                className="space-y-4 sm:space-y-6"
+              >
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                   <h2 className="text-xl sm:text-2xl font-bold text-foreground">
                     Highlights Management

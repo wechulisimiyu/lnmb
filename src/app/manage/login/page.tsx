@@ -31,12 +31,12 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const result = await login({ 
-        email, 
+      const result = await login({
+        email,
         password,
         userAgent,
       });
-      
+
       // Store token in localStorage
       localStorage.setItem("authToken", result.token);
       localStorage.setItem("user", JSON.stringify(result.user));
@@ -44,7 +44,8 @@ export default function LoginPage() {
       // Redirect to manage page
       router.push("/manage");
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Login failed. Please try again.";
+      const errorMessage =
+        err instanceof Error ? err.message : "Login failed. Please try again.";
       setError(errorMessage);
     } finally {
       setIsLoading(false);

@@ -11,9 +11,9 @@ export function About() {
 
       <div className="text-lg leading-relaxed space-y-6 text-justify max-w-4xl mx-auto">
         <p>
-          The <strong>Leave No Medic Behind (LNMB)</strong> initiative primarily focuses on
-          fundraising to cover tuition fees, accommodation, and meals for
-          medical students in need.
+          The <strong>Leave No Medic Behind (LNMB)</strong> initiative primarily
+          focuses on fundraising to cover tuition fees, accommodation, and meals
+          for medical students in need.
         </p>
         <p>
           The initiative started in <strong>2017</strong> as a small-scale

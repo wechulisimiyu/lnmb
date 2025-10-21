@@ -91,7 +91,8 @@ interface PaymentRecord {
 */
 
 class PaymentService {
-  private readonly baseUrl = process.env.JENGA_BASE_URL || "https://uat.finserve.africa";
+  private readonly baseUrl =
+    process.env.JENGA_BASE_URL || "https://uat.finserve.africa";
   private readonly merchantAccountNumber = "0170280594893";
 
   private createSTKPayload(request: PaymentRequest): STKPayload {

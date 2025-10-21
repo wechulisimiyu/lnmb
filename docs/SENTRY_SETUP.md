@@ -5,6 +5,7 @@ This document explains how Sentry has been integrated into the LNMB Next.js appl
 ## Overview
 
 Sentry has been configured to provide:
+
 - **Error tracking**: Automatic capture of exceptions and errors
 - **Performance monitoring**: Tracking of API calls, UI interactions, and function execution
 - **Structured logging**: Centralized logs with context and metadata
@@ -13,28 +14,36 @@ Sentry has been configured to provide:
 ## Configuration Files
 
 ### Client-Side (`sentry.client.config.ts`)
+
 Runs in the browser and tracks:
+
 - Client-side errors
 - UI interactions
 - Browser performance
 
 ### Server-Side (`sentry.server.config.ts`)
+
 Runs on the Node.js server and tracks:
+
 - API route errors
 - Server-side rendering errors
 - Backend operations
 
 ### Edge Runtime (`sentry.edge.config.ts`)
+
 Runs on Vercel Edge Functions and tracks:
+
 - Edge function errors
 - Middleware errors
 
 ### Instrumentation (`instrumentation.ts`)
+
 Loads Sentry before the application starts, ensuring all errors are captured from the beginning.
 
 ## Environment Variables
 
 The DSN (Data Source Name) is already configured in the code:
+
 ```
 dsn: "https://e5ad05a1a0341bd4fe3733c2b4f6efab@o4510184047116288.ingest.us.sentry.io/4510184059961344"
 ```
@@ -83,12 +92,12 @@ function handleCheckout() {
     },
     async (span) => {
       span.setAttribute("orderAmount", 1000);
-      
+
       // Your checkout logic here
       await processPayment();
-      
+
       span.setAttribute("success", true);
-    }
+    },
   );
 }
 ```
@@ -126,6 +135,7 @@ logger.error("Payment processing failed", {
 Both webhook endpoints (`/api/payment/callback` and `/api/pgw-webhook-4365c21f`) have been updated to:
 
 1. **Capture exceptions with Sentry**
+
    ```typescript
    Sentry.captureException(error, {
      tags: { endpoint: "/api/pgw-webhook-4365c21f" },
@@ -160,6 +170,7 @@ PaymentSecurityLogger.logSecurityError("AUTH_FAILED", {
 ### Checkout Flow Tracing
 
 The checkout page tracks:
+
 - Payment processing operations
 - Form submissions to Jenga PGW
 - Success/failure metrics
@@ -170,6 +181,7 @@ A comprehensive test suite has been added at:
 `src/app/api/pgw-webhook-4365c21f/__tests__/webhook.test.ts`
 
 These tests simulate:
+
 - Valid webhook payloads from production
 - Invalid/tampered payloads
 - Different payment statuses (paid, pending, failed)
@@ -177,6 +189,7 @@ These tests simulate:
 - Idempotency checks
 
 Run tests with:
+
 ```bash
 npm test
 ```
@@ -184,6 +197,7 @@ npm test
 ## Monitoring in Production
 
 When `NODE_ENV=production`, Sentry will:
+
 - Capture errors automatically
 - Track performance metrics
 - Send logs to the Sentry dashboard
@@ -193,6 +207,7 @@ In development, Sentry is disabled to avoid noise, but you can enable it by remo
 ## Best Practices
 
 1. **Always add context to errors**
+
    ```typescript
    Sentry.captureException(error, {
      tags: { component: "payment" },
@@ -201,6 +216,7 @@ In development, Sentry is disabled to avoid noise, but you can enable it by remo
    ```
 
 2. **Use structured logging**
+
    ```typescript
    logger.info("Action completed", { metric: value });
    ```
@@ -216,14 +232,17 @@ In development, Sentry is disabled to avoid noise, but you can enable it by remo
 ## Troubleshooting
 
 ### Sentry not capturing errors in development
+
 - Check that `enabled: process.env.NODE_ENV === "production"` is set appropriately
 - For testing, temporarily set `enabled: true`
 
 ### Missing source maps
+
 - Ensure `hideSourceMaps: true` is set in `next.config.ts`
 - Check that build process completes successfully
 
 ### Too many events
+
 - Reduce `tracesSampleRate` in the config files
 - Adjust `replaysSessionSampleRate` to sample fewer sessions
 

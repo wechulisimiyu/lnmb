@@ -2,7 +2,13 @@
 
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { ShoppingCart } from "lucide-react";
 
 export default function TallyOrderForm() {
@@ -45,7 +51,7 @@ export default function TallyOrderForm() {
     }
 
     const win = window as WindowWithTally;
-    
+
     if (typeof win.Tally !== "undefined" && win.Tally.openPopup) {
       // Open the Tally popup form for order
       win.Tally.openPopup("3xOB5J", {
@@ -61,9 +67,12 @@ export default function TallyOrderForm() {
     <div className="max-w-4xl mx-auto">
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl sm:text-3xl">Order Your T-shirt</CardTitle>
+          <CardTitle className="text-2xl sm:text-3xl">
+            Order Your T-shirt
+          </CardTitle>
           <CardDescription>
-            Click the button below to open our order form and reserve your spot for the run
+            Click the button below to open our order form and reserve your spot
+            for the run
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -85,7 +94,7 @@ export default function TallyOrderForm() {
                 </li>
               </ul>
             </div> */}
-            
+
             <div className="space-y-2">
               <h4 className="font-semibold">Pricing:</h4>
               <div className="text-sm space-y-1">
@@ -95,9 +104,9 @@ export default function TallyOrderForm() {
             </div>
           </div>
 
-          <Button 
-            onClick={handleOpenForm} 
-            size="lg" 
+          <Button
+            onClick={handleOpenForm}
+            size="lg"
             className="w-full text-lg h-14"
           >
             <ShoppingCart className="w-5 h-5 mr-2" />

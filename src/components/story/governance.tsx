@@ -36,10 +36,12 @@ export function Governance() {
               </span>
               , entrusted with organizing and executing the LNMB Annual Charity
               Run. The committee is led by{" "}
-              <span className="font-semibold text-emerald-600">Peter Ogutu</span>,{" "}
-              Race Director, supported by a passionate team of medical students
-              who pour their energy into ensuring that the event continues to
-              grow and touch lives year after year.
+              <span className="font-semibold text-emerald-600">
+                Peter Ogutu
+              </span>
+              , Race Director, supported by a passionate team of medical
+              students who pour their energy into ensuring that the event
+              continues to grow and touch lives year after year.
             </p>
           </div>
 

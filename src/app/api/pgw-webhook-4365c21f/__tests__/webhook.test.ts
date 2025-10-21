@@ -17,7 +17,7 @@ function generateJengaWebhookPayload(
     amount?: string;
     merchantCode?: string;
     callbackUrl?: string;
-  } = {}
+  } = {},
 ): {
   transactionId?: string;
   status: string;
@@ -30,9 +30,10 @@ function generateJengaWebhookPayload(
 } {
   const merchantCode = options.merchantCode || "TEST123";
   const amount = options.amount || "1000";
-  const callbackUrl = options.callbackUrl || "https://example.com/api/pgw-webhook-4365c21f";
+  const callbackUrl =
+    options.callbackUrl || "https://example.com/api/pgw-webhook-4365c21f";
   const transactionId = options.transactionId || `TXN${Date.now()}`;
-  
+
   // Generate hash as per Jenga spec: merchantCode + orderReference + currency + amount + callbackUrl
   const signatureData = `${merchantCode}${orderReference}KES${amount}${callbackUrl}`;
   const hash = crypto.createHash("sha256").update(signatureData).digest("hex");
@@ -82,13 +83,13 @@ describe("Jenga Webhook Integration Tests", () => {
 
     it("should generate different hashes for different amounts", () => {
       const orderReference = "ORD123456";
-      
+
       const payload1 = generateJengaWebhookPayload(orderReference, "paid", {
         amount: "1000",
         merchantCode,
         callbackUrl,
       });
-      
+
       const payload2 = generateJengaWebhookPayload(orderReference, "paid", {
         amount: "2000",
         merchantCode,
@@ -100,21 +101,29 @@ describe("Jenga Webhook Integration Tests", () => {
 
     it("should generate payload for different payment statuses", () => {
       const orderReference = "ORD123456";
-      
+
       const paidPayload = generateJengaWebhookPayload(orderReference, "paid", {
         merchantCode,
         callbackUrl,
       });
-      
-      const pendingPayload = generateJengaWebhookPayload(orderReference, "pending", {
-        merchantCode,
-        callbackUrl,
-      });
-      
-      const failedPayload = generateJengaWebhookPayload(orderReference, "failed", {
-        merchantCode,
-        callbackUrl,
-      });
+
+      const pendingPayload = generateJengaWebhookPayload(
+        orderReference,
+        "pending",
+        {
+          merchantCode,
+          callbackUrl,
+        },
+      );
+
+      const failedPayload = generateJengaWebhookPayload(
+        orderReference,
+        "failed",
+        {
+          merchantCode,
+          callbackUrl,
+        },
+      );
 
       expect(paidPayload.status).toBe("paid");
       expect(pendingPayload.status).toBe("pending");
@@ -152,7 +161,7 @@ describe("Jenga Webhook Integration Tests", () => {
 
     it("should handle pending payment webhook payload", () => {
       const orderReference = "ORD1234567890";
-      
+
       const payload = generateJengaWebhookPayload(orderReference, "pending", {
         merchantCode,
         callbackUrl,
@@ -165,7 +174,7 @@ describe("Jenga Webhook Integration Tests", () => {
 
     it("should handle failed payment webhook payload", () => {
       const orderReference = "ORD1234567890";
-      
+
       const payload = generateJengaWebhookPayload(orderReference, "failed", {
         merchantCode,
         callbackUrl,
@@ -178,7 +187,7 @@ describe("Jenga Webhook Integration Tests", () => {
 
     it("should include payment channel information", () => {
       const orderReference = "ORD1234567890";
-      
+
       const payload = generateJengaWebhookPayload(orderReference, "paid", {
         merchantCode,
         callbackUrl,
@@ -186,7 +195,7 @@ describe("Jenga Webhook Integration Tests", () => {
 
       expect(payload.desc).toBe("MPESA");
       expect(payload.extraData).toBeDefined();
-      
+
       const extraData = JSON.parse(payload.extraData!);
       expect(extraData.channel).toBe("MPESA");
     });
@@ -196,7 +205,7 @@ describe("Jenga Webhook Integration Tests", () => {
     it("should detect when amount is tampered", () => {
       const orderReference = "ORD123456";
       const originalAmount = "1000";
-      
+
       const payload = generateJengaWebhookPayload(orderReference, "paid", {
         amount: originalAmount,
         merchantCode,
@@ -223,12 +232,16 @@ describe("Jenga Webhook Integration Tests", () => {
     it("should detect when order reference is tampered", () => {
       const originalOrderReference = "ORD123456";
       const amount = "1000";
-      
-      const payload = generateJengaWebhookPayload(originalOrderReference, "paid", {
-        amount,
-        merchantCode,
-        callbackUrl,
-      });
+
+      const payload = generateJengaWebhookPayload(
+        originalOrderReference,
+        "paid",
+        {
+          amount,
+          merchantCode,
+          callbackUrl,
+        },
+      );
 
       const originalHash = payload.hash;
 
@@ -255,8 +268,8 @@ describe("Jenga Webhook Integration Tests", () => {
       });
 
       const requiredFields = ["orderReference", "status", "hash"];
-      
-      requiredFields.forEach(field => {
+
+      requiredFields.forEach((field) => {
         expect(payload).toHaveProperty(field);
         const value = (payload as Record<string, unknown>)[field];
         expect(value).toBeTruthy();
@@ -289,7 +302,7 @@ describe("Jenga Webhook Integration Tests", () => {
 
     it("should generate different keys for different transactions", () => {
       const orderReference = "ORD123456";
-      
+
       const key1 = generateIdempotencyKey(orderReference, "TXN111");
       const key2 = generateIdempotencyKey(orderReference, "TXN222");
 
@@ -298,9 +311,9 @@ describe("Jenga Webhook Integration Tests", () => {
 
     it("should generate key from order reference only when transaction is missing", () => {
       const orderReference = "ORD123456";
-      
+
       const key = generateIdempotencyKey(orderReference);
-      
+
       expect(key).toBeDefined();
       expect(typeof key).toBe("string");
       expect(key.length).toBeGreaterThan(0);
@@ -310,11 +323,11 @@ describe("Jenga Webhook Integration Tests", () => {
 
 function generateIdempotencyKey(
   orderReference: string,
-  transactionId?: string
+  transactionId?: string,
 ): string {
-  const key = transactionId 
-    ? `${orderReference}-${transactionId}` 
+  const key = transactionId
+    ? `${orderReference}-${transactionId}`
     : orderReference;
-  
+
   return crypto.createHash("sha256").update(key).digest("hex");
 }

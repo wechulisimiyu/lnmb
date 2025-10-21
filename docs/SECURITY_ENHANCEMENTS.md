@@ -19,7 +19,9 @@ async function hashPassword(password: string): Promise<string> {
   const data = encoder.encode(password);
   const hashBuffer = await crypto.subtle.digest("SHA-256", data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  const hashHex = hashArray
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
   return hashHex;
 }
 ```
@@ -31,12 +33,14 @@ async function hashPassword(password: string): Promise<string> {
 **Feature**: Automatic blocking after too many failed login attempts
 
 **Implementation**:
+
 - Maximum 5 failed attempts within 15 minutes
 - Account locked for 30 minutes after limit exceeded
 - IP address tracking for additional security
 - Automatic reset on successful login
 
 **Database Table**: `loginAttempts`
+
 - Tracks attempts per email and IP
 - Stores block duration
 - Automatically cleaned up on success
@@ -49,6 +53,7 @@ async function hashPassword(password: string): Promise<string> {
 **Feature**: Complete logging of all authentication events
 
 **Logged Events**:
+
 - `login` - Successful logins
 - `logout` - User logouts
 - `failed_login` - Failed login attempts (with reason)
@@ -58,6 +63,7 @@ async function hashPassword(password: string): Promise<string> {
 - `oauth_user_created` - OAuth user registration
 
 **Logged Data**:
+
 - User ID and email
 - Action performed
 - Success/failure status
@@ -67,10 +73,12 @@ async function hashPassword(password: string): Promise<string> {
 - Additional context/details
 
 **Database Table**: `auditLogs`
+
 - Indexed by userId, timestamp, and action
 - Queryable by admins via `getAuditLogs` query
 
-**Location**: 
+**Location**:
+
 - Schema: `convex/schema.ts` - `auditLogs` table
 - Functions: `convex/auth.ts` - Audit logging throughout all auth functions
 - Admin Query: `convex/auth.ts` - `getAuditLogs()`
@@ -80,6 +88,7 @@ async function hashPassword(password: string): Promise<string> {
 **Feature**: View and manage active sessions
 
 **Capabilities**:
+
 - View all active sessions for current user
 - See session creation time and expiration
 - View IP address and user agent per session
@@ -87,10 +96,12 @@ async function hashPassword(password: string): Promise<string> {
 - Identify current session
 
 **Functions**:
+
 - `getUserSessions()` - Query to list user's active sessions
 - `revokeSession()` - Mutation to revoke a specific session
 
 **Use Cases**:
+
 - Security review: Check for suspicious logins
 - Device management: Remove sessions from lost devices
 - Forced logout: Revoke compromised sessions
@@ -100,12 +111,14 @@ async function hashPassword(password: string): Promise<string> {
 ### 5. ✅ Enhanced Session Tokens
 
 **Improvements**:
+
 - Cryptographically secure random token generation
 - 32-byte tokens using `crypto.getRandomValues()`
 - Session tracking includes IP and user agent
 - Automatic expiration (7 days)
 
 **Database Fields Added** to `sessions`:
+
 - `ipAddress` - Track login location
 - `userAgent` - Track device/browser
 
@@ -116,12 +129,14 @@ async function hashPassword(password: string): Promise<string> {
 **Status**: Infrastructure ready, requires configuration
 
 **What's Ready**:
+
 - Schema supports OAuth fields (email verification, profile image)
 - Documentation for setup (`docs/AUTH_OAUTH.md`)
 - Example implementation provided
 - Environment variables documented
 
 **What's Needed**:
+
 1. Set up Google OAuth credentials
 2. Add Convex Auth configuration file
 3. Update frontend to use auth hooks
@@ -134,10 +149,12 @@ async function hashPassword(password: string): Promise<string> {
 **Status**: Schema prepared for future implementation
 
 **Schema Fields Added**:
+
 - `twoFactorEnabled` - Boolean flag
 - `twoFactorSecret` - TOTP secret storage
 
 **Next Steps**:
+
 1. Install `otpauth` or similar TOTP library
 2. Create QR code generation for setup
 3. Add verification step to login flow
@@ -145,6 +162,7 @@ async function hashPassword(password: string): Promise<string> {
 5. Add UI for enabling/disabling 2FA
 
 **Recommended Libraries**:
+
 - `otpauth` for TOTP generation
 - `qrcode` for QR code display
 - `speakeasy` as alternative
@@ -156,13 +174,14 @@ async function hashPassword(password: string): Promise<string> {
 The following functions now require additional optional parameters:
 
 #### `login` mutation
+
 ```typescript
 // Before
 login({ email, password })
 
 // After
-login({ 
-  email, 
+login({
+  email,
   password,
   ipAddress?, // optional
   userAgent?  // optional
@@ -170,12 +189,13 @@ login({
 ```
 
 #### `logout` mutation
+
 ```typescript
 // Before
 logout({ token })
 
 // After
-logout({ 
+logout({
   token,
   ipAddress?, // optional
   userAgent?  // optional
@@ -183,15 +203,16 @@ logout({
 ```
 
 #### `createUser` mutation
+
 ```typescript
 // Before
 createUser({ name, email, password, role })
 
 // After
-createUser({ 
-  name, 
-  email, 
-  password, 
+createUser({
+  name,
+  email,
+  password,
   role,
   ipAddress?, // optional
   userAgent?  // optional
@@ -203,10 +224,12 @@ createUser({
 ### Database Schema Changes
 
 **New Tables**:
+
 1. `auditLogs` - Authentication event logging
 2. `loginAttempts` - Rate limiting data
 
 **Updated Tables**:
+
 1. `users` - Added OAuth and 2FA fields
 2. `sessions` - Added IP address and user agent tracking
 
@@ -224,6 +247,7 @@ All additions use indexed queries for optimal performance.
 ## Security Best Practices
 
 ### Current Implementation
+
 ✅ Secure password hashing (SHA-256)
 ✅ Rate limiting prevents brute force
 ✅ Comprehensive audit logging
@@ -232,6 +256,7 @@ All additions use indexed queries for optimal performance.
 ✅ Secure token generation
 
 ### Recommended for Production
+
 🔄 Consider bcrypt for even stronger hashing
 🔄 Enable 2FA for admin accounts
 🔄 Set up OAuth for convenient access
@@ -275,10 +300,12 @@ npx convex run auth:getUserSessions --token="your_token"
 ## Documentation Updates
 
 New documentation files:
+
 - `docs/AUTH_OAUTH.md` - OAuth setup guide
 - `docs/SECURITY_ENHANCEMENTS.md` - This file
 
 Updated documentation:
+
 - `docs/AUTH.md` - Updated with new features
 - `env.sample` - Added OAuth environment variables
 
@@ -305,6 +332,7 @@ However, database schema changes (new tables) will remain. They can be safely ig
 ## Support and Feedback
 
 For questions or issues with these enhancements:
+
 1. Review the audit logs for debugging
 2. Check rate limit status in `loginAttempts` table
 3. Verify environment variables are set correctly

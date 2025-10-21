@@ -5,6 +5,7 @@ This guide will help you set up and configure the management dashboard at `/mana
 ## Overview
 
 The management dashboard provides:
+
 - **Orders Management**: View and track all orders
 - **Payments Management**: Monitor payment status and transactions
 - **Dashboard**: View key metrics and statistics
@@ -28,6 +29,7 @@ npx convex dev
 ```
 
 This will:
+
 - Create the new `users` and `sessions` tables
 - Update the schema with authentication support
 - Deploy all authentication functions
@@ -45,6 +47,7 @@ npx convex run auth:createUser \
 ```
 
 **⚠️ Important Security Notes:**
+
 - Use a strong password
 - Change the password after first login
 - Store credentials securely
@@ -71,7 +74,9 @@ npx convex run auth:createUser \
 ## User Roles
 
 ### Admin Role
+
 Full access to all features:
+
 - ✅ View Dashboard
 - ✅ View and Manage Orders
 - ✅ View and Manage Payments
@@ -81,7 +86,9 @@ Full access to all features:
 - ✅ Create new users
 
 ### Director Role
+
 Limited access for oversight:
+
 - ✅ View Dashboard
 - ✅ View Orders
 - ✅ View Payments
@@ -138,19 +145,25 @@ Limited access for oversight:
 For production deployment, consider these security improvements:
 
 1. **Upgrade Password Hashing**
+
    ```typescript
    // Replace base64 with bcrypt
-   import bcrypt from 'bcrypt';
+   import bcrypt from "bcrypt";
    const hash = await bcrypt.hash(password, 10);
    ```
 
 2. **Use HTTP-Only Cookies**
+
    ```typescript
    // Instead of localStorage, use secure cookies
-   res.setHeader('Set-Cookie', `token=${token}; HttpOnly; Secure; SameSite=Strict`);
+   res.setHeader(
+     "Set-Cookie",
+     `token=${token}; HttpOnly; Secure; SameSite=Strict`,
+   );
    ```
 
 3. **Add Rate Limiting**
+
    ```typescript
    // Limit login attempts to prevent brute force
    // Use a rate limiting library or service
@@ -190,6 +203,7 @@ pnpm run test
 ```
 
 The auth tests verify:
+
 - User creation
 - Login/logout functionality
 - Session management
@@ -216,6 +230,7 @@ The auth tests verify:
 **Cause**: The session token is invalid or has expired.
 
 **Solution**:
+
 1. Clear browser localStorage
 2. Log in again
 3. If persists, check Convex deployment status
@@ -225,6 +240,7 @@ The auth tests verify:
 **Cause**: Convex backend is not running or URL is incorrect.
 
 **Solution**:
+
 1. Verify `NEXT_PUBLIC_CONVEX_URL` in `.env.local`
 2. Run `npx convex dev` to start the backend
 3. Check Convex dashboard for deployment status
@@ -234,6 +250,7 @@ The auth tests verify:
 **Cause**: Trying to create a user with an email that's already registered.
 
 **Solution**:
+
 1. Use a different email address
 2. Or manually delete the existing user from Convex dashboard
 
@@ -242,6 +259,7 @@ The auth tests verify:
 **Cause**: Auth functions may not be deployed to Convex.
 
 **Solution**:
+
 1. Ensure `convex/auth.ts` is present
 2. Run `npx convex dev` to deploy
 3. Check Convex dashboard for function deployment
@@ -251,6 +269,7 @@ The auth tests verify:
 **Cause**: No orders/payments in database or token not being passed correctly.
 
 **Solution**:
+
 1. Verify orders and payments exist in Convex dashboard
 2. Check browser console for errors
 3. Verify token is being passed to queries
@@ -285,6 +304,7 @@ lnmb/
 ### Mutations
 
 #### createUser
+
 ```typescript
 createUser({
   name: string,
@@ -295,6 +315,7 @@ createUser({
 ```
 
 #### login
+
 ```typescript
 login({
   email: string,
@@ -311,6 +332,7 @@ login({
 ```
 
 #### logout
+
 ```typescript
 logout({
   token: string
@@ -320,6 +342,7 @@ logout({
 ### Queries
 
 #### getCurrentUser
+
 ```typescript
 getCurrentUser({
   token: string
@@ -327,6 +350,7 @@ getCurrentUser({
 ```
 
 #### getAllOrders (Protected)
+
 ```typescript
 getAllOrders({
   token: string
@@ -334,6 +358,7 @@ getAllOrders({
 ```
 
 #### getAllPayments (Protected)
+
 ```typescript
 getAllPayments({
   token: string
@@ -341,6 +366,7 @@ getAllPayments({
 ```
 
 #### getOrderStats (Protected)
+
 ```typescript
 getOrderStats({
   token: string
@@ -352,6 +378,7 @@ getOrderStats({
 The old `/admin` page has been replaced with `/manage`. If you visit `/admin`, you'll be automatically redirected to `/manage`.
 
 **Changes:**
+
 - `/admin` → Redirects to `/manage`
 - `/manage/login` → New login page
 - `/manage` → Protected dashboard with authentication
@@ -370,6 +397,7 @@ After setup, consider:
 ## Support
 
 For issues or questions:
+
 1. Check the [AUTH.md](./AUTH.md) documentation
 2. Review Convex logs in the dashboard
 3. Check browser console for errors

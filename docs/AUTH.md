@@ -5,6 +5,7 @@ This document describes the role-based authentication system implemented for the
 ## Overview
 
 The system implements a simple but secure role-based access control (RBAC) with two roles:
+
 - **Admin**: Full access to all features
 - **Director**: Limited access (can view orders and payments, but not manage team, highlights, or products)
 
@@ -13,6 +14,7 @@ The system implements a simple but secure role-based access control (RBAC) with 
 ### Database Schema
 
 **users table**:
+
 - `name`: User's full name
 - `email`: Unique email address (used for login)
 - `passwordHash`: Hashed password (using base64 encoding - should be upgraded to bcrypt in production)
@@ -21,6 +23,7 @@ The system implements a simple but secure role-based access control (RBAC) with 
 - `createdAt`, `updatedAt`: Timestamps
 
 **sessions table**:
+
 - `userId`: Reference to user
 - `token`: Unique session token
 - `expiresAt`: Expiration timestamp (7 days from creation)
@@ -55,6 +58,7 @@ The system implements a simple but secure role-based access control (RBAC) with 
 #### Protected Queries
 
 The following queries in `convex/orders.ts` now require authentication:
+
 - `getAllOrders`: Requires admin or director role
 - `getAllPayments`: Requires admin or director role
 - `getOrderStats`: Requires admin or director role
@@ -129,6 +133,7 @@ npx convex run auth:createUser \
 ## Testing
 
 Tests are located in `convex/__tests__/auth.test.ts` and cover:
+
 - User creation (admin and director)
 - Duplicate email prevention
 - Login with valid/invalid credentials
@@ -136,6 +141,7 @@ Tests are located in `convex/__tests__/auth.test.ts` and cover:
 - Role-based access control
 
 Run tests with:
+
 ```bash
 npm run test
 ```
@@ -145,6 +151,7 @@ npm run test
 ### Mutations
 
 #### createUser
+
 ```typescript
 createUser({
   name: string,
@@ -155,6 +162,7 @@ createUser({
 ```
 
 #### login
+
 ```typescript
 login({
   email: string,
@@ -171,6 +179,7 @@ login({
 ```
 
 #### logout
+
 ```typescript
 logout({
   token: string
@@ -180,6 +189,7 @@ logout({
 ### Queries
 
 #### getCurrentUser
+
 ```typescript
 getCurrentUser({
   token: string
@@ -192,6 +202,7 @@ getCurrentUser({
 ```
 
 #### checkRole
+
 ```typescript
 checkRole({
   token: string,
@@ -201,15 +212,15 @@ checkRole({
 
 ## Role Permissions Matrix
 
-| Feature | Admin | Director |
-|---------|-------|----------|
-| View Dashboard | ✅ | ✅ |
-| View Orders | ✅ | ✅ |
-| View Payments | ✅ | ✅ |
-| Manage Team | ✅ | ❌ |
-| Manage Highlights | ✅ | ❌ |
-| Manage Products | ✅ | ❌ |
-| Create Users | ✅ | ❌ |
+| Feature           | Admin | Director |
+| ----------------- | ----- | -------- |
+| View Dashboard    | ✅    | ✅       |
+| View Orders       | ✅    | ✅       |
+| View Payments     | ✅    | ✅       |
+| Manage Team       | ✅    | ❌       |
+| Manage Highlights | ✅    | ❌       |
+| Manage Products   | ✅    | ❌       |
+| Create Users      | ✅    | ❌       |
 
 ## Troubleshooting
 

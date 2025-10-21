@@ -28,7 +28,6 @@ import {
   Info,
   ChevronLeft,
   ChevronRight,
-  Upload,
 } from "lucide-react";
 import { matchUniversity } from "@/lib/normalizeUniversity";
 import generateOrderReference from "@/lib/generateOrderReference";
@@ -59,18 +58,19 @@ interface OrderFormData {
   tshirtType: string;
   tshirtSize: string;
   quantity: number;
-  cartItems: CartItem[];  // NEW: Support multiple sizes
+  cartItems: CartItem[]; // NEW: Support multiple sizes
   student: string;
   university?: string;
   universityUserEntered?: boolean;
   unitPrice: number;
   totalAmount: number;
-  salesAgentName?: string;  // NEW: Optional sales agent field
+  salesAgentName?: string; // NEW: Optional sales agent field
 
   // Step 2: Personal & Registration Details
-  schoolIdFile?: File;
-  schoolIdUrl?: string;
-  schoolIdPublicId?: string;
+  registrationNumber?: string; // new: registration number in place of uploaded ID
+  // legacy: image fields may exist but are now optional/null in the DB
+  schoolIdUrl?: string | null;
+  schoolIdPublicId?: string | null;
   name: string;
   email: string;
   phone: string;
@@ -86,7 +86,7 @@ interface OrderFormData {
 
 // Pricing constants from PRD (authoritative)
 const PRICING = {
-  round: { regular: 1500, student: 850 },     // updated regular and student price
+  round: { regular: 1500, student: 850 }, // updated regular and student price
 };
 
 const STEPS = {
@@ -113,16 +113,16 @@ export default function OrderForm() {
     tshirtType: "round",
     tshirtSize: "",
     quantity: 1,
-    cartItems: [],  // NEW: Initialize empty cart
+    cartItems: [], // NEW: Initialize empty cart
     student: "",
     university: "",
     universityUserEntered: false,
     unitPrice: 0,
     totalAmount: 0,
-    salesAgentName: "",  // NEW: Initialize sales agent field
+    salesAgentName: "", // NEW: Initialize sales agent field
 
     // Step 2: Personal & Registration Details
-    schoolIdFile: undefined,
+    registrationNumber: "",
     name: "",
     email: "",
     phone: "",
@@ -138,13 +138,6 @@ export default function OrderForm() {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isUploadingSchoolId, setIsUploadingSchoolId] = useState(false);
-  const [schoolIdUploadError, setSchoolIdUploadError] = useState<string | null>(
-    null,
-  );
-  const [uploadProgress, setUploadProgress] = useState<number>(0);
-  // Maximum upload size (5MB)
-  const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
   const [universities, setUniversities] = useState<string[] | null>(null);
   const [uniQuery, setUniQuery] = useState("");
   const [uniPopoverOpen, setUniPopoverOpen] = useState(false);
@@ -162,10 +155,10 @@ export default function OrderForm() {
   useEffect(() => {
     const isStudent = formData.student === "yes";
     const unitPrice = getUnitPrice(formData.tshirtType, isStudent);
-    
+
     // Calculate total from cart items
     const cartTotal = formData.cartItems.reduce((sum, item) => {
-      return sum + (unitPrice * item.quantity);
+      return sum + unitPrice * item.quantity;
     }, 0);
 
     setFormData((prev) => ({
@@ -208,7 +201,7 @@ export default function OrderForm() {
 
     setFormData((prev) => {
       const existingItemIndex = prev.cartItems.findIndex(
-        (item) => item.size === prev.tshirtSize
+        (item) => item.size === prev.tshirtSize,
       );
 
       let newCartItems;
@@ -260,7 +253,7 @@ export default function OrderForm() {
     setFormData((prev) => ({
       ...prev,
       cartItems: prev.cartItems.map((item) =>
-        item.size === size ? { ...item, quantity } : item
+        item.size === size ? { ...item, quantity } : item,
       ),
     }));
   };
@@ -300,7 +293,7 @@ export default function OrderForm() {
         .trim()
         .toLowerCase()
         .split(" ")
-        .filter(word => word.length > 0) // Remove empty strings from multiple spaces
+        .filter((word) => word.length > 0) // Remove empty strings from multiple spaces
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(" ");
       setFormData((prev) => ({ ...prev, salesAgentName: normalized }));
@@ -331,27 +324,29 @@ export default function OrderForm() {
         if (!formData.email.trim()) newErrors.email = "Email is required";
         // Normalize phone for validation without mutating UI immediately
         const normalizeKenyaPhone = (raw: string | undefined) => {
-          if (!raw) return ""
-          const digits = (raw || "").replace(/\D/g, "")
+          if (!raw) return "";
+          const digits = (raw || "").replace(/\D/g, "");
           // Already contains country code 254 or 257 (e.g. 2547xxxxxxxx)
           if (digits.startsWith("254") || digits.startsWith("257")) {
             // keep country + 9 digits if available
-            if (digits.length >= 12) return digits.slice(0, 12)
-            return digits
+            if (digits.length >= 12) return digits.slice(0, 12);
+            return digits;
           }
           // Local numbers:
           // 0XXXXXXXXX (10 digits) -> drop leading 0 and prefix 254
           if (digits.length === 10 && digits.startsWith("0")) {
-            return `254${digits.slice(1)}`
+            return `254${digits.slice(1)}`;
           }
           // 9-digit local like 7XXXXXXXX or 1XXXXXXXX -> prefix 254
           if (digits.length === 9) {
-            return `254${digits}`
+            return `254${digits}`;
           }
-          return digits
-        }
+          return digits;
+        };
 
-        const normalizedPhoneForValidation = normalizeKenyaPhone(formData.phone as string)
+        const normalizedPhoneForValidation = normalizeKenyaPhone(
+          formData.phone as string,
+        );
 
         if (!formData.phone || !formData.phone.toString().trim())
           newErrors.phone = "Phone number is required";
@@ -365,7 +360,9 @@ export default function OrderForm() {
         }
 
         if (formData.kinNumber) {
-          const normalizedKin = normalizeKenyaPhone(formData.kinNumber as string)
+          const normalizedKin = normalizeKenyaPhone(
+            formData.kinNumber as string,
+          );
           if (!phoneRegex.test(normalizedKin)) {
             newErrors.kinNumber =
               "Please enter a valid phone number (examples: +254712345678, 0712345678)";
@@ -374,8 +371,10 @@ export default function OrderForm() {
 
         // Student-specific validation: accept either a selected File or an already uploaded URL
         if (formData.student === "yes") {
-          if (!formData.schoolIdFile && !formData.schoolIdUrl)
-            newErrors.schoolIdFile = "Please upload your school ID picture";
+          // Require either registration number or an already uploaded school ID URL
+          if (!formData.registrationNumber && !formData.schoolIdUrl)
+            newErrors.registrationNumber =
+              "Please provide your registration number";
         }
         break;
 
@@ -490,8 +489,8 @@ export default function OrderForm() {
     setIsSubmitting(true);
 
     try {
-  // Create order reference using shared generator
-  const orderReference = generateOrderReference("LNMB");
+      // Create order reference using shared generator
+      const orderReference = generateOrderReference("LNMB");
 
       // Try to normalize university client-side if we have the canonical list
       let universityToSave = formData.university;
@@ -507,54 +506,29 @@ export default function OrderForm() {
         }
       }
 
-      // If student uploaded a school ID file, upload it first to Cloudinary
-      let schoolIdUrl: string | undefined = undefined;
-      if (formData.schoolIdFile) {
-        try {
-          const uploadForm = new FormData();
-          uploadForm.append("file", formData.schoolIdFile);
-
-          const res = await fetch("/api/upload-school-id", {
-            method: "POST",
-            body: uploadForm,
-          });
-
-          if (!res.ok) {
-            const err = await res.json().catch(() => ({}));
-            throw new Error(err?.error || "Upload failed");
-          }
-
-          const body = await res.json();
-          schoolIdUrl = body.url;
-        } catch (uploadError) {
-          console.error("School ID upload failed", uploadError);
-          setErrors({
-            general: "Failed to upload school ID. Please try again.",
-          });
-          setIsSubmitting(false);
-          return;
-        }
-      }
+      // No client-side upload step anymore. If server already has a schoolIdUrl
+      // it will be preserved via formData.schoolIdUrl. Prefer registrationNumber.
+      const schoolIdUrl: string | undefined = formData.schoolIdUrl || undefined;
 
       // Normalize phone and kinNumber before saving order
       const normalizeKenyaPhone = (raw: string | undefined) => {
-        if (!raw) return ""
-        const digits = (raw || "").replace(/\D/g, "")
+        if (!raw) return "";
+        const digits = (raw || "").replace(/\D/g, "");
         if (digits.startsWith("254") || digits.startsWith("257")) {
-          if (digits.length >= 12) return digits.slice(0, 12)
-          return digits
+          if (digits.length >= 12) return digits.slice(0, 12);
+          return digits;
         }
         if (digits.length === 10 && digits.startsWith("0")) {
-          return `254${digits.slice(1)}`
+          return `254${digits.slice(1)}`;
         }
         if (digits.length === 9) {
-          return `254${digits}`
+          return `254${digits}`;
         }
-        return digits
-      }
+        return digits;
+      };
 
-  const normalizedPhone = normalizeKenyaPhone(formData.phone as string)
-  const normalizedKin = normalizeKenyaPhone(formData.kinNumber as string)
+      const normalizedPhone = normalizeKenyaPhone(formData.phone as string);
+      const normalizedKin = normalizeKenyaPhone(formData.kinNumber as string);
 
       // Serialize cart items into a format that fits existing schema
       // tshirtSize will be comma-separated like "M:2,L:3,XL:1"
@@ -569,10 +543,13 @@ export default function OrderForm() {
         ...formData,
         phone: normalizedPhone,
         kinNumber: normalizedKin,
-        tshirtSize: cartSummary,  // Store cart as serialized string
-        quantity: totalQuantity,   // Store total quantity
+        tshirtSize: cartSummary, // Store cart as serialized string
+        quantity: totalQuantity, // Store total quantity
         // Remove File from the saved order; include uploaded URL if available
-        schoolIdFile: undefined,
+        // registrationNumber replaces client upload UX; keep schoolIdUrl if present
+        registrationNumber: formData.registrationNumber,
+        // Map to server-expected field name so checkout/createOrder receives it
+        regNumber: formData.registrationNumber,
         schoolIdUrl,
         university: universityToSave,
         universityUserEntered: userEntered,
@@ -752,7 +729,8 @@ export default function OrderForm() {
         {formData.student === "yes" && (
           <div className="p-3 bg-green-50 rounded-lg">
             <p className="text-green-700 text-sm">
-              🎓 Student discount activated! You saved up to KES 650 per t-shirt.
+              🎓 Student discount activated! You saved up to KES 650 per
+              t-shirt.
             </p>
           </div>
         )}
@@ -905,10 +883,7 @@ export default function OrderForm() {
                   size="sm"
                   className="leading-none"
                   onClick={() =>
-                    handleInputChange(
-                      "quantity",
-                      formData.quantity + 1,
-                    )
+                    handleInputChange("quantity", formData.quantity + 1)
                   }
                 >
                   +
@@ -987,9 +962,7 @@ export default function OrderForm() {
               </div>
             ))}
           </div>
-          {errors.cart && (
-            <p className="text-red-500 text-sm">{errors.cart}</p>
-          )}
+          {errors.cart && <p className="text-red-500 text-sm">{errors.cart}</p>}
         </div>
       )}
 
@@ -1000,7 +973,12 @@ export default function OrderForm() {
             <div>
               <p className="font-semibold">Order Total</p>
               <p className="text-sm text-gray-600">
-                {getTotalQuantity()} t-shirt{getTotalQuantity() !== 1 ? 's' : ''} ({formData.cartItems.map(item => `${item.quantity}×${item.size}`).join(', ')})
+                {getTotalQuantity()} t-shirt
+                {getTotalQuantity() !== 1 ? "s" : ""} (
+                {formData.cartItems
+                  .map((item) => `${item.quantity}×${item.size}`)
+                  .join(", ")}
+                )
               </p>
               {formData.student === "yes" && (
                 <p className="text-sm text-green-600">
@@ -1049,190 +1027,40 @@ export default function OrderForm() {
           <h4 className="font-semibold text-gray-800">Student Information</h4>
 
           <div className="space-y-2">
-            <Label htmlFor="schoolId">School ID Picture *</Label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
-              <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-              <p className="text-sm text-gray-600 mb-2">
-                Upload a clear photo of your student ID
+            <Label htmlFor="registrationNumber">Registration Number *</Label>
+            <Input
+              id="registrationNumber"
+              value={formData.registrationNumber || ""}
+              onChange={(e) =>
+                handleInputChange("registrationNumber", e.target.value)
+              }
+              placeholder="Enter your registration / matric number"
+              className="max-w-md"
+            />
+            <p className="text-sm text-gray-500">
+              Enter your institutional registration number here.
+            </p>
+            {errors.registrationNumber && (
+              <p className="text-red-500 text-sm">
+                {errors.registrationNumber}
               </p>
-              <Input
-                id="schoolId"
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-
-                  // Client-side file size check
-                  if (file.size > MAX_UPLOAD_BYTES) {
-                    setSchoolIdUploadError("File is too large. Maximum size is 5MB.");
-                    setIsUploadingSchoolId(false);
-                    setUploadProgress(0);
-                    // keep the selected file in state briefly so user can see name, but don't start upload
-                    handleInputChange("schoolIdFile", file);
-                    return;
-                  }
-
-                  // Start upload flow: resize client-side, then upload with XHR to show progress
-                  handleInputChange("schoolIdFile", file);
-                  setIsUploadingSchoolId(true);
-                  setSchoolIdUploadError(null);
-                  setUploadProgress(0);
-
-                  const reader = new FileReader();
-                  reader.onload = async () => {
-                    try {
-                      const img = document.createElement("img");
-                      img.src = reader.result as string;
-                      await new Promise<void>((res, rej) => {
-                        img.onload = () => res();
-                        img.onerror = () => rej(new Error("Image load error"));
-                      });
-
-                      // Resize logic: max 1200px on longest edge
-                      const maxSize = 1200;
-                      let { width, height } = img;
-                      if (width > maxSize || height > maxSize) {
-                        const ratio = width / height;
-                        if (ratio > 1) {
-                          width = maxSize;
-                          height = Math.round(maxSize / ratio);
-                        } else {
-                          height = maxSize;
-                          width = Math.round(maxSize * ratio);
-                        }
-                      }
-
-                      const canvas = document.createElement("canvas");
-                      canvas.width = width;
-                      canvas.height = height;
-                      const ctx = canvas.getContext("2d");
-                      if (!ctx) throw new Error("Canvas not supported");
-                      ctx.drawImage(img, 0, 0, width, height);
-
-                      // Convert to blob (jpeg) at 0.85 quality
-                      const blob: Blob | null = await new Promise((resolve) =>
-                        canvas.toBlob((b) => resolve(b), "image/jpeg", 0.85),
-                      );
-                      if (!blob) throw new Error("Failed to create image blob");
-
-                      // Upload via XMLHttpRequest to capture progress
-                      const form = new FormData();
-                      form.append("file", blob, file.name.replace(/\.[^.]+$/, ".jpg"));
-
-                      const xhr = new XMLHttpRequest();
-                      xhr.open("POST", "/api/upload-school-id");
-
-                      xhr.upload.onprogress = (evt) => {
-                        if (evt.lengthComputable) {
-                          const percent = Math.round((evt.loaded / evt.total) * 100);
-                          setUploadProgress(percent);
-                        }
-                      };
-
-                      xhr.onload = () => {
-                        setIsUploadingSchoolId(false);
-                        if (xhr.status >= 200 && xhr.status < 300) {
-                          try {
-                            const body = JSON.parse(xhr.responseText);
-                            handleInputChange("schoolIdUrl", body.url);
-                            handleInputChange("schoolIdPublicId", body.public_id);
-                            // clear local File reference to avoid storing large objects in localStorage draft
-                            handleInputChange("schoolIdFile", undefined as unknown as File);
-                          } catch {
-                            setSchoolIdUploadError("Upload succeeded but response parsing failed");
-                          }
-                        } else {
-                          let errMsg = "Upload failed";
-                          try {
-                            const body = JSON.parse(xhr.responseText);
-                            errMsg = body.error || errMsg;
-                          } catch {
-                            // ignore parse errors
-                          }
-                          setSchoolIdUploadError(errMsg);
-                        }
-                      };
-
-                      xhr.onerror = () => {
-                        setIsUploadingSchoolId(false);
-                        setSchoolIdUploadError("Upload failed (network error)");
-                      };
-
-                      xhr.send(form);
-                    } catch (err) {
-                      console.error("School ID processing failed", err);
-                      setIsUploadingSchoolId(false);
-                      setSchoolIdUploadError((err as Error)?.message || "Upload failed");
-                    }
-                  };
-                  reader.readAsDataURL(file);
-                }}
-                className="hidden"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => document.getElementById("schoolId")?.click()}
-              >
-                Choose File
-              </Button>
-              {formData.schoolIdFile && (
-                <p className="text-sm text-green-600 mt-2">
-                  File selected: {formData.schoolIdFile.name}
-                </p>
-              )}
-              {formData.schoolIdUrl && (
-                <div className="mt-3 flex items-center space-x-3">
-                  <Image
-                    src={formData.schoolIdUrl as string}
-                    alt="Uploaded school ID"
-                    width={64}
-                    height={64}
-                    unoptimized
-                    className="w-16 h-16 object-cover rounded-md border"
-                  />
-                  <div className="text-sm">
-                    <p className="font-medium">School ID uploaded</p>
-                    {isUploadingSchoolId ? (
-                      <div className="space-y-1">
-                        <div className="text-xs text-gray-500">Uploading... {uploadProgress}%</div>
-                        <progress
-                          value={uploadProgress}
-                          max={100}
-                          className="w-40 h-2 rounded-full overflow-hidden"
-                        />
-                      </div>
-                    ) : schoolIdUploadError ? (
-                      <p className="text-xs text-red-500">{schoolIdUploadError}</p>
-                    ) : (
-                      <p className="text-xs text-gray-500">Tap &quot;Choose File&quot; to replace</p>
-                    )}
-                  </div>
+            )}
+            {formData.schoolIdUrl && (
+              <div className="mt-3 flex items-center space-x-3">
+                <Image
+                  src={formData.schoolIdUrl as string}
+                  alt="Previously uploaded school ID"
+                  width={64}
+                  height={64}
+                  unoptimized
+                  className="w-16 h-16 object-cover rounded-md border"
+                />
+                <div className="text-sm">
+                  <p className="font-medium">
+                    Previously uploaded school ID on file
+                  </p>
                 </div>
-              )}
-              {/* If a file is selected but not yet uploaded (e.g., too large or waiting), show progress or message */}
-              {formData.schoolIdFile && !formData.schoolIdUrl && (
-                <div className="mt-2">
-                  {schoolIdUploadError ? (
-                    <p className="text-xs text-red-500">{schoolIdUploadError}</p>
-                  ) : isUploadingSchoolId ? (
-                    <div className="flex items-center space-x-3">
-                      <progress
-                        value={uploadProgress}
-                        max={100}
-                        className="w-40 h-2 rounded-full overflow-hidden"
-                      />
-                      <div className="text-xs text-gray-500">{uploadProgress}%</div>
-                    </div>
-                  ) : (
-                    <p className="text-sm text-gray-600">Selected: {formData.schoolIdFile.name}</p>
-                  )}
-                </div>
-              )}
-            </div>
-            {errors.schoolIdFile && (
-              <p className="text-red-500 text-sm">{errors.schoolIdFile}</p>
+              </div>
             )}
           </div>
         </div>
@@ -1526,7 +1354,9 @@ export default function OrderForm() {
                 </p>
               ))}
               {formData.student === "yes" && (
-                <p className="text-green-600 font-medium">✓ Student discount applied</p>
+                <p className="text-green-600 font-medium">
+                  ✓ Student discount applied
+                </p>
               )}
               <p>
                 <strong>Attendance:</strong>{" "}

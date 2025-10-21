@@ -2,13 +2,13 @@ import { describe, it, expect } from "vitest";
 
 /**
  * Auth System Tests
- * 
+ *
  * These tests verify the authentication and authorization system.
- * 
+ *
  * NOTE: These are integration-style tests that would require a running Convex
  * deployment to fully execute. For now, they serve as documentation of the
  * expected behavior.
- * 
+ *
  * To run integration tests against a real Convex deployment:
  * 1. Set up your Convex deployment
  * 2. Create test users using the createUser mutation
@@ -156,4 +156,3 @@ describe("Session Security", () => {
     expect(isExpired).toBe(false);
   });
 });
-

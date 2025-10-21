@@ -21,12 +21,15 @@ describe("createPaymentRecord action (integration-style)", () => {
     const privateKeyPath = path.resolve(process.cwd(), "privatekey.pem");
     if (!fs.existsSync(privateKeyPath)) {
       // Skip test if no local private key — still useful in CI where key may be set via env
-      console.warn("Skipping signing integration test: privatekey.pem not found");
+      console.warn(
+        "Skipping signing integration test: privatekey.pem not found",
+      );
       return;
     }
 
     // Ensure expected env vars used in signature computation
-    process.env.JENGA_MERCHANT_CODE = process.env.JENGA_MERCHANT_CODE || "TESTMERCH";
+    process.env.JENGA_MERCHANT_CODE =
+      process.env.JENGA_MERCHANT_CODE || "TESTMERCH";
     process.env.SITE_URL = process.env.SITE_URL || "http://localhost:3000";
 
     // Mock generateAccessToken to avoid external network calls
@@ -34,7 +37,7 @@ describe("createPaymentRecord action (integration-style)", () => {
       default: async () => "tok_test",
     }));
 
-  const mod = await import("../orders_node_actions");
+    const mod = await import("../orders_node_actions");
 
     // Create a fake Convex action context with minimal runMutation and db
     const fakeCtx: any = {
@@ -81,7 +84,12 @@ describe("createPaymentRecord action (integration-style)", () => {
       const signatureBase64 = result.paymentData.signature;
       const signatureData = `${process.env.JENGA_MERCHANT_CODE || "TESTMERCH"}${args.orderReference}KES${String(args.orderAmount)}${process.env.SITE_URL ? `${process.env.SITE_URL}/api/pgw-webhook-4365c21f` : "http://localhost:3000/api/pgw-webhook-4365c21f"}`;
       const verified = await import("crypto").then((c) =>
-        c.verify("RSA-SHA256", Buffer.from(signatureData), { key: pub, padding: c.constants.RSA_PKCS1_PADDING }, Buffer.from(signatureBase64, "base64")),
+        c.verify(
+          "RSA-SHA256",
+          Buffer.from(signatureData),
+          { key: pub, padding: c.constants.RSA_PKCS1_PADDING },
+          Buffer.from(signatureBase64, "base64"),
+        ),
       );
       expect(verified).toBe(true);
     }

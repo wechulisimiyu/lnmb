@@ -14,11 +14,13 @@ This document summarizes the comprehensive cleanup and security hardening perfor
 **Action:** Audited all deprecated functions in `convex/checkout.ts`
 
 **Findings:**
+
 - All deprecated functions (`triggerSTKPush`, `initiateCheckout`, `handlePaymentCallback`, `updatePaymentStatus` in checkout.ts) are NOT being called from any frontend or API code
 - The codebase exclusively uses `api.orders.*` functions
 - Deprecated functions only reference themselves in commented-out code
 
 **Files Checked:**
+
 - `convex/checkout.ts` - Contains deprecated functions (commented out)
 - `convex/orders.ts` - Contains active implementations
 - `src/app/checkout/page.tsx` - Uses `api.orders.createOrder`, `api.orders.createPaymentRecord`, `api.orders.getPaymentStatus`
@@ -34,11 +36,13 @@ This document summarizes the comprehensive cleanup and security hardening perfor
 **Action:** Deleted `src/app/api/payment/callback/route.ts` entirely
 
 **Rationale:**
+
 - You explicitly stated no backward compatibility needed
 - Production should only use the secure webhook endpoint
 - The deprecated endpoint was causing parameter name mismatches with production Jenga callbacks
 
 **Impact:**
+
 - ⚠️ **CRITICAL:** Update Jenga PGW dashboard to use ONLY the secure webhook:
   ```
   https://your-domain.com/api/pgw-webhook-4365c21f
@@ -52,6 +56,7 @@ This document summarizes the comprehensive cleanup and security hardening perfor
 **File:** `src/app/api/pgw-webhook-4365c21f/route.ts`
 
 **Changes:**
+
 - Added check for payment record existence BEFORE processing webhook
 - If payment record doesn't exist, logs warning and returns 200 (prevents Jenga retries)
 - All errors now return 200 status with error details (prevents Jenga retry storms)
@@ -59,6 +64,7 @@ This document summarizes the comprehensive cleanup and security hardening perfor
 - Added Sentry spans for tracing (`http.server` operations)
 
 **Key Code:**
+
 ```typescript
 // Check if payment record exists before processing
 const paymentExists = await convex.query(api.orders.getPaymentStatus, {
@@ -79,12 +85,13 @@ if (!paymentExists) {
       message: "Payment record not found - may arrive later",
       orderReference,
     },
-    { status: 200 }
+    { status: 200 },
   );
 }
 ```
 
 **Sentry Integration:**
+
 - Wrapped handlers in `Sentry.startSpan()` for tracing
 - Captures exceptions with context tags
 - Logs all webhook events (info, warn, error levels)
@@ -100,6 +107,7 @@ if (!paymentExists) {
 **Change:** Instead of throwing when payment not found, now logs and returns `null`
 
 **Before:**
+
 ```typescript
 if (!payment) {
   throw new Error("Payment record not found");
@@ -107,6 +115,7 @@ if (!payment) {
 ```
 
 **After:**
+
 ```typescript
 if (!payment) {
   // Log the missing payment record but don't throw - this can happen if webhook
@@ -118,14 +127,15 @@ if (!payment) {
       status: args.status,
       transactionId: args.transactionId,
       paymentChannel: args.paymentChannel,
-    }
+    },
   );
   // Return null to indicate no update occurred
   return null;
 }
 ```
 
-**Impact:** 
+**Impact:**
+
 - No more server errors thrown to client
 - Race conditions between order creation and webhook arrival are now handled gracefully
 - All errors are logged for debugging but don't crash the system
@@ -135,11 +145,13 @@ if (!payment) {
 ### 5. ✅ Sentry Setup for Next.js
 
 **Files Created/Verified:**
+
 - `sentry.client.config.ts` - Client-side configuration (browser)
 - `sentry.server.config.ts` - Server-side configuration (Node.js)
 - `sentry.edge.config.ts` - Edge runtime configuration
 
 **Configuration:**
+
 - DSN: Already configured
 - Trace sampling: 100% (adjust for production)
 - Replay: Enabled on errors
@@ -148,6 +160,7 @@ if (!payment) {
 - **Only runs in production** (`enabled: process.env.NODE_ENV === "production"`)
 
 **Sentry Logger Usage:**
+
 ```typescript
 import * as Sentry from "@sentry/nextjs";
 const { logger } = Sentry;
@@ -168,7 +181,7 @@ Sentry.startSpan(
   { op: "http.server", name: "POST /api/pgw-webhook-4365c21f" },
   async () => {
     // handler code
-  }
+  },
 );
 ```
 
@@ -179,6 +192,7 @@ Sentry.startSpan(
 **Action:** Installed OpenTelemetry dependencies required by Sentry
 
 **Packages:**
+
 ```bash
 pnpm add -D import-in-the-middle require-in-the-middle
 ```
@@ -194,6 +208,7 @@ pnpm add -D import-in-the-middle require-in-the-middle
 **File:** `src/app/api/pgw-webhook-4365c21f/__tests__/route.test.ts`
 
 **Test Coverage:**
+
 1. **Production GET callback** - Simulates actual production payload with `transactionStatus=SUCCESS`, `transactionReference`, `secureResponse`
 2. **Production POST callback** - Simulates server-to-server webhook with payment confirmation
 3. **Missing payment record** - Verifies graceful handling (returns 200, logs warning)
@@ -201,6 +216,7 @@ pnpm add -D import-in-the-middle require-in-the-middle
 5. **Duplicate webhooks** - Verifies idempotency works correctly
 
 **Run Tests:**
+
 ```bash
 pnpm test
 ```
@@ -210,9 +226,11 @@ pnpm test
 ### 8. ✅ Documentation Updated
 
 **Files Updated:**
+
 - `docs/PAYMENT_SECURITY.md` - Updated to reflect removal of deprecated endpoint
 
 **Key Changes:**
+
 - Removed references to backward compatibility with `/api/payment/callback`
 - Added critical note about updating Jenga PGW dashboard configuration
 - Emphasized secure webhook as the only supported endpoint
@@ -223,16 +241,19 @@ pnpm test
 
 ### What Was Happening in Production
 
-**Symptom:** 
+**Symptom:**
+
 - Convex server error: `[CONVEX Q(orders:getPaymentStatus)] Server Error`
 - Payment marked as "failed" even when Jenga reported "SUCCESS"
 
 **Root Cause:**
+
 1. **Parameter name mismatch:** Production Jenga callbacks used `transactionStatus`, `transactionReference`, `secureResponse` but deprecated handler expected `status`, `transactionId`, `hash`
 2. **Missing payment records:** Webhooks arriving before payment record creation (race condition)
 3. **Throwing errors:** Convex mutation threw error when payment not found, causing client-side exceptions
 
 **Solution:**
+
 - Removed deprecated endpoint entirely (no backward compatibility needed)
 - Added defensive checks in webhook handler
 - Made Convex mutation return null instead of throwing
@@ -313,7 +334,7 @@ NEXT_PUBLIC_SENTRY_DSN=your_sentry_dsn  # If using custom DSN
 ✅ Step 6: Add Sentry to webhook handlers → **Complete**  
 ✅ Step 7: Create integration tests → **Complete**  
 ✅ Step 8: Update Convex mutation → **Complete**  
-✅ Step 9: Update documentation → **Complete**  
+✅ Step 9: Update documentation → **Complete**
 
 ⚠️ **Action Required:** Update Jenga PGW dashboard to use secure webhook URL
 
@@ -339,7 +360,7 @@ Enable debug mode in Sentry config for detailed logging:
 ```typescript
 Sentry.init({
   dsn: "...",
-  debug: true,  // Set to true for debugging
+  debug: true, // Set to true for debugging
   // ...
 });
 ```
@@ -365,6 +386,6 @@ All changes are complete and ready for deployment. The system now:
 ✅ Never throws errors that reach the client  
 ✅ Logs all errors to Sentry for monitoring  
 ✅ Has comprehensive test coverage  
-✅ Is documented for future maintenance  
+✅ Is documented for future maintenance
 
 **Next Step:** Update Jenga PGW dashboard configuration and deploy to production.

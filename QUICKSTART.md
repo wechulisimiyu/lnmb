@@ -24,7 +24,8 @@ npx convex run auth:createUser \
   --role "admin"
 ```
 
-**Important**: 
+**Important**:
+
 - Use a strong password
 - Remember your credentials
 - Change password after first login
@@ -39,12 +40,14 @@ npx convex run auth:createUser \
 ## 👥 User Roles
 
 ### Admin
+
 - ✅ Full access to all features
 - ✅ View Dashboard, Orders, Payments
 - ✅ Manage Team, Highlights, Products
 - ✅ Create new users
 
 ### Director
+
 - ✅ View Dashboard, Orders, Payments
 - ❌ Cannot manage Team, Highlights, or Products
 - ❌ Cannot create users
@@ -74,23 +77,27 @@ npx convex run auth:createUser \
 ## 📱 Features
 
 ### Dashboard
+
 - View key metrics (orders, payments, revenue)
 - Recent activity feed
 - Statistics overview
 
 ### Orders Management
+
 - View all orders in real-time
 - Filter and search orders
 - See payment status
 - Customer details
 
 ### Payments Management
+
 - Track all payments
 - Payment status (paid, pending, failed)
 - Transaction IDs
 - Amount and currency
 
 ### Role-Based Tabs
+
 - Admin sees all tabs
 - Director sees limited tabs
 - Automatic UI adaptation
@@ -114,16 +121,19 @@ Detailed documentation available:
 ## 🔧 Troubleshooting
 
 ### Cannot Login?
+
 1. Check Convex deployment is running: `npx convex dev`
 2. Verify user exists in Convex dashboard
 3. Check console for error messages
 4. Ensure `NEXT_PUBLIC_CONVEX_URL` is set
 
 ### Session Expired?
+
 - Sessions expire after 7 days
 - Simply log in again with your credentials
 
 ### Forgot Password?
+
 Currently, contact an admin to create a new user or reset password manually in Convex dashboard.
 
 ## 🧪 Testing
@@ -135,6 +145,7 @@ pnpm run test
 ```
 
 All 20 authentication tests should pass:
+
 - ✅ User creation
 - ✅ Login/logout
 - ✅ Session management
@@ -143,16 +154,20 @@ All 20 authentication tests should pass:
 ## 📊 What Changed
 
 ### New Routes
+
 - `/manage` - Management dashboard (requires login)
 - `/manage/login` - Login page
 - `/admin` - Redirects to `/manage`
 
 ### New Database Tables
+
 - `users` - User accounts with roles
 - `sessions` - Active login sessions
 
 ### Protected Endpoints
+
 These now require authentication:
+
 - `api.orders.getAllOrders`
 - `api.orders.getAllPayments`
 - `api.orders.getOrderStats`
@@ -191,6 +206,7 @@ Before deploying to production:
 Your management dashboard is now set up and secured with role-based authentication. Users can access it at `/manage` after logging in.
 
 **Next Steps:**
+
 1. Create user accounts for your team
 2. Test different roles (admin vs director)
 3. Customize the dashboard as needed

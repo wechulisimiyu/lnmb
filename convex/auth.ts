@@ -11,11 +11,16 @@ async function hashPassword(password: string): Promise<string> {
   const data = encoder.encode(password);
   const hashBuffer = await crypto.subtle.digest("SHA-256", data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  const hashHex = hashArray
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
   return hashHex;
 }
 
-async function verifyPassword(password: string, hash: string): Promise<boolean> {
+async function verifyPassword(
+  password: string,
+  hash: string,
+): Promise<boolean> {
   const passwordHash = await hashPassword(password);
   return passwordHash === hash;
 }
@@ -24,7 +29,9 @@ async function verifyPassword(password: string, hash: string): Promise<boolean> 
 function generateToken(): string {
   const array = new Uint8Array(32);
   crypto.getRandomValues(array);
-  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+  return Array.from(array, (byte) => byte.toString(16).padStart(2, "0")).join(
+    "",
+  );
 }
 
 // Rate limiting constants
@@ -55,10 +62,10 @@ export const logAuditEvent = internalMutation({
 async function checkRateLimit(
   ctx: { db: any },
   email: string,
-  ipAddress?: string
+  ipAddress?: string,
 ): Promise<boolean> {
   const now = Date.now();
-  
+
   // Find existing rate limit record
   const rateLimit = await ctx.db
     .query("loginAttempts")
@@ -144,7 +151,7 @@ export const createUser = mutation({
 
     const now = Date.now();
     const passwordHash = await hashPassword(args.password);
-    
+
     const userId = await ctx.db.insert("users", {
       name: args.name,
       email: args.email,
@@ -182,7 +189,7 @@ export const login = mutation({
   },
   handler: async (ctx, args) => {
     const now = Date.now();
-    
+
     // Check rate limiting
     const canAttempt = await checkRateLimit(ctx, args.email, args.ipAddress);
     if (!canAttempt) {
@@ -321,7 +328,7 @@ export const logout = mutation({
 
     if (session) {
       const user = await ctx.db.get(session.userId);
-      
+
       // Delete session
       await ctx.db.delete(session._id);
 
@@ -493,7 +500,7 @@ export const getUserSessions = query({
       .filter((q) => q.gt(q.field("expiresAt"), Date.now()))
       .collect();
 
-    return sessions.map(s => ({
+    return sessions.map((s) => ({
       token: s.token.substring(0, 10) + "...", // Only show part of token
       createdAt: s.createdAt,
       expiresAt: s.expiresAt,
@@ -532,11 +539,13 @@ export const revokeSession = mutation({
       .withIndex("by_userId", (q) => q.eq("userId", user._id))
       .collect();
 
-    const targetSession = sessions.find(s => s.token.startsWith(args.targetToken));
-    
+    const targetSession = sessions.find((s) =>
+      s.token.startsWith(args.targetToken),
+    );
+
     if (targetSession) {
       await ctx.db.delete(targetSession._id);
-      
+
       // Log the revocation
       await ctx.db.insert("auditLogs", {
         userId: user._id,

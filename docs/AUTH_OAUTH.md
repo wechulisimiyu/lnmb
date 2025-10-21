@@ -39,6 +39,7 @@ AUTH_GOOGLE_SECRET=your_google_client_secret_here
 ### 3. Update Convex Schema
 
 The schema already includes OAuth-compatible fields in the `users` table:
+
 - `emailVerified`: Boolean indicating if email is verified
 - `image`: Profile picture URL from OAuth provider
 - `passwordHash`: Optional (not needed for OAuth users)
@@ -147,6 +148,7 @@ export default function LoginPage() {
 ### 6. Deploy and Test
 
 1. Deploy your updated code to Convex:
+
    ```bash
    npx convex dev
    ```
@@ -173,10 +175,12 @@ export default function LoginPage() {
 ### Mixed Authentication
 
 The system supports both:
+
 - Email/password authentication (for admins)
 - OAuth authentication (for convenient access)
 
 Users can have either:
+
 - `passwordHash` set (email/password login)
 - OAuth profile (Google login)
 - Both (can use either method)
@@ -184,6 +188,7 @@ Users can have either:
 ### Audit Logging
 
 OAuth logins are logged in the `auditLogs` table with:
+
 - Action: `oauth_login` or `oauth_user_created`
 - Provider details
 - Timestamp and IP address
@@ -196,7 +201,8 @@ OAuth logins are logged in the `auditLogs` table with:
 
 ### Redirect URI mismatch
 
-**Solution**: 
+**Solution**:
+
 1. Check the redirect URI in Google Cloud Console
 2. Ensure it matches your deployment URL
 3. Format: `https://your-domain.com/api/auth/callback/google`
@@ -224,6 +230,7 @@ providers: [
 ### Custom OAuth Callbacks
 
 Modify the `createOrUpdateUser` callback to:
+
 - Set custom user roles
 - Sync additional profile data
 - Trigger welcome emails
@@ -239,6 +246,7 @@ Modify the `createOrUpdateUser` callback to:
 ## Support
 
 For issues:
+
 1. Check Convex logs in the dashboard
 2. Verify OAuth credentials are correct
 3. Test redirect URIs match exactly

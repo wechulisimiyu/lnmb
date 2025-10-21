@@ -366,14 +366,45 @@ export const handlePaymentCallback = mutation({
     } catch (e) {
       // ignore
     }
-
     // Try to find matching payment record using index by_reference if available
-    const payment = await ctx.db
-      .query("payments")
-      .withIndex("by_reference", (q) =>
-        q.eq("orderReference", args.orderReference),
-      )
-      .first();
+    let payment = null;
+    try {
+      payment = await ctx.db
+        .query("payments")
+        .withIndex("by_reference", (q) =>
+          q.eq("orderReference", args.orderReference),
+        )
+        .first();
+
+      // Log lookup details to help diagnose reference mismatches
+      try {
+        console.info("[handlePaymentCallback] payment lookup result", {
+          orderReference: args.orderReference,
+          found: !!payment,
+          paymentId: payment?._id,
+          paymentStatusStored: payment?.status,
+        });
+      } catch (e) {
+        // ignore
+      }
+    } catch (error) {
+      // Log the database/query error but continue to return a structured response
+      try {
+        console.error(
+          `[handlePaymentCallback] error querying payments for reference=${args.orderReference}:`,
+          error,
+        );
+      } catch (e) {
+        // swallow
+      }
+
+      return {
+        success: false,
+        message: "error querying payment record",
+        error: String(error),
+        reference: args.orderReference,
+      };
+    }
 
     if (!payment) {
       // If payment not found, log and return an explicit result so caller can retry or investigate
@@ -388,11 +419,39 @@ export const handlePaymentCallback = mutation({
     }
 
     // Patch the payment record with new status and transactionId
-    await ctx.db.patch(payment._id, {
-      status: args.status,
-      transactionId: args.transactionId,
-      updatedAt: Date.now(),
-    });
+    try {
+      await ctx.db.patch(payment._id, {
+        status: args.status,
+        transactionId: args.transactionId,
+        updatedAt: Date.now(),
+      });
+
+      try {
+        console.info("[handlePaymentCallback] patched payment record", {
+          paymentId: payment._id,
+          newStatus: args.status,
+          transactionId: args.transactionId,
+        });
+      } catch (e) {
+        // ignore
+      }
+    } catch (error) {
+      try {
+        console.error(
+          `[handlePaymentCallback] failed to patch payment ${payment._id}:`,
+          error,
+        );
+      } catch (e) {
+        // swallow
+      }
+
+      return {
+        success: false,
+        message: "failed to patch payment record",
+        error: String(error),
+        reference: args.orderReference,
+      };
+    }
 
     // If payment is marked as paid, mark the linked order as paid too
     if (args.status === "paid") {
@@ -404,10 +463,30 @@ export const handlePaymentCallback = mutation({
         .first();
 
       if (order) {
-        await ctx.db.patch(order._id, {
-          paid: true,
-          updatedAt: Date.now(),
-        });
+        try {
+          await ctx.db.patch(order._id, {
+            paid: true,
+            updatedAt: Date.now(),
+          });
+
+          try {
+            console.info("[handlePaymentCallback] patched order as paid", {
+              orderId: order._id,
+              orderReference: args.orderReference,
+            });
+          } catch (e) {
+            // ignore
+          }
+        } catch (error) {
+          try {
+            console.error(
+              `[handlePaymentCallback] failed to patch order ${order._id}:`,
+              error,
+            );
+          } catch (e) {
+            // swallow
+          }
+        }
       } else {
         // Log but continue - order may be inserted later due to race condition
         console.warn(

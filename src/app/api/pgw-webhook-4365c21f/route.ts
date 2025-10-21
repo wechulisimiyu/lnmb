@@ -394,6 +394,14 @@ export async function POST(request: NextRequest) {
 
         // Update payment status in database using the new handlePaymentCallback mutation
         try {
+          // Log the incoming callback details and raw body for troubleshooting
+          logger.info("[pgw-webhook] calling convex.handlePaymentCallback", {
+            orderReference,
+            transactionId,
+            mappedStatus: paymentStatus,
+            rawBody,
+          });
+
           const result = await convex.mutation(
             api.orders.handlePaymentCallback,
             {
@@ -407,10 +415,13 @@ export async function POST(request: NextRequest) {
             },
           );
 
-          if (!result.success) {
-            logger.warn("Payment callback handler returned failure", {
+          // Log the mutation result so we can see if Convex accepted/processed it
+          logger.info("[pgw-webhook] convex mutation result", { orderReference, result });
+
+          if (!result || !result.success) {
+            logger.warn("Payment callback handler returned failure or null", {
               orderReference,
-              message: result.message,
+              result,
             });
           }
 
@@ -419,16 +430,17 @@ export async function POST(request: NextRequest) {
             status: paymentStatus,
             transactionId,
             channel: desc,
-            handlerSuccess: result.success,
+            handlerSuccess: result?.success,
           });
 
           logger.info("Payment callback processed", {
             orderReference,
             status: paymentStatus,
             transactionId,
-            handlerSuccess: result.success,
+            handlerSuccess: result?.success,
           });
         } catch (error) {
+          // Capture to Sentry with context
           Sentry.captureException(error, {
             tags: {
               endpoint: "/api/pgw-webhook-4365c21f",
@@ -437,6 +449,7 @@ export async function POST(request: NextRequest) {
             extra: {
               orderReference,
               status: paymentStatus,
+              rawBody,
             },
           });
 

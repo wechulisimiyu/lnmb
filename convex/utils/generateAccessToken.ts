@@ -7,10 +7,11 @@ export const getAuthUrl = () =>
   // warning so the issue is visible.
   (() => {
     if (process.env.JENGA_AUTH_URL) return process.env.JENGA_AUTH_URL;
-    const fallback = "https://uat.finserve.africa/authentication/api/v3/authenticate/merchant";
+    const fallback =
+      "https://uat.finserve.africa/authentication/api/v3/authenticate/merchant";
     if (process.env.NODE_ENV === "production") {
       throw new Error(
-        "Missing JENGA_AUTH_URL environment variable in production. Please set JENGA_AUTH_URL to your Jenga authentication endpoint."
+        "Missing JENGA_AUTH_URL environment variable in production. Please set JENGA_AUTH_URL to your Jenga authentication endpoint.",
       );
     }
     // Non-production: warn and return fallback

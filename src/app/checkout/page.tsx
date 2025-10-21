@@ -72,7 +72,9 @@ export default function CheckoutPage() {
   // Single payment flow: no client selection between card and mpesa
 
   const createOrder = useMutation(api.orders.createOrder);
-  const createPaymentRecord = useAction(api.orders_node_actions.createPaymentRecord);
+  const createPaymentRecord = useAction(
+    api.orders_node_actions.createPaymentRecord,
+  );
   const paymentStatus = useQuery(
     api.orders.getPaymentStatus,
     orderData?.orderReference
@@ -180,7 +182,7 @@ export default function CheckoutPage() {
               orderReference: orderData.orderReference,
             },
           });
-          
+
           Sentry.logger.error("Error processing payment", {
             error: error instanceof Error ? error.message : "Unknown error",
             orderReference: orderData.orderReference,
@@ -191,7 +193,7 @@ export default function CheckoutPage() {
         } finally {
           setIsProcessing(false);
         }
-      }
+      },
     );
   };
 
@@ -213,10 +215,12 @@ export default function CheckoutPage() {
         });
 
         // Create a form and submit to Jenga PGW
-      const form = document.createElement("form");
-      form.method = "POST";
-      // Allow override of Jenga process URL via public env var
-      form.action = (process.env.NEXT_PUBLIC_JENGA_PROCESS_URL as string) || "https://v3-uat.jengapgw.io/processPayment";
+        const form = document.createElement("form");
+        form.method = "POST";
+        // Allow override of Jenga process URL via public env var
+        form.action =
+          (process.env.NEXT_PUBLIC_JENGA_PROCESS_URL as string) ||
+          "https://v3-uat.jengapgw.io/processPayment";
 
         const fields: Record<string, string> = {
           token: paymentFormData.token,
@@ -259,7 +263,7 @@ export default function CheckoutPage() {
         form.submit();
 
         span.setAttribute("submitted", true);
-      }
+      },
     );
   };
 

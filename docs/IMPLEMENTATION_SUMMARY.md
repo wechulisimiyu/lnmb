@@ -15,11 +15,13 @@ This implementation addresses the requirements from the problem statement:
 ### 1. Deprecated Callback Endpoint (`/api/payment/callback`)
 
 **Before:**
+
 - Attempted to process payments directly
 - Threw errors on missing data
 - No backward compatibility path
 
 **After:**
+
 - Forwards all POST requests to secure webhook `/api/pgw-webhook-4365c21f`
 - Redirects all GET requests to secure webhook
 - Returns 200 status even on errors to prevent Jenga retries
@@ -27,6 +29,7 @@ This implementation addresses the requirements from the problem statement:
 - Gracefully handles missing payment data
 
 **Code:**
+
 ```typescript
 // Always returns 200, never throws
 return NextResponse.json(
@@ -35,13 +38,14 @@ return NextResponse.json(
     message: "Callback received but processing failed",
     error: error instanceof Error ? error.message : "Unknown error",
   },
-  { status: 200 }
+  { status: 200 },
 );
 ```
 
 ### 2. Secure Webhook Endpoint (`/api/pgw-webhook-4365c21f`)
 
 **Enhancements:**
+
 - Added Sentry tracing for all requests
 - Checks if payment record exists before processing
 - Returns 200 even on validation/auth failures
@@ -49,18 +53,20 @@ return NextResponse.json(
 - Uses structured logging throughout
 
 **Error Handling:**
+
 ```typescript
 // Return 200 to prevent retries even for invalid payloads
 if (!validation.valid) {
   logger.warn("Invalid webhook payload", { missing: validation.missing });
   return NextResponse.json(
     { error: "Invalid payload", missing: validation.missing },
-    { status: 200 }
+    { status: 200 },
   );
 }
 ```
 
 **Payment Record Check:**
+
 ```typescript
 // Gracefully handle missing payment records
 if (!paymentExists) {
@@ -69,14 +75,14 @@ if (!paymentExists) {
     status,
     transactionId,
   });
-  
+
   return NextResponse.json(
     {
       success: true,
       message: "Payment record not found - may arrive later",
       orderReference,
     },
-    { status: 200 }
+    { status: 200 },
   );
 }
 ```
@@ -86,6 +92,7 @@ if (!paymentExists) {
 **Location:** `src/app/api/pgw-webhook-4365c21f/__tests__/webhook.test.ts`
 
 **Test Coverage:**
+
 - ✅ Valid webhook payload generation
 - ✅ Hash verification
 - ✅ Different payment statuses (paid, pending, failed)
@@ -95,6 +102,7 @@ if (!paymentExists) {
 - ✅ Production-like payload simulation
 
 **Test Results:**
+
 ```
 ✓ src/app/api/pgw-webhook-4365c21f/__tests__/webhook.test.ts (14 tests)
   ✓ Webhook Payload Generation (3 tests)
@@ -107,12 +115,14 @@ if (!paymentExists) {
 ### 4. Sentry Integration
 
 **Configuration Files Created:**
+
 - `instrumentation.ts` - Loads Sentry before app starts
 - `sentry.client.config.ts` - Browser-side configuration
 - `sentry.server.config.ts` - Server-side configuration
 - `sentry.edge.config.ts` - Edge runtime configuration
 
 **Features Enabled:**
+
 - ✅ Automatic exception capture
 - ✅ Performance monitoring with spans
 - ✅ Structured logging with Sentry logger
@@ -121,14 +131,15 @@ if (!paymentExists) {
 - ✅ Sensitive data sanitization
 
 **PaymentSecurityLogger Enhancement:**
+
 ```typescript
 export class PaymentSecurityLogger {
   private static logger = Sentry.logger;
-  
+
   static logSecurityError(event: string, data: Record<string, unknown>) {
     const sanitized = sanitizeLogData(data);
     this.logger.error(this.logger.fmt`[SECURITY_ERROR] ${event}`, sanitized);
-    
+
     // Capture as Sentry exception for alerting
     Sentry.captureException(new Error(`Security Error: ${event}`), {
       tags: { type: "security_error", event },
@@ -139,6 +150,7 @@ export class PaymentSecurityLogger {
 ```
 
 **Checkout Flow Tracing:**
+
 ```typescript
 const handleProcessPayment = async () => {
   return Sentry.startSpan(
@@ -149,11 +161,11 @@ const handleProcessPayment = async () => {
     async (span) => {
       span.setAttribute("orderReference", orderData.orderReference);
       span.setAttribute("totalAmount", orderData.totalAmount);
-      
+
       // Payment processing logic
-      
+
       span.setAttribute("success", true);
-    }
+    },
   );
 };
 ```
@@ -161,6 +173,7 @@ const handleProcessPayment = async () => {
 ### 5. Documentation
 
 **Created:**
+
 - `docs/SENTRY_SETUP.md` - Comprehensive Sentry setup guide including:
   - Configuration overview
   - Usage examples (exceptions, tracing, logging)
@@ -172,22 +185,26 @@ const handleProcessPayment = async () => {
 ## Testing Instructions
 
 ### Run Tests
+
 ```bash
 npm test
 ```
 
 ### Expected Results
+
 - All 14 webhook integration tests should pass
 - Pre-existing test failures are unrelated to this implementation
 
 ### Manual Testing
 
 1. **Test Deprecated Callback:**
+
    ```bash
    curl -X POST http://localhost:3000/api/payment/callback \
      -H "Content-Type: application/json" \
      -d '{"orderReference":"ORD123","status":"paid"}'
    ```
+
    Expected: Returns 200, forwards to secure webhook
 
 2. **Test Secure Webhook:**
@@ -209,6 +226,7 @@ npm test
 ### Environment Variables
 
 No new required environment variables. Optional:
+
 - `SENTRY_ENVIRONMENT` - Set environment name
 - `SENTRY_RELEASE` - Set release version
 

@@ -18,7 +18,7 @@ function verifyJengaSignature(
     callbackUrl: string;
   },
   receivedHash: string,
-  merchantCode: string
+  merchantCode: string,
 ): boolean {
   if (!receivedHash || !merchantCode) {
     return false;
@@ -26,7 +26,7 @@ function verifyJengaSignature(
 
   const currency = params.currency || "KES";
   const signatureData = `${merchantCode}${params.orderReference}${currency}${params.amount}${params.callbackUrl}`;
-  
+
   const computedHash = crypto
     .createHash("sha256")
     .update(signatureData)
@@ -60,7 +60,9 @@ function validateCallbackPayload(payload: Record<string, unknown>): {
   };
 }
 
-function sanitizeLogData(data: Record<string, unknown>): Record<string, unknown> {
+function sanitizeLogData(
+  data: Record<string, unknown>,
+): Record<string, unknown> {
   const sensitiveFields = [
     "token",
     "hash",
@@ -74,9 +76,8 @@ function sanitizeLogData(data: Record<string, unknown>): Record<string, unknown>
   for (const field of sensitiveFields) {
     if (sanitized[field]) {
       const value = String(sanitized[field]);
-      sanitized[field] = value.length > 4 
-        ? `${value.substring(0, 4)}...` 
-        : "***";
+      sanitized[field] =
+        value.length > 4 ? `${value.substring(0, 4)}...` : "***";
     }
   }
 
@@ -85,12 +86,12 @@ function sanitizeLogData(data: Record<string, unknown>): Record<string, unknown>
 
 function generateIdempotencyKey(
   orderReference: string,
-  transactionId?: string
+  transactionId?: string,
 ): string {
-  const key = transactionId 
-    ? `${orderReference}-${transactionId}` 
+  const key = transactionId
+    ? `${orderReference}-${transactionId}`
     : orderReference;
-  
+
   return crypto.createHash("sha256").update(key).digest("hex");
 }
 
@@ -367,7 +368,7 @@ describe("Payment Security - Integration Scenarios", () => {
   it("should handle complete valid webhook", () => {
     const merchantCode = "TEST123";
     const callbackUrl = "https://example.com/api/webhook";
-    
+
     const payload = {
       orderReference: "ORD12345",
       status: "paid",
@@ -397,20 +398,20 @@ describe("Payment Security - Integration Scenarios", () => {
         callbackUrl,
       },
       hash,
-      merchantCode
+      merchantCode,
     );
     expect(signatureValid).toBe(true);
 
-  // Sanitize for logging - ensure we mask but keep prefix
-  const sanitized = sanitizeLogData(payloadWithHash);
-  expect(typeof sanitized.hash).toBe("string");
-  expect((sanitized.hash as string).endsWith("...")).toBe(true);
+    // Sanitize for logging - ensure we mask but keep prefix
+    const sanitized = sanitizeLogData(payloadWithHash);
+    expect(typeof sanitized.hash).toBe("string");
+    expect((sanitized.hash as string).endsWith("...")).toBe(true);
   });
 
   it("should reject webhook with tampered data", () => {
     const merchantCode = "TEST123";
     const callbackUrl = "https://example.com/api/webhook";
-    
+
     const originalPayload = {
       orderReference: "ORD12345",
       status: "paid",
@@ -445,7 +446,7 @@ describe("Payment Security - Integration Scenarios", () => {
         callbackUrl,
       },
       hash,
-      merchantCode
+      merchantCode,
     );
     expect(signatureValid).toBe(false);
   });

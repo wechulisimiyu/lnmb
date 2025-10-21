@@ -1,7 +1,64 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
+// Note: For full OAuth integration with Convex Auth, see docs/AUTH_OAUTH.md
+// The authTables from @convex-dev/auth/server can be added when setting up OAuth
+
 export default defineSchema({
+  users: defineTable({
+    name: v.string(),
+    email: v.string(),
+    passwordHash: v.optional(v.string()), // Hashed password for email/password auth (optional for OAuth)
+    role: v.union(v.literal("admin"), v.literal("director")), // admin has full access, director has limited access
+    isActive: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    // OAuth fields
+    emailVerified: v.optional(v.boolean()),
+    image: v.optional(v.string()),
+    // 2FA fields (for future implementation)
+    twoFactorEnabled: v.optional(v.boolean()),
+    twoFactorSecret: v.optional(v.string()),
+  }).index("by_email", ["email"]),
+
+  // Session tokens for authentication
+  sessions: defineTable({
+    userId: v.id("users"),
+    token: v.string(),
+    expiresAt: v.number(),
+    createdAt: v.number(),
+    ipAddress: v.optional(v.string()),
+    userAgent: v.optional(v.string()),
+  })
+    .index("by_token", ["token"])
+    .index("by_userId", ["userId"]),
+
+  // Audit log for tracking authentication events
+  auditLogs: defineTable({
+    userId: v.optional(v.id("users")),
+    email: v.optional(v.string()),
+    action: v.string(), // "login", "logout", "failed_login", "user_created", "password_changed", etc.
+    details: v.optional(v.string()),
+    ipAddress: v.optional(v.string()),
+    userAgent: v.optional(v.string()),
+    success: v.boolean(),
+    timestamp: v.number(),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_timestamp", ["timestamp"])
+    .index("by_action", ["action"]),
+
+  // Rate limiting for login attempts
+  loginAttempts: defineTable({
+    email: v.string(),
+    ipAddress: v.optional(v.string()),
+    attemptCount: v.number(),
+    lastAttempt: v.number(),
+    blockedUntil: v.optional(v.number()),
+  })
+    .index("by_email", ["email"])
+    .index("by_ip", ["ipAddress"]),
+
   orders: defineTable({
     // Student information
     student: v.string(), // "yes" or "no"
@@ -36,10 +93,11 @@ export default defineSchema({
 
     // Order reference for payment tracking
     orderReference: v.string(),
-    // Uploaded school ID image URL (Cloudinary)
-    schoolIdUrl: v.optional(v.string()),
+    // Uploaded school ID image URL (Cloudinary) - nullable for compatibility
+    // Allow string, null, or undefined so old orders and new null values are accepted
+    schoolIdUrl: v.optional(v.union(v.string(), v.null())),
     // Cloudinary public id for the uploaded school ID (for later management)
-    schoolIdPublicId: v.optional(v.string()),
+    schoolIdPublicId: v.optional(v.union(v.string(), v.null())),
 
     // Timestamps
     createdAt: v.number(),
@@ -86,6 +144,7 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_reference", ["orderReference"])
+    .index("by_transactionId", ["transactionId"])
     .index("by_status", ["status"])
     .index("by_created_at", ["createdAt"]),
 });

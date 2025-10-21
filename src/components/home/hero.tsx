@@ -66,13 +66,14 @@ export function HomeHero() {
             Leave <span className="text-red-500">No</span>
             <span className="block text-blue-500">Medic Behind</span>
           </h1>
-          
+
           {/* Strides of Compassion heading */}
           <div className="mb-3 mt-3 flex flex-col items-center">
             <span
               className="block text-3xl sm:text-4xl font-semibold text-blue-900"
               style={{
-                fontFamily: "'Pacifico', cursive, 'Brush Script MT', sans-serif",
+                fontFamily:
+                  "'Pacifico', cursive, 'Brush Script MT', sans-serif",
                 letterSpacing: "0.02em",
               }}
             >

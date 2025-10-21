@@ -9,7 +9,7 @@ import * as Sentry from "@sentry/nextjs";
 /**
  * Verify Jenga PGW callback signature
  * Formula: merchantCode + orderReference + currency + orderAmount + callbackUrl
- * 
+ *
  * @param params - Callback parameters
  * @param receivedHash - Hash received from Jenga PGW
  * @param merchantCode - Merchant code from environment
@@ -23,7 +23,7 @@ export function verifyJengaSignature(
     callbackUrl: string;
   },
   receivedHash: string,
-  merchantCode: string
+  merchantCode: string,
 ): boolean {
   if (!receivedHash || !merchantCode) {
     return false;
@@ -32,9 +32,12 @@ export function verifyJengaSignature(
   // Construct signature data as per Jenga documentation
   const currency = params.currency || "KES";
   const signatureData = `${merchantCode}${params.orderReference}${currency}${params.amount}${params.callbackUrl}`;
-  
+
   // Jenga PGW uses SHA-256 hash
-  const computedHash = crypto.createHash("sha256").update(signatureData).digest("hex");
+  const computedHash = crypto
+    .createHash("sha256")
+    .update(signatureData)
+    .digest("hex");
 
   try {
     // Interpret hashes as hex. If receivedHash isn't valid hex or lengths differ,
@@ -84,7 +87,9 @@ export function validateCallbackPayload(payload: unknown): {
 /**
  * Sanitize log data by removing sensitive information
  */
-export function sanitizeLogData(data: Record<string, unknown>): Record<string, unknown> {
+export function sanitizeLogData(
+  data: Record<string, unknown>,
+): Record<string, unknown> {
   const sensitiveFields = [
     "token",
     "hash",
@@ -99,7 +104,8 @@ export function sanitizeLogData(data: Record<string, unknown>): Record<string, u
     if (sanitized[field]) {
       // Keep first 4 chars for debugging, mask the rest
       const value = String(sanitized[field]);
-      sanitized[field] = value.length > 4 ? `${value.substring(0, 4)}...` : "***";
+      sanitized[field] =
+        value.length > 4 ? `${value.substring(0, 4)}...` : "***";
     }
   }
 
@@ -113,12 +119,16 @@ export function sanitizeLogData(data: Record<string, unknown>): Record<string, u
 export class PaymentSecurityLogger {
   private static logger = Sentry.logger;
 
-  private static formatMessage(level: string, event: string, data: Record<string, unknown>): string {
+  private static formatMessage(
+    level: string,
+    event: string,
+    data: Record<string, unknown>,
+  ): string {
     const timestamp = new Date().toISOString();
     const sanitized = sanitizeLogData(data);
     return `[${timestamp}] [${level}] [${event}] ${JSON.stringify(sanitized)}`;
   }
-  
+
   static logSecurityEvent(event: string, data: Record<string, unknown>) {
     const sanitized = sanitizeLogData(data);
     this.logger.info(this.logger.fmt`[SECURITY] ${event}`, sanitized);
@@ -154,11 +164,11 @@ export class PaymentSecurityLogger {
  */
 export function generateIdempotencyKey(
   orderReference: string,
-  transactionId?: string
+  transactionId?: string,
 ): string {
-  const key = transactionId 
-    ? `${orderReference}-${transactionId}` 
+  const key = transactionId
+    ? `${orderReference}-${transactionId}`
     : orderReference;
-  
+
   return crypto.createHash("sha256").update(key).digest("hex");
 }

@@ -82,9 +82,9 @@ Input Components:
   • callbackUrl:      "https://domain.com/api/pgw-webhook-4365c21f"
 
 Concatenation (no separators):
-  signatureData = merchantCode + orderReference + 
+  signatureData = merchantCode + orderReference +
                   currency + orderAmount + callbackUrl
-  
+
   = "MERCHANT123ORD1234567890KES1000https://domain.com/api/pgw-webhook-4365c21f"
 
 SHA-256 Hash:
@@ -154,7 +154,7 @@ After Sanitization:
 }
 
 Logged as:
-[2024-01-01T12:00:00.000Z] [SECURITY] [CALLBACK_PROCESSED] 
+[2024-01-01T12:00:00.000Z] [SECURITY] [CALLBACK_PROCESSED]
 {"orderReference":"ORD1234567890","customerEmail":"cust..."}
 
 
@@ -243,3 +243,4 @@ src/lib/__tests__/payment-security.test.ts
   • Sanitization tests
   • Idempotency tests
   • Integration scenarios
+```

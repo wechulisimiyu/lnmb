@@ -15,7 +15,9 @@ export function ImpactSnapshot() {
 
         {/* Biggest Fundraiser */}
         <div className="flex flex-col items-center space-y-4 px-4 text-center md:border-l md:border-r md:border-gray-200">
-          <h3 className="text-lg font-semibold text-blue-700">Biggest Fundraiser</h3>
+          <h3 className="text-lg font-semibold text-blue-700">
+            Biggest Fundraiser
+          </h3>
           <Image
             src="/logo-lnmb.png"
             alt="LNMB Annual Charity Run Logo"
@@ -31,13 +33,17 @@ export function ImpactSnapshot() {
 
         {/* Participants Annually */}
         <div className="flex flex-col items-center space-y-2 px-4 text-center md:border-r md:border-gray-200">
-          <h3 className="text-lg font-semibold text-blue-700">Participants Annually</h3>
+          <h3 className="text-lg font-semibold text-blue-700">
+            Participants Annually
+          </h3>
           <p className="text-5xl font-extrabold">1,000+</p>
         </div>
 
         {/* Students Helped */}
         <div className="flex flex-col items-center md:items-end space-y-2">
-          <h3 className="text-lg font-semibold text-blue-700">Students Helped</h3>
+          <h3 className="text-lg font-semibold text-blue-700">
+            Students Helped
+          </h3>
           <p className="text-5xl font-extrabold">50+</p>
           <p className="text-red-700 font-semibold">So Far</p>
         </div>
@@ -62,11 +68,12 @@ export function ImpactSnapshot() {
         <div className="md:col-span-2 flex flex-col space-y-4">
           <div>
             <p className="text-blue-700 font-semibold">
-              An initiative under the Prof Hassan Saidi Memorial Educational Fund.
+              An initiative under the Prof Hassan Saidi Memorial Educational
+              Fund.
             </p>
             <p>
-              Honoring the legacy of a mentor devoted to supporting and mentoring
-              underprivileged medical students.
+              Honoring the legacy of a mentor devoted to supporting and
+              mentoring underprivileged medical students.
             </p>
           </div>
         </div>
@@ -92,16 +99,16 @@ export function ImpactSnapshot() {
           <div>
             <p className="text-blue-700 font-semibold">Accountability</p>
             <p>
-              Overseen by a board of trustees made up of doctors from the Kenya Medical
-              Association, University of Nairobi Faculty of Health Sciences, and family
-              of the late Prof. Saidi.
+              Overseen by a board of trustees made up of doctors from the Kenya
+              Medical Association, University of Nairobi Faculty of Health
+              Sciences, and family of the late Prof. Saidi.
             </p>
           </div>
           <div>
             <p className="text-blue-700 font-semibold">Community-Led</p>
             <p>
-              The Charity Run is fully planned and executed by medical students for the
-              benefit of their peers.
+              The Charity Run is fully planned and executed by medical students
+              for the benefit of their peers.
             </p>
           </div>
         </div>

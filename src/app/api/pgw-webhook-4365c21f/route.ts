@@ -1,6 +1,6 @@
 /**
  * Secure Jenga Payment Gateway Webhook Handler
- * 
+ *
  * Security Features:
  * - Signature verification using hash from Jenga PGW
  * - Request validation and sanitization
@@ -47,7 +47,7 @@ const processedTransactions = new Set<string>();
  */
 function verifyWebhookAuthenticity(
   body: JengaPaymentCallback,
-  callbackUrl: string
+  callbackUrl: string,
 ): { valid: boolean; reason?: string } {
   // Check if hash is provided
   if (!body.hash) {
@@ -80,7 +80,7 @@ function verifyWebhookAuthenticity(
       callbackUrl,
     },
     body.hash,
-    MERCHANT_CODE!
+    MERCHANT_CODE!,
   );
 
   if (!signatureValid) {
@@ -95,7 +95,7 @@ function verifyWebhookAuthenticity(
  */
 function checkIdempotency(
   orderReference: string,
-  transactionId?: string
+  transactionId?: string,
 ): { isDuplicate: boolean; key: string } {
   const key = generateIdempotencyKey(orderReference, transactionId);
   const isDuplicate = processedTransactions.has(key);
@@ -125,7 +125,8 @@ export async function GET(request: NextRequest) {
       try {
         // Support both NextRequest (with nextUrl) and standard Request objects used in tests
         // Support both NextRequest (with nextUrl) and standard Request objects used in tests
-        const urlObj = (request as unknown as { nextUrl?: URL; url?: string }).nextUrl
+        const urlObj = (request as unknown as { nextUrl?: URL; url?: string })
+          .nextUrl
           ? (request as unknown as { nextUrl: URL }).nextUrl
           : new URL((request as unknown as { url: string }).url);
         const searchParams = urlObj.searchParams;
@@ -135,8 +136,8 @@ export async function GET(request: NextRequest) {
         const status = searchParams.get("status");
         const orderReference = searchParams.get("orderReference");
         const amount = searchParams.get("amount");
-      // const desc = searchParams.get("desc"); // not used on GET
-      // const date = searchParams.get("date"); // not used on GET
+        // const desc = searchParams.get("desc"); // not used on GET
+        // const date = searchParams.get("date"); // not used on GET
 
         PaymentSecurityLogger.logSecurityEvent("CALLBACK_GET_RECEIVED", {
           orderReference,
@@ -153,14 +154,17 @@ export async function GET(request: NextRequest) {
 
         // Validate required fields
         if (!orderReference) {
-          PaymentSecurityLogger.logSecurityWarning("CALLBACK_GET_MISSING_REFERENCE", {
-            params: Array.from(searchParams.keys()),
-          });
+          PaymentSecurityLogger.logSecurityWarning(
+            "CALLBACK_GET_MISSING_REFERENCE",
+            {
+              params: Array.from(searchParams.keys()),
+            },
+          );
 
           logger.warn("GET callback missing order reference", {
             availableParams: Array.from(searchParams.keys()),
           });
-          
+
           const redirectUrl = new URL("/checkout/result", request.url);
           redirectUrl.searchParams.set("status", "error");
           redirectUrl.searchParams.set("message", "Invalid payment reference");
@@ -205,7 +209,7 @@ export async function GET(request: NextRequest) {
 
         return NextResponse.redirect(redirectUrl);
       }
-    }
+    },
   );
 }
 
@@ -225,11 +229,17 @@ export async function POST(request: NextRequest) {
 
         // Narrow the parsed body to an object before using
         if (!rawBody || typeof rawBody !== "object") {
-          PaymentSecurityLogger.logSecurityWarning("CALLBACK_POST_INVALID_TYPE", {
-            bodyType: typeof rawBody,
-          });
+          PaymentSecurityLogger.logSecurityWarning(
+            "CALLBACK_POST_INVALID_TYPE",
+            {
+              bodyType: typeof rawBody,
+            },
+          );
 
-          return NextResponse.json({ success: false, error: "Invalid payload" }, { status: 200 });
+          return NextResponse.json(
+            { success: false, error: "Invalid payload" },
+            { status: 200 },
+          );
         }
 
         const body = rawBody as JengaPaymentCallback;
@@ -259,8 +269,12 @@ export async function POST(request: NextRequest) {
 
           // Return 200 to prevent retries even for invalid payloads
           return NextResponse.json(
-            { success: false, error: "Invalid payload", missing: validation.missing },
-            { status: 200 }
+            {
+              success: false,
+              error: "Invalid payload",
+              missing: validation.missing,
+            },
+            { status: 200 },
           );
         }
 
@@ -275,9 +289,12 @@ export async function POST(request: NextRequest) {
         // This helps avoid errors when webhook arrives before order is created
         if (orderReference) {
           try {
-            const paymentExists = await convex.query(api.orders.getPaymentStatus, {
-              reference: orderReference,
-            });
+            const paymentExists = await convex.query(
+              api.orders.getPaymentStatus,
+              {
+                reference: orderReference,
+              },
+            );
 
             if (!paymentExists) {
               logger.warn("Payment record not found for order reference", {
@@ -293,7 +310,7 @@ export async function POST(request: NextRequest) {
                   message: "Payment record not found - may arrive later",
                   orderReference,
                 },
-                { status: 200 }
+                { status: 200 },
               );
             }
           } catch (error) {
@@ -301,7 +318,7 @@ export async function POST(request: NextRequest) {
               orderReference,
               error: error instanceof Error ? error.message : "Unknown error",
             });
-            
+
             // Continue processing - don't fail on query errors
           }
         }
@@ -334,13 +351,20 @@ export async function POST(request: NextRequest) {
 
           // Return 200 to prevent retries even for auth failures
           return NextResponse.json(
-            { success: false, error: "Webhook authentication failed", reason: authCheck.reason },
-            { status: 200 }
+            {
+              success: false,
+              error: "Webhook authentication failed",
+              reason: authCheck.reason,
+            },
+            { status: 200 },
           );
         }
 
         // Check idempotency
-        const idempotencyCheck = checkIdempotency(orderReference!, transactionId);
+        const idempotencyCheck = checkIdempotency(
+          orderReference!,
+          transactionId,
+        );
         if (idempotencyCheck.isDuplicate) {
           PaymentSecurityLogger.logSecurityWarning("CALLBACK_DUPLICATE", {
             orderReference,
@@ -370,15 +394,18 @@ export async function POST(request: NextRequest) {
 
         // Update payment status in database using the new handlePaymentCallback mutation
         try {
-          const result = await convex.mutation(api.orders.handlePaymentCallback, {
-            orderReference: orderReference!,
-            status: paymentStatus,
-            transactionId: transactionId || undefined,
-            amount: body.amount,
-            hash: body.hash,
-            desc: desc || undefined,
-            extraData: body.extraData,
-          });
+          const result = await convex.mutation(
+            api.orders.handlePaymentCallback,
+            {
+              orderReference: orderReference!,
+              status: paymentStatus,
+              transactionId: transactionId || undefined,
+              amount: body.amount,
+              hash: body.hash,
+              desc: desc || undefined,
+              extraData: body.extraData,
+            },
+          );
 
           if (!result.success) {
             logger.warn("Payment callback handler returned failure", {
@@ -425,7 +452,7 @@ export async function POST(request: NextRequest) {
               message: "Failed to process payment callback",
               error: error instanceof Error ? error.message : "Unknown error",
             },
-            { status: 200 }
+            { status: 200 },
           );
         }
 
@@ -452,9 +479,9 @@ export async function POST(request: NextRequest) {
         // Return 200 even on error to prevent Jenga retries
         return NextResponse.json(
           { success: false, error: "Failed to process payment callback" },
-          { status: 200 }
+          { status: 200 },
         );
       }
-    }
+    },
   );
 }

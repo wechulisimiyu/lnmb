@@ -21,13 +21,18 @@ export function loadPrivateKeyFromEnvOrFile(): string | undefined {
   if (process.env.JENGA_PRIVATE_KEY) return process.env.JENGA_PRIVATE_KEY;
 
   // 3) path to PEM file
-  const keyPath = process.env.JENGA_PRIVATE_KEY_PATH || path.resolve(process.cwd(), "privatekey.pem");
+  const keyPath =
+    process.env.JENGA_PRIVATE_KEY_PATH ||
+    path.resolve(process.cwd(), "privatekey.pem");
   if (fs.existsSync(keyPath)) return fs.readFileSync(keyPath, "utf8");
 
   return undefined;
 }
 
-export function computeJengaSignatureBase64(signatureData: string, privateKeyPem: string): string {
+export function computeJengaSignatureBase64(
+  signatureData: string,
+  privateKeyPem: string,
+): string {
   const signed = crypto.sign("RSA-SHA256", Buffer.from(signatureData), {
     key: privateKeyPem,
     padding: crypto.constants.RSA_PKCS1_PADDING,
@@ -36,12 +41,21 @@ export function computeJengaSignatureBase64(signatureData: string, privateKeyPem
   return signed.toString("base64");
 }
 
-export function verifyJengaSignatureBase64(signatureData: string, signatureBase64: string, publicKeyPem: string): boolean {
+export function verifyJengaSignatureBase64(
+  signatureData: string,
+  signatureBase64: string,
+  publicKeyPem: string,
+): boolean {
   const signature = Buffer.from(signatureBase64, "base64");
-  return crypto.verify("RSA-SHA256", Buffer.from(signatureData), {
-    key: publicKeyPem,
-    padding: crypto.constants.RSA_PKCS1_PADDING,
-  }, signature);
+  return crypto.verify(
+    "RSA-SHA256",
+    Buffer.from(signatureData),
+    {
+      key: publicKeyPem,
+      padding: crypto.constants.RSA_PKCS1_PADDING,
+    },
+    signature,
+  );
 }
 
 // Do not run expensive or throwing checks at module load time because the Convex

@@ -14,6 +14,8 @@
     "test:unit": "node -r ts-node/register src/lib/__tests__/normalizeRunner.ts"
   },
   "dependencies": {
+    "@auth/core": "^0.41.0",
+    "@convex-dev/auth": "^0.0.90",
     "@hookform/resolvers": "^5.2.1",
     "@radix-ui/react-accordion": "^1.1.2",
     "@radix-ui/react-alert-dialog": "^1.1.15",
@@ -43,8 +45,10 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@sentry/nextjs": "^10",
     "@tanstack/react-table": "^8.21.3",
+    "@types/bcryptjs": "^3.0.0",
     "@vercel/analytics": "^1.5.0",
     "axios": "^1.11.0",
+    "bcryptjs": "^3.0.2",
     "class-variance-authority": "^0.7.1",
     "cloudinary": "^2.7.0",
     "clsx": "^2.1.1",

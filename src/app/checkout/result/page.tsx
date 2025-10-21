@@ -19,6 +19,7 @@ function PaymentResultContent() {
   const [reference, setReference] = useState<string | null>(null);
   const [transactionId, setTransactionId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [checking, setChecking] = useState(false);
 
   useEffect(() => {
     setStatus(searchParams.get("status"));
@@ -26,6 +27,83 @@ function PaymentResultContent() {
     setTransactionId(searchParams.get("transactionId"));
     setMessage(searchParams.get("message"));
   }, [searchParams]);
+
+  // If status is missing or unknown, try to fetch authoritative status from server
+  useEffect(() => {
+    let mounted = true;
+
+    async function fetchStatus() {
+      if (!mounted) return;
+
+      // Only attempt check when status is null or 'unknown' (or empty)
+      if (status && status !== "unknown") return;
+
+      // Need at least a reference or transactionId to check
+      if (!reference && !transactionId) return;
+
+      setChecking(true);
+
+      const params = new URLSearchParams();
+      if (reference) params.set("reference", reference);
+      if (transactionId) params.set("transactionId", transactionId);
+
+      // Polling: try a few times with small delays to account for webhook/write races
+      for (let attempt = 0; attempt < 5; attempt++) {
+        try {
+          const res = await fetch(`/api/checkout/status?${params.toString()}`);
+          if (!res.ok) {
+            // wait and retry
+            await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
+            continue;
+          }
+
+          const body = await res.json();
+          if (body && body.success && body.payment) {
+            const payment = body.payment as {
+              status?: string;
+              transactionId?: string;
+            };
+            if (payment.status) {
+              // Map backend payment.status to UI status expectations
+              let mapped = payment.status;
+              if (mapped === "processing") mapped = "processing";
+              if (mapped === "paid") mapped = "paid";
+              if (mapped === "failed") mapped = "failed";
+
+              if (mounted) {
+                setStatus(mapped);
+                if (payment.transactionId)
+                  setTransactionId(payment.transactionId);
+                setMessage(null);
+                setChecking(false);
+              }
+              return;
+            }
+          }
+
+          // If not found, wait a bit and try again
+          await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
+        } catch (_) {
+          // ignore transient errors and retry
+          await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
+        }
+      }
+
+      if (mounted) {
+        setChecking(false);
+        // if still unknown after retries, surface user-friendly guidance
+        setMessage(
+          "We couldn't confirm your payment immediately. Please check your bank/app for a transaction receipt or contact support with your order reference.",
+        );
+      }
+    }
+
+    fetchStatus();
+
+    return () => {
+      mounted = false;
+    };
+  }, [status, reference, transactionId]);
 
   const getStatusIcon = () => {
     switch (status) {
@@ -195,7 +273,15 @@ function PaymentResultContent() {
                     Try Again
                   </Button>
                   <Button
-                    onClick={() => router.push("/contact")}
+                    onClick={() => {
+                      const subject = encodeURIComponent(
+                        `Help needed: payment ${reference || "(no-ref)"}`,
+                      );
+                      const body = encodeURIComponent(
+                        `Order Reference: ${reference || "N/A"}%0D%0ATransaction ID: ${transactionId || "N/A"}%0D%0A\nPlease describe what happened:`,
+                      );
+                      window.location.href = `mailto:info@lnmb-run.org?subject=${subject}&body=${body}`;
+                    }}
                     variant="outline"
                     className="w-full"
                   >

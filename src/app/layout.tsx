@@ -11,7 +11,8 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Leave No Medic Behind - Charity Run",
-  description: "Supporting medical students through our annual charity run mission",
+  description:
+    "Supporting medical students through our annual charity run mission",
 };
 
 export default function RootLayout({

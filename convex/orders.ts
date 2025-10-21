@@ -25,8 +25,9 @@ export const createOrder = mutation({
     pickUp: v.optional(v.string()),
     confirm: v.string(),
     orderReference: v.string(),
-    schoolIdUrl: v.optional(v.string()),
-    schoolIdPublicId: v.optional(v.string()),
+    // school ID image fields are optional and may be null for simplified UX
+    schoolIdUrl: v.optional(v.union(v.string(), v.null())),
+    schoolIdPublicId: v.optional(v.union(v.string(), v.null())),
   },
   handler: async (ctx, args) => {
     const now = Date.now();
@@ -151,7 +152,9 @@ export const getPaymentStatus = query({
     try {
       const payment = await ctx.db
         .query("payments")
-        .withIndex("by_reference", (q) => q.eq("orderReference", args.reference))
+        .withIndex("by_reference", (q) =>
+          q.eq("orderReference", args.reference),
+        )
         .first();
 
       return payment;
@@ -159,7 +162,10 @@ export const getPaymentStatus = query({
       // Defensive logging to aid debugging on the server
       try {
         // Prefer console for server logs in Convex
-        console.error(`[getPaymentStatus] error for reference=${args.reference}:`, error);
+        console.error(
+          `[getPaymentStatus] error for reference=${args.reference}:`,
+          error,
+        );
       } catch (e) {
         // swallow
       }
@@ -179,6 +185,28 @@ export const getPaymentStatus = query({
       }
 
       // Return null so callers can handle missing payment records gracefully
+      return null;
+    }
+  },
+});
+
+// Get payment by transactionId
+export const getPaymentByTransactionId = query({
+  args: { transactionId: v.string() },
+  handler: async (ctx, args) => {
+    try {
+      const payment = await ctx.db
+        .query("payments")
+        .withIndex("by_transactionId", (q) => q.eq("transactionId", args.transactionId))
+        .first();
+
+      return payment;
+    } catch (error) {
+      try {
+        console.error(`[getPaymentByTransactionId] error for transactionId=${args.transactionId}:`, error);
+      } catch (e) {
+        // swallow
+      }
       return null;
     }
   },
@@ -210,7 +238,7 @@ export const updatePaymentStatus = mutation({
           status: args.status,
           transactionId: args.transactionId,
           paymentChannel: args.paymentChannel,
-        }
+        },
       );
       // Return null to indicate no update occurred
       return null;
@@ -244,20 +272,68 @@ export const updatePaymentStatus = mutation({
   },
 });
 
-// Get all orders (for admin)
+// Get all orders (for admin/director)
 export const getAllOrders = query({
-  args: {},
-  handler: async (ctx) => {
+  args: {
+    token: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Verify session
+    const session = await ctx.db
+      .query("sessions")
+      .withIndex("by_token", (q) => q.eq("token", args.token))
+      .first();
+
+    if (!session || session.expiresAt < Date.now()) {
+      throw new Error("Unauthorized: Invalid or expired session");
+    }
+
+    // Get user
+    const user = await ctx.db.get(session.userId);
+
+    if (!user || !user.isActive) {
+      throw new Error("Unauthorized: User not found or inactive");
+    }
+
+    // Check if user has admin or director role
+    if (user.role !== "admin" && user.role !== "director") {
+      throw new Error("Unauthorized: Insufficient permissions");
+    }
+
     const orders = await ctx.db.query("orders").order("desc").collect();
 
     return orders;
   },
 });
 
-// Get all payments (for admin)
+// Get all payments (for admin/director)
 export const getAllPayments = query({
-  args: {},
-  handler: async (ctx) => {
+  args: {
+    token: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Verify session
+    const session = await ctx.db
+      .query("sessions")
+      .withIndex("by_token", (q) => q.eq("token", args.token))
+      .first();
+
+    if (!session || session.expiresAt < Date.now()) {
+      throw new Error("Unauthorized: Invalid or expired session");
+    }
+
+    // Get user
+    const user = await ctx.db.get(session.userId);
+
+    if (!user || !user.isActive) {
+      throw new Error("Unauthorized: User not found or inactive");
+    }
+
+    // Check if user has admin or director role
+    if (user.role !== "admin" && user.role !== "director") {
+      throw new Error("Unauthorized: Insufficient permissions");
+    }
+
     const payments = await ctx.db.query("payments").order("desc").collect();
 
     return payments;
@@ -290,13 +366,21 @@ export const handlePaymentCallback = mutation({
     // Try to find matching payment record using index by_reference if available
     const payment = await ctx.db
       .query("payments")
-      .withIndex("by_reference", (q) => q.eq("orderReference", args.orderReference))
+      .withIndex("by_reference", (q) =>
+        q.eq("orderReference", args.orderReference),
+      )
       .first();
 
     if (!payment) {
       // If payment not found, log and return an explicit result so caller can retry or investigate
-      console.warn(`[handlePaymentCallback] payment record not found for reference: ${args.orderReference}`);
-      return { success: false, message: "payment record not found", reference: args.orderReference };
+      console.warn(
+        `[handlePaymentCallback] payment record not found for reference: ${args.orderReference}`,
+      );
+      return {
+        success: false,
+        message: "payment record not found",
+        reference: args.orderReference,
+      };
     }
 
     // Patch the payment record with new status and transactionId
@@ -310,7 +394,9 @@ export const handlePaymentCallback = mutation({
     if (args.status === "paid") {
       const order = await ctx.db
         .query("orders")
-        .withIndex("by_reference", (q) => q.eq("orderReference", args.orderReference))
+        .withIndex("by_reference", (q) =>
+          q.eq("orderReference", args.orderReference),
+        )
         .first();
 
       if (order) {
@@ -320,7 +406,9 @@ export const handlePaymentCallback = mutation({
         });
       } else {
         // Log but continue - order may be inserted later due to race condition
-        console.warn(`[handlePaymentCallback] order not found for reference: ${args.orderReference}`);
+        console.warn(
+          `[handlePaymentCallback] order not found for reference: ${args.orderReference}`,
+        );
       }
     }
 
@@ -328,10 +416,34 @@ export const handlePaymentCallback = mutation({
   },
 });
 
-// Get order statistics (for admin dashboard)
+// Get order statistics (for admin/director dashboard)
 export const getOrderStats = query({
-  args: {},
-  handler: async (ctx) => {
+  args: {
+    token: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Verify session
+    const session = await ctx.db
+      .query("sessions")
+      .withIndex("by_token", (q) => q.eq("token", args.token))
+      .first();
+
+    if (!session || session.expiresAt < Date.now()) {
+      throw new Error("Unauthorized: Invalid or expired session");
+    }
+
+    // Get user
+    const user = await ctx.db.get(session.userId);
+
+    if (!user || !user.isActive) {
+      throw new Error("Unauthorized: User not found or inactive");
+    }
+
+    // Check if user has admin or director role
+    if (user.role !== "admin" && user.role !== "director") {
+      throw new Error("Unauthorized: Insufficient permissions");
+    }
+
     const orders = await ctx.db.query("orders").collect();
     const payments = await ctx.db.query("payments").collect();
 

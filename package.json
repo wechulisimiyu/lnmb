@@ -45,7 +45,6 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@sentry/nextjs": "^10",
     "@tanstack/react-table": "^8.21.3",
-    "@types/bcryptjs": "^3.0.0",
     "@vercel/analytics": "^1.5.0",
     "axios": "^1.11.0",
     "bcryptjs": "^3.0.2",
@@ -73,7 +72,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
-    "@types/next": "^9.0.0",
+    
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
@@ -91,5 +90,10 @@
     "typescript": "^5",
     "vitest": "^1.6.1"
   },
-  "packageManager": "pnpm@10.18.2+sha512.9fb969fa749b3ade6035e0f109f0b8a60b5d08a1a87fdf72e337da90dcc93336e2280ca4e44f2358a649b83c17959e9993e777c2080879f3801e6f0d999ad3dd"
+  "pnpm": {
+    "overrides": {
+      "require-in-the-middle": "7.5.2"
+    }
+  },
+  "packageManager": "pnpm@10.18.3"
 }

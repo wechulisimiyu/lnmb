@@ -172,7 +172,6 @@ export const getPaymentStatus = query({
 
       // If Sentry server SDK is available in the environment, capture the exception
       try {
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
         const Sentry = require("@sentry/node");
         if (Sentry && Sentry.captureException) {
           Sentry.captureException(error, {
@@ -197,13 +196,18 @@ export const getPaymentByTransactionId = query({
     try {
       const payment = await ctx.db
         .query("payments")
-        .withIndex("by_transactionId", (q) => q.eq("transactionId", args.transactionId))
+        .withIndex("by_transactionId", (q) =>
+          q.eq("transactionId", args.transactionId),
+        )
         .first();
 
       return payment;
     } catch (error) {
       try {
-        console.error(`[getPaymentByTransactionId] error for transactionId=${args.transactionId}:`, error);
+        console.error(
+          `[getPaymentByTransactionId] error for transactionId=${args.transactionId}:`,
+          error,
+        );
       } catch (e) {
         // swallow
       }

@@ -6,13 +6,28 @@ process.env.NEXT_PUBLIC_CONVEX_URL = "https://test.convex.cloud";
 // Mock Convex client
 vi.mock("convex/browser", () => ({
   ConvexHttpClient: vi.fn().mockImplementation(() => ({
-    query: vi.fn().mockImplementation((fnName: any, args: any) => {
+    query: vi.fn().mockImplementation((fnName: string, args: unknown) => {
       // Simple behavior: if reference provided return fake payment; if transactionId return fake
-      if (args && args.reference === "FOUND_REF") {
-        return Promise.resolve({ _id: "p1", orderReference: "FOUND_REF", status: "paid", transactionId: "TX1" });
+      const a = args as Record<string, unknown> | null;
+      if (a && typeof a.reference === "string" && a.reference === "FOUND_REF") {
+        return Promise.resolve({
+          _id: "p1",
+          orderReference: "FOUND_REF",
+          status: "paid",
+          transactionId: "TX1",
+        });
       }
-      if (args && args.transactionId === "FOUND_TX") {
-        return Promise.resolve({ _id: "p2", orderReference: "REF_TX", status: "processing", transactionId: "FOUND_TX" });
+      if (
+        a &&
+        typeof a.transactionId === "string" &&
+        a.transactionId === "FOUND_TX"
+      ) {
+        return Promise.resolve({
+          _id: "p2",
+          orderReference: "REF_TX",
+          status: "processing",
+          transactionId: "FOUND_TX",
+        });
       }
       return Promise.resolve(null);
     }),
@@ -31,12 +46,13 @@ describe("GET /api/checkout/status", () => {
   });
 
   it("returns payment by reference", async () => {
-    const req = new Request("https://test.example.com/api/checkout/status?reference=FOUND_REF", { method: "GET" });
-  const res = await GET(req as unknown as NextRequest);
-  expect(res).toBeDefined();
-  // @ts-expect-error - Response type from Next may differ in tests
+    const req = new Request(
+      "https://test.example.com/api/checkout/status?reference=FOUND_REF",
+      { method: "GET" },
+    );
+    const res = await GET(req as unknown as NextRequest);
+    expect(res).toBeDefined();
   expect(res.status).toBe(200);
-  // @ts-expect-error
   const body = await res.json();
     expect(body.success).toBe(true);
     expect(body.payment).toBeTruthy();
@@ -44,12 +60,13 @@ describe("GET /api/checkout/status", () => {
   });
 
   it("returns payment by transactionId", async () => {
-    const req = new Request("https://test.example.com/api/checkout/status?transactionId=FOUND_TX", { method: "GET" });
-  const res = await GET(req as unknown as NextRequest);
-  expect(res).toBeDefined();
-  // @ts-expect-error
+    const req = new Request(
+      "https://test.example.com/api/checkout/status?transactionId=FOUND_TX",
+      { method: "GET" },
+    );
+    const res = await GET(req as unknown as NextRequest);
+    expect(res).toBeDefined();
   expect(res.status).toBe(200);
-  // @ts-expect-error
   const body = await res.json();
     expect(body.success).toBe(true);
     expect(body.payment).toBeTruthy();
@@ -57,12 +74,12 @@ describe("GET /api/checkout/status", () => {
   });
 
   it("returns 400 when missing params", async () => {
-    const req = new Request("https://test.example.com/api/checkout/status", { method: "GET" });
-  const res = await GET(req as unknown as NextRequest);
-  expect(res).toBeDefined();
-  // @ts-expect-error
+    const req = new Request("https://test.example.com/api/checkout/status", {
+      method: "GET",
+    });
+    const res = await GET(req as unknown as NextRequest);
+    expect(res).toBeDefined();
   expect(res.status).toBe(400);
-  // @ts-expect-error
   const body = await res.json();
     expect(body.success).toBe(false);
   });

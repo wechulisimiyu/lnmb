@@ -17,12 +17,10 @@ process.env.SITE_URL = "https://test.example.com";
 // Mock Convex client
 vi.mock("convex/browser", () => ({
   ConvexHttpClient: vi.fn().mockImplementation(() => ({
-    query: vi
-      .fn()
-      .mockResolvedValue({
-        _id: "payment123",
-        orderReference: "LNMB1760382255555S8W1",
-      }),
+    query: vi.fn().mockResolvedValue({
+      _id: "payment123",
+      orderReference: "LNMB1760382255555S8W1",
+    }),
     mutation: vi.fn().mockResolvedValue("payment123"),
   })),
 }));
@@ -224,12 +222,10 @@ describe("Jenga PGW Webhook - Production Payload", () => {
     };
     // @ts-expect-error - testing environment provides vi.fn mocks
     convexMockModule.ConvexHttpClient.mockImplementation(() => ({
-      query: vi
-        .fn()
-        .mockResolvedValue({
-          _id: "payment123",
-          orderReference: "LNMB1760382255555S8W1",
-        }),
+      query: vi.fn().mockResolvedValue({
+        _id: "payment123",
+        orderReference: "LNMB1760382255555S8W1",
+      }),
       mutation: vi.fn().mockResolvedValue("payment123"),
     }));
 

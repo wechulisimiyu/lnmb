@@ -19,6 +19,8 @@ function PaymentResultContent() {
   const [reference, setReference] = useState<string | null>(null);
   const [transactionId, setTransactionId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  // 'checking' indicates whether the client is polling the server for status.
+  // It's intentionally unused directly in the render but useful for debugging; keep the state to preserve intent.
   const [checking, setChecking] = useState(false);
 
   useEffect(() => {
@@ -83,8 +85,11 @@ function PaymentResultContent() {
 
           // If not found, wait a bit and try again
           await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
-        } catch (_) {
-          // ignore transient errors and retry
+        } catch (error) {
+          // ignore transient errors and retry; log in development
+
+          if (process.env.NODE_ENV === "development")
+            console.debug("status check error", error);
           await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
         }
       }
@@ -177,6 +182,11 @@ function PaymentResultContent() {
             </CardTitle>
             <CardDescription className="text-center">
               {getStatusMessage()}
+              {checking && !status && (
+                <div className="text-xs text-slate-500 mt-2">
+                  Checking payment status...
+                </div>
+              )}
             </CardDescription>
           </CardHeader>
 

@@ -5,7 +5,7 @@ import * as Sentry from "@sentry/nextjs";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest): Promise<Response> {
   const url = new URL(request.url);
   const reference = url.searchParams.get("reference");
   const transactionId = url.searchParams.get("transactionId");
@@ -28,9 +28,12 @@ export async function GET(request: NextRequest) {
 
     // If only transactionId provided, use Convex query by transactionId
     if (transactionId) {
-      const paymentByTx = await convex.query(api.orders.getPaymentByTransactionId, {
-        transactionId,
-      });
+      const paymentByTx = await convex.query(
+        api.orders.getPaymentByTransactionId,
+        {
+          transactionId,
+        },
+      );
       return NextResponse.json({ success: true, payment: paymentByTx ?? null });
     }
   } catch (error) {
@@ -46,4 +49,11 @@ export async function GET(request: NextRequest) {
       { status: 500 },
     );
   }
+
+  // Fallback return to satisfy TypeScript control-flow analysis. All code paths
+  // above should return, but include a safe default response here.
+  return NextResponse.json(
+    { success: false, error: "missing_reference_or_transactionId" },
+    { status: 400 },
+  );
 }

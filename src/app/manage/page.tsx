@@ -315,10 +315,13 @@ export default function ManagePage() {
       });
     }
 
+    // We intentionally drop the numeric `timestamp` when returning recent
+    // activity items because the UI uses the human-friendly `time` string.
+    // Return only the properties the UI needs to avoid creating unused vars.
     return activities
       .sort((a, b) => b.timestamp - a.timestamp)
       .slice(0, 6)
-      .map(({ timestamp, ...rest }) => rest);
+      .map(({ action, user, time, type }) => ({ action, user, time, type }));
   };
 
   const recentActivity = generateRecentActivity();

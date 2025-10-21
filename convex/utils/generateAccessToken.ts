@@ -16,7 +16,6 @@ export const getAuthUrl = () =>
     }
     // Non-production: warn and return fallback
     try {
-      // eslint-disable-next-line no-console
       console.warn(
         `JENGA_AUTH_URL not set, falling back to UAT auth URL: ${fallback}`,
       );
@@ -72,7 +71,7 @@ const authToken = async () => {
     const message = `Failed to get Jenga auth token from ${authUrl}: ${
       err?.message || String(err)
     }`;
-    // eslint-disable-next-line no-console
+
     console.error(message, err);
     throw new Error(message);
   }

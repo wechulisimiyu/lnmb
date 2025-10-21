@@ -144,6 +144,7 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_reference", ["orderReference"])
+    .index("by_transactionId", ["transactionId"])
     .index("by_status", ["status"])
     .index("by_created_at", ["createdAt"]),
 });

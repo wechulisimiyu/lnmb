@@ -26,9 +26,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: true, payment: payment ?? null });
     }
 
-    // If only transactionId provided, do a broader search on payments using Convex query (server-side)
-    // There's no direct query by transactionId in convex functions, so return null if not provided.
-    return NextResponse.json({ success: true, payment: null });
+    // If only transactionId provided, use Convex query by transactionId
+    if (transactionId) {
+      const paymentByTx = await convex.query(api.orders.getPaymentByTransactionId, {
+        transactionId,
+      });
+      return NextResponse.json({ success: true, payment: paymentByTx ?? null });
+    }
   } catch (error) {
     Sentry.captureException(error, {
       tags: { endpoint: "/api/checkout/status" },

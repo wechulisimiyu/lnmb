@@ -190,6 +190,28 @@ export const getPaymentStatus = query({
   },
 });
 
+// Get payment by transactionId
+export const getPaymentByTransactionId = query({
+  args: { transactionId: v.string() },
+  handler: async (ctx, args) => {
+    try {
+      const payment = await ctx.db
+        .query("payments")
+        .withIndex("by_transactionId", (q) => q.eq("transactionId", args.transactionId))
+        .first();
+
+      return payment;
+    } catch (error) {
+      try {
+        console.error(`[getPaymentByTransactionId] error for transactionId=${args.transactionId}:`, error);
+      } catch (e) {
+        // swallow
+      }
+      return null;
+    }
+  },
+});
+
 // Update payment status
 export const updatePaymentStatus = mutation({
   args: {

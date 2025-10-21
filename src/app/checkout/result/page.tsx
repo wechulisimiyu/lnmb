@@ -273,7 +273,15 @@ function PaymentResultContent() {
                     Try Again
                   </Button>
                   <Button
-                    onClick={() => router.push("/contact")}
+                    onClick={() => {
+                      const subject = encodeURIComponent(
+                        `Help needed: payment ${reference || "(no-ref)"}`,
+                      );
+                      const body = encodeURIComponent(
+                        `Order Reference: ${reference || "N/A"}%0D%0ATransaction ID: ${transactionId || "N/A"}%0D%0A\nPlease describe what happened:`,
+                      );
+                      window.location.href = `mailto:info@lnmb-run.org?subject=${subject}&body=${body}`;
+                    }}
                     variant="outline"
                     className="w-full"
                   >

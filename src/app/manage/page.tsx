@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from "react";
 import type { LucideIcon } from "lucide-react";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useRouter } from "next/navigation";
+import { UserButton, useUser } from "@clerk/nextjs";
 import {
   Users,
   Award,
@@ -23,13 +23,6 @@ import {
   LogOut,
   Shield,
 } from "lucide-react";
-
-interface User {
-  _id: string;
-  name: string;
-  email: string;
-  role: "admin" | "director";
-}
 
 interface Order {
   _id: string;
@@ -63,78 +56,14 @@ interface Payment {
 
 export default function ManagePage() {
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [authToken, setAuthToken] = useState<string | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const router = useRouter();
+  const { user, isLoaded } = useUser();
 
-  // Get current user
-  const currentUser = useQuery(
-    api.auth.getCurrentUser,
-    authToken ? { token: authToken } : "skip",
-  );
+  // Fetch data from Convex
+  const orders = useQuery(api.orders.getAllOrders, {});
+  const payments = useQuery(api.orders.getAllPayments, {});
+  const orderStats = useQuery(api.orders.getOrderStats, {});
 
-  const logout = useMutation(api.auth.logout);
-
-  // Check authentication on mount
-  useEffect(() => {
-    const token = localStorage.getItem("authToken");
-    const userData = localStorage.getItem("user");
-
-    if (!token) {
-      router.push("/manage/login");
-      return;
-    }
-
-    setAuthToken(token);
-    if (userData) {
-      setUser(JSON.parse(userData));
-    }
-  }, [router]);
-
-  // Check if user is authenticated
-  useEffect(() => {
-    if (currentUser === null && authToken) {
-      // User not authenticated, redirect to login
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("user");
-      router.push("/manage/login");
-    } else if (currentUser) {
-      setUser(currentUser);
-    }
-  }, [currentUser, authToken, router]);
-
-  // Fetch data from Convex with auth token
-  const orders = useQuery(
-    api.orders.getAllOrders,
-    authToken ? { token: authToken } : "skip",
-  );
-  const payments = useQuery(
-    api.orders.getAllPayments,
-    authToken ? { token: authToken } : "skip",
-  );
-  const orderStats = useQuery(
-    api.orders.getOrderStats,
-    authToken ? { token: authToken } : "skip",
-  );
-
-  const handleLogout = async () => {
-    if (authToken) {
-      try {
-        await logout({
-          token: authToken,
-          userAgent: navigator.userAgent,
-        });
-      } catch (error) {
-        console.error("Logout error:", error);
-      }
-    }
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("user");
-    router.push("/manage/login");
-  };
-
-  // Show loading while checking auth
-  if (!authToken || !user) {
+  if (!isLoaded) {
     return (
       <div className="min-h-screen bg-secondary flex items-center justify-center">
         <div className="text-center">
@@ -326,9 +255,6 @@ export default function ManagePage() {
 
   const recentActivity = generateRecentActivity();
 
-  // Check if user has admin role
-  const isAdmin = user?.role === "admin";
-
   return (
     <div className="min-h-screen bg-secondary py-4 sm:py-6 lg:py-8">
       <div className="container mx-auto px-4">
@@ -347,21 +273,10 @@ export default function ManagePage() {
               <div className="flex items-center gap-2">
                 <Shield className="w-4 h-4 text-slate-600" />
                 <div className="text-sm">
-                  <p className="font-medium">{user.name}</p>
-                  <p className="text-xs text-slate-600 capitalize">
-                    {user.role}
-                  </p>
+                  <p className="font-medium">{user?.fullName}</p>
                 </div>
               </div>
-              <Button
-                onClick={handleLogout}
-                variant="outline"
-                size="sm"
-                className="gap-2"
-              >
-                <LogOut className="w-4 h-4" />
-                Logout
-              </Button>
+              <UserButton afterSignOutUrl="/" />
             </div>
           </div>
         </div>
@@ -371,7 +286,7 @@ export default function ManagePage() {
           onValueChange={setActiveTab}
           className="space-y-4 sm:space-y-6"
         >
-          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 lg:w-fit gap-1">
+          <TabsList className="grid w-full grid-cols-3 lg:w-fit gap-1">
             <TabsTrigger
               value="dashboard"
               className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm"
@@ -393,31 +308,6 @@ export default function ManagePage() {
               <CreditCard className="w-3 h-3 sm:w-4 sm:h-4" />
               <span>Payments</span>
             </TabsTrigger>
-            {isAdmin && (
-              <>
-                <TabsTrigger
-                  value="team"
-                  className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm"
-                >
-                  <Users className="w-3 h-3 sm:w-4 sm:h-4" />
-                  <span>Team</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="highlights"
-                  className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm"
-                >
-                  <Award className="w-3 h-3 sm:w-4 sm:h-4" />
-                  <span>Highlights</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="products"
-                  className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm"
-                >
-                  <ShoppingCart className="w-3 h-3 sm:w-4 sm:h-4" />
-                  <span>Products</span>
-                </TabsTrigger>
-              </>
-            )}
           </TabsList>
 
           {/* Dashboard Tab */}
@@ -831,70 +721,6 @@ export default function ManagePage() {
             </Card>
           </TabsContent>
 
-          {/* Admin-only tabs */}
-          {isAdmin && (
-            <>
-              {/* Team Management Tab - Simplified mock for now */}
-              <TabsContent value="team" className="space-y-4 sm:space-y-6">
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-                  <h2 className="text-xl sm:text-2xl font-bold text-foreground">
-                    Team Management
-                  </h2>
-                  <Button className="bg-primary hover:bg-primary/90 w-full sm:w-auto">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Team Member
-                  </Button>
-                </div>
-                <Card>
-                  <CardContent className="p-8 text-center text-slate-500">
-                    <Users className="w-12 h-12 mx-auto mb-4 text-slate-300" />
-                    <p>Team management feature coming soon</p>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              {/* Highlights Management Tab - Simplified mock */}
-              <TabsContent
-                value="highlights"
-                className="space-y-4 sm:space-y-6"
-              >
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-                  <h2 className="text-xl sm:text-2xl font-bold text-foreground">
-                    Highlights Management
-                  </h2>
-                  <Button className="bg-primary hover:bg-primary/90 w-full sm:w-auto">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Highlight
-                  </Button>
-                </div>
-                <Card>
-                  <CardContent className="p-8 text-center text-slate-500">
-                    <Award className="w-12 h-12 mx-auto mb-4 text-slate-300" />
-                    <p>Highlights management feature coming soon</p>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              {/* Products Management Tab - Simplified mock */}
-              <TabsContent value="products" className="space-y-4 sm:space-y-6">
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-                  <h2 className="text-xl sm:text-2xl font-bold text-foreground">
-                    Products Management
-                  </h2>
-                  <Button className="bg-primary hover:bg-primary/90 w-full sm:w-auto">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Product
-                  </Button>
-                </div>
-                <Card>
-                  <CardContent className="p-8 text-center text-slate-500">
-                    <ShoppingCart className="w-12 h-12 mx-auto mb-4 text-slate-300" />
-                    <p>Products management feature coming soon</p>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </>
-          )}
         </Tabs>
       </div>
     </div>

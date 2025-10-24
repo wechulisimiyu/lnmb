@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@auth/core": "^0.41.0",
-    "@convex-dev/auth": "^0.0.90",
+    "@clerk/nextjs": "^6.34.0",
     "@hookform/resolvers": "^5.2.1",
     "@radix-ui/react-accordion": "^1.1.2",
     "@radix-ui/react-alert-dialog": "^1.1.15",

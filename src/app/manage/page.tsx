@@ -27,7 +27,7 @@ interface Order {
   orderReference: string;
   name: string;
   email: string;
-  phone: string;
+  phone?: string;
   tshirtType: string;
   tshirtSize: string;
   quantity: number;

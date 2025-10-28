@@ -73,7 +73,6 @@ interface OrderFormData {
   schoolIdPublicId?: string | null;
   name: string;
   email: string;
-  phone: string;
   nameOfKin: string;
   kinNumber: string;
   medicalCondition: string;
@@ -125,7 +124,6 @@ export default function OrderForm() {
     registrationNumber: "",
     name: "",
     email: "",
-    phone: "",
     nameOfKin: "",
     kinNumber: "",
     medicalCondition: "",
@@ -267,7 +265,7 @@ export default function OrderForm() {
     value: string | number | boolean | File,
   ) => {
     // Live-normalize phone-like fields so users can type 070... or 2547...
-    if (field === "phone" || field === "kinNumber") {
+    if (field === "kinNumber") {
       if (typeof value === "string") {
         let digits = value.replace(/\D/g, "");
         if (digits.startsWith("254")) digits = digits.slice(3);
@@ -344,20 +342,8 @@ export default function OrderForm() {
           return digits;
         };
 
-        const normalizedPhoneForValidation = normalizeKenyaPhone(
-          formData.phone as string,
-        );
-
-        if (!formData.phone || !formData.phone.toString().trim())
-          newErrors.phone = "Phone number is required";
-
         // Accept +254 or +257 (country code) followed by 9 digits
         const phoneRegex = /^(?:254|257)\d{9}$/;
-
-        if (formData.phone && !phoneRegex.test(normalizedPhoneForValidation)) {
-          newErrors.phone =
-            "Please enter a valid phone number (examples: +254712345678, 0712345678, +257712345678)";
-        }
 
         if (formData.kinNumber) {
           const normalizedKin = normalizeKenyaPhone(
@@ -527,7 +513,6 @@ export default function OrderForm() {
         return digits;
       };
 
-      const normalizedPhone = normalizeKenyaPhone(formData.phone as string);
       const normalizedKin = normalizeKenyaPhone(formData.kinNumber as string);
 
       // Serialize cart items into a format that fits existing schema
@@ -541,7 +526,6 @@ export default function OrderForm() {
       // Prepare order data for checkout
       const orderData = {
         ...formData,
-        phone: normalizedPhone,
         kinNumber: normalizedKin,
         tshirtSize: cartSummary, // Store cart as serialized string
         quantity: totalQuantity, // Store total quantity
@@ -1097,25 +1081,6 @@ export default function OrderForm() {
             )}
           </div>
         </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="phone">Phone Number *</Label>
-          <div className="flex">
-            <span className="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-l-md">
-              +254
-            </span>
-            <Input
-              id="phone"
-              value={formData.phone}
-              onChange={(e) => handleInputChange("phone", e.target.value)}
-              placeholder="000000000"
-              className="rounded-l-none"
-            />
-          </div>
-          {errors.phone && (
-            <p className="text-red-500 text-sm">{errors.phone}</p>
-          )}
-        </div>
       </div>
 
       {/* Emergency Contact */}
@@ -1160,7 +1125,9 @@ export default function OrderForm() {
 
       {/* Medical Information */}
       <div className="space-y-2">
-        <Label htmlFor="medicalCondition">Any medical condition? *</Label>
+        <Label htmlFor="medicalCondition">
+          Any medical condition? (Optional)
+        </Label>
         <Input
           id="medicalCondition"
           value={formData.medicalCondition}
@@ -1316,9 +1283,6 @@ export default function OrderForm() {
               </p>
               <p>
                 <strong>Email:</strong> {formData.email}
-              </p>
-              <p>
-                <strong>Phone:</strong> +254{formData.phone}
               </p>
               <p>
                 <strong>Next of Kin:</strong> {formData.nameOfKin} (+254

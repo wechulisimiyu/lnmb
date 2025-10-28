@@ -1,27 +1,25 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { LucideIcon } from "lucide-react";
-import { useQuery } from "convex/react";
+import { useConvexAuth, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { UserButton, useUser } from "@clerk/nextjs";
+import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
 import {
   Users,
-  Award,
   ShoppingCart,
-  Plus,
   Eye,
   BarChart3,
   DollarSign,
   Calendar,
   Package,
   CreditCard,
-  LogOut,
   Shield,
+  LogIn,
 } from "lucide-react";
 
 interface Order {
@@ -54,25 +52,14 @@ interface Payment {
   createdAt: number;
 }
 
-export default function ManagePage() {
+function DashboardContent() {
   const [activeTab, setActiveTab] = useState("dashboard");
-  const { user, isLoaded } = useUser();
+  const { user } = useUser();
 
-  // Fetch data from Convex
+  // Fetch data from Convex - now safe to call
   const orders = useQuery(api.orders.getAllOrders, {});
   const payments = useQuery(api.orders.getAllPayments, {});
   const orderStats = useQuery(api.orders.getOrderStats, {});
-
-  if (!isLoaded) {
-    return (
-      <div className="min-h-screen bg-secondary flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-slate-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
 
   const totalOrders = orderStats?.totalOrders ?? (orders ? orders.length : 0);
   const paidOrders =
@@ -180,7 +167,6 @@ export default function ManagePage() {
     },
   ];
 
-  // Generate recent activity from orders and payments
   const generateRecentActivity = () => {
     type Activity = {
       action: string;
@@ -193,22 +179,16 @@ export default function ManagePage() {
     const describeTimeAgo = (timestamp: number) => {
       const diff = Date.now() - timestamp;
       const minutes = Math.floor(diff / (1000 * 60));
-      if (minutes < 1) {
-        return "Just now";
-      }
-      if (minutes < 60) {
+      if (minutes < 1) return "Just now";
+      if (minutes < 60)
         return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
-      }
       const hours = Math.floor(minutes / 60);
-      if (hours < 24) {
-        return `${hours} hour${hours === 1 ? "" : "s"} ago`;
-      }
+      if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
       const days = Math.floor(hours / 24);
       return `${days} day${days === 1 ? "" : "s"} ago`;
     };
 
     const activities: Activity[] = [];
-
     if (orders && orders.length > 0) {
       orders.slice(0, 5).forEach((order) => {
         activities.push({
@@ -229,11 +209,8 @@ export default function ManagePage() {
             .filter(Boolean)
             .join(" ") || "Unknown User";
         let activityType = "payment-pending";
-        if (payment.status === "paid") {
-          activityType = "payment-success";
-        } else if (payment.status !== "pending") {
-          activityType = "payment-other";
-        }
+        if (payment.status === "paid") activityType = "payment-success";
+        else if (payment.status !== "pending") activityType = "payment-other";
         activities.push({
           action: `Payment ${payment.status} - ${formatCurrency(amount)}`,
           user: name,
@@ -244,9 +221,6 @@ export default function ManagePage() {
       });
     }
 
-    // We intentionally drop the numeric `timestamp` when returning recent
-    // activity items because the UI uses the human-friendly `time` string.
-    // Return only the properties the UI needs to avoid creating unused vars.
     return activities
       .sort((a, b) => b.timestamp - a.timestamp)
       .slice(0, 6)
@@ -258,7 +232,6 @@ export default function ManagePage() {
   return (
     <div className="min-h-screen bg-secondary py-4 sm:py-6 lg:py-8">
       <div className="container mx-auto px-4">
-        {/* Header - Mobile Optimized */}
         <div className="mb-6 sm:mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
@@ -310,9 +283,7 @@ export default function ManagePage() {
             </TabsTrigger>
           </TabsList>
 
-          {/* Dashboard Tab */}
           <TabsContent value="dashboard" className="space-y-4 sm:space-y-6">
-            {/* Stats Grid - Mobile Responsive */}
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
               {overviewCards.map(({ label, value, icon: Icon, iconClass }) => (
                 <Card key={label}>
@@ -333,7 +304,6 @@ export default function ManagePage() {
               ))}
             </div>
 
-            {/* Order Stats Grid */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
               <Card>
                 <CardContent className="p-3 sm:p-4 lg:p-6">
@@ -400,7 +370,6 @@ export default function ManagePage() {
               </Card>
             </div>
 
-            {/* Recent Activity */}
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg sm:text-xl">
@@ -417,15 +386,7 @@ export default function ManagePage() {
                       >
                         <div className="flex items-center space-x-3">
                           <div
-                            className={`w-2 h-2 rounded-full ${
-                              activity.type === "order"
-                                ? "bg-blue-600"
-                                : activity.type === "payment-success"
-                                  ? "bg-green-600"
-                                  : activity.type === "payment-pending"
-                                    ? "bg-yellow-600"
-                                    : "bg-slate-400"
-                            }`}
+                            className={`w-2 h-2 rounded-full ${activity.type === "order" ? "bg-blue-600" : activity.type === "payment-success" ? "bg-green-600" : activity.type === "payment-pending" ? "bg-yellow-600" : "bg-slate-400"}`}
                           ></div>
                           <div>
                             <p className="font-medium text-foreground text-sm sm:text-base">
@@ -451,7 +412,6 @@ export default function ManagePage() {
             </Card>
           </TabsContent>
 
-          {/* Orders Tab */}
           <TabsContent value="orders" className="space-y-4 sm:space-y-6">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
               <h2 className="text-xl sm:text-2xl font-bold text-foreground">
@@ -466,7 +426,6 @@ export default function ManagePage() {
                 </Badge>
               </div>
             </div>
-
             <Card>
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
@@ -576,7 +535,6 @@ export default function ManagePage() {
             </Card>
           </TabsContent>
 
-          {/* Payments Tab */}
           <TabsContent value="payments" className="space-y-4 sm:space-y-6">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
               <h2 className="text-xl sm:text-2xl font-bold text-foreground">
@@ -594,7 +552,6 @@ export default function ManagePage() {
                 </Badge>
               </div>
             </div>
-
             <Card>
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
@@ -720,9 +677,47 @@ export default function ManagePage() {
               </CardContent>
             </Card>
           </TabsContent>
-
         </Tabs>
       </div>
     </div>
   );
+}
+
+export default function ManagePage() {
+  const { isLoading, isAuthenticated } = useConvexAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-secondary flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-slate-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-secondary flex items-center justify-center">
+        <div className="text-center p-8 bg-white rounded-lg shadow-md max-w-sm mx-auto">
+          <Shield className="w-16 h-16 text-primary mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-foreground mb-2">
+            Access Denied
+          </h1>
+          <p className="text-slate-600 mb-6">
+            You must be signed in to access the management dashboard.
+          </p>
+          <SignInButton mode="redirect" forceRedirectUrl="/manage">
+            <Button className="w-full">
+              <LogIn className="w-4 h-4 mr-2" />
+              Sign in with Google
+            </Button>
+          </SignInButton>
+        </div>
+      </div>
+    );
+  }
+
+  return <DashboardContent />;
 }

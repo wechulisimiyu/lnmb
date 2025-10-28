@@ -10,7 +10,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { CheckCircle, XCircle, Clock, AlertTriangle, Inbox } from "lucide-react";
+import {
+  CheckCircle,
+  XCircle,
+  Clock,
+  AlertTriangle,
+  Inbox,
+} from "lucide-react";
 
 function PaymentResultContent() {
   const router = useRouter();

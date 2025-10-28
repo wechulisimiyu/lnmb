@@ -13,9 +13,9 @@ importers:
       "@auth/core":
         specifier: ^0.41.0
         version: 0.41.0
-      "@convex-dev/auth":
-        specifier: ^0.0.90
-        version: 0.0.90(@auth/core@0.41.0)(convex@1.25.4(react@19.1.0))(react@19.1.0)
+      "@clerk/nextjs":
+        specifier: ^6.34.0
+        version: 6.34.0(next@15.5.0(@babel/core@7.28.4)(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       "@hookform/resolvers":
         specifier: ^5.2.1
         version: 5.2.1(react-hook-form@7.62.0(react@19.1.0))
@@ -126,7 +126,7 @@ importers:
         version: 1.1.1(@types/react-dom@19.1.7(@types/react@19.1.10))(@types/react@19.1.10)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       convex:
         specifier: ^1.25.4
-        version: 1.25.4(react@19.1.0)
+        version: 1.25.4(@clerk/clerk-react@5.53.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
@@ -387,19 +387,55 @@ packages:
       }
     engines: { node: ">=6.9.0" }
 
-  "@convex-dev/auth@0.0.90":
+  "@clerk/backend@2.19.0":
     resolution:
       {
-        integrity: sha512-aqw88EB042HvnaF4wcf/f/wTocmT2Bus2VDQRuV79cM0+8kORM0ICK/ByZ6XsHgQ9qr6TmidNbXm6QAgndrdpQ==,
+        integrity: sha512-EXeuG97O0c/OtXVQqw4a0RK1xfMe5+zkp5f0hZWkUob5l7NXX/f/PzbbtNQ1Ae+Maam0aC08uFNwgy2BpGvn6w==,
       }
-    hasBin: true
+    engines: { node: ">=18.17.0" }
+
+  "@clerk/clerk-react@5.53.3":
+    resolution:
+      {
+        integrity: sha512-7bEaJox6TzVhUSX6PjOuKpu6KPFT92bdeFSm8gtcA5ix4ce1WE0pC6K7mWdNZXxpLWmBbbqqsOuQSBFVIcC0hw==,
+      }
+    engines: { node: ">=18.17.0" }
     peerDependencies:
-      "@auth/core": ^0.37.0
-      convex: ^1.17.0
-      react: ^18.2.0 || ^19.0.0-0
+      react: ^18.0.0 || ^19.0.0 || ^19.0.0-0
+      react-dom: ^18.0.0 || ^19.0.0 || ^19.0.0-0
+
+  "@clerk/nextjs@6.34.0":
+    resolution:
+      {
+        integrity: sha512-UUojIZGSTKAL5zd8hVaYkS1P69oFc0f4PmUH6M+al+GDDBfhZSRUMi/rkhjc/3I7PkXwSBEX+oUxxvD3IfY6/g==,
+      }
+    engines: { node: ">=18.17.0" }
+    peerDependencies:
+      next: ^13.5.7 || ^14.2.25 || ^15.2.3 || ^16
+      react: ^18.0.0 || ^19.0.0 || ^19.0.0-0
+      react-dom: ^18.0.0 || ^19.0.0 || ^19.0.0-0
+
+  "@clerk/shared@3.28.3":
+    resolution:
+      {
+        integrity: sha512-IjuEHf2faKohv7Q4Q/C1P7bvXonbatuGwTu2ZUQ5wnULafHRpT6GfR82bhk/OaxTZ0CI+sPzHr7yoC3Kp8Ho1g==,
+      }
+    engines: { node: ">=18.17.0" }
+    peerDependencies:
+      react: ^18.0.0 || ^19.0.0 || ^19.0.0-0
+      react-dom: ^18.0.0 || ^19.0.0 || ^19.0.0-0
     peerDependenciesMeta:
       react:
         optional: true
+      react-dom:
+        optional: true
+
+  "@clerk/types@4.95.1":
+    resolution:
+      {
+        integrity: sha512-YZ7fiWS1IL7zl6o3azw+9HRO1keeEhaTieqSpwlesHASp3dE8EIB6WwSkGlcGOWRZyrOgisoBRDERP6tdzprZA==,
+      }
+    engines: { node: ">=18.17.0" }
 
   "@cspotcode/source-map-support@0.8.1":
     resolution:
@@ -1658,30 +1694,6 @@ packages:
     peerDependencies:
       "@opentelemetry/api": ^1.1.0
 
-  "@oslojs/asn1@1.0.0":
-    resolution:
-      {
-        integrity: sha512-zw/wn0sj0j0QKbIXfIlnEcTviaCzYOY3V5rAyjR6YtOByFtJiT574+8p9Wlach0lZH9fddD4yb9laEAIl4vXQA==,
-      }
-
-  "@oslojs/binary@1.0.0":
-    resolution:
-      {
-        integrity: sha512-9RCU6OwXU6p67H4NODbuxv2S3eenuQ4/WFLrsq+K/k682xrznH5EVWA7N4VFk9VYVcbFtKqur5YQQZc0ySGhsQ==,
-      }
-
-  "@oslojs/crypto@1.0.1":
-    resolution:
-      {
-        integrity: sha512-7n08G8nWjAr/Yu3vu9zzrd0L9XnrJfpMioQcvCMxBIiF5orECHe5/3J0jmXRVvgfqMm/+4oxlQ+Sq39COYLcNQ==,
-      }
-
-  "@oslojs/encoding@1.1.0":
-    resolution:
-      {
-        integrity: sha512-70wQhgYmndg4GCPxPPxPGevRKqTIJ2Nh4OkiMWmDAVYsTQ+Ta7Sq+rPevXyXGdzr30/qZBnyOalCszoMxlyldQ==,
-      }
-
   "@panva/hkdf@1.2.1":
     resolution:
       {
@@ -2890,6 +2902,12 @@ packages:
     resolution:
       {
         integrity: sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==,
+      }
+
+  "@stablelib/base64@1.0.1":
+    resolution:
+      {
+        integrity: sha512-1bnPQqSxSuc3Ii6MhBysoWCg58j97aUjuCSZrGSmDxNqtytIi0k8utUenAwTZN4V5mXXYGsVUI9zeBqy+jBOSQ==,
       }
 
   "@standard-schema/spec@1.0.0":
@@ -4373,6 +4391,13 @@ packages:
       }
     engines: { node: ">=0.4.0" }
 
+  dequal@2.0.3:
+    resolution:
+      {
+        integrity: sha512-0je+qPKHEMohvfRTCEo3CrPG6cAzAYgmzKyxRiYSSDkS6eGJdyVJm7WaYA5ECaAD9wLB2T4EEeymA5aFVcYXCA==,
+      }
+    engines: { node: ">=6" }
+
   detect-libc@2.0.4:
     resolution:
       {
@@ -4809,6 +4834,12 @@ packages:
         integrity: sha512-dwsoQlS7h9hMeYUq1W++23NDcBLV4KqONnITDV9DjfS3q1SgDGVrBdvvTLUotWtPSD7asWDV9/CmsZPy8Hf70A==,
       }
     engines: { node: ">=6" }
+
+  fast-sha256@1.3.0:
+    resolution:
+      {
+        integrity: sha512-n11RGP/lrWEFI/bWdygLxhI+pVeo1ZYIVwvvPkW7azl/rOy+F3HYRZ2K5zeE9mmkhQppyv9sQFx0JM9UabnpPQ==,
+      }
 
   fast-uri@3.1.0:
     resolution:
@@ -5286,13 +5317,6 @@ packages:
       }
     engines: { node: ">= 0.4" }
 
-  is-network-error@1.3.0:
-    resolution:
-      {
-        integrity: sha512-6oIwpsgRfnDiyEDLMay/GqCl3HoAtH5+RUKW29gYkL0QA+ipzpDLA16yQs7/RHCSu+BwgbJaOUqa4A99qNVQVw==,
-      }
-    engines: { node: ">=16" }
-
   is-number-object@1.1.1:
     resolution:
       {
@@ -5416,17 +5440,18 @@ packages:
       }
     hasBin: true
 
-  jose@5.10.0:
-    resolution:
-      {
-        integrity: sha512-s+3Al/p9g32Iq+oqXxkW//7jk2Vig6FF1CFqzVXoTUXt2qz89YWbL+OwS17NFYEvxC35n0FKeGO2LGYSxeM2Gg==,
-      }
-
   jose@6.1.0:
     resolution:
       {
         integrity: sha512-TTQJyoEoKcC1lscpVDCSsVgYzUDg/0Bt3WE//WiTPK6uOCQC2KZS4MpugbMWt/zyjkopgZoXhZuCi00gLudfUA==,
       }
+
+  js-cookie@3.0.5:
+    resolution:
+      {
+        integrity: sha512-cEiJEAEoIbWfCZYKWhVwFuvPX1gETRYPw6LlaTKoxD3s2AkXzkCjnp6h0V77ozyqj0jakteJ4YqDJT830+lVGw==,
+      }
+    engines: { node: ">=14" }
 
   js-tokens@4.0.0:
     resolution:
@@ -5694,13 +5719,6 @@ packages:
       {
         integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==,
       }
-
-  lucia@3.2.2:
-    resolution:
-      {
-        integrity: sha512-P1FlFBGCMPMXu+EGdVD9W4Mjm0DqsusmKgO7Xc33mI5X1bklmsQb0hfzPhXomQr9waWIBDsiOjvr1e6BTaUqpA==,
-      }
-    deprecated: This package has been deprecated. Please see https://lucia-auth.com/lucia-v3/migrate.
 
   lucide-react@0.540.0:
     resolution:
@@ -6131,12 +6149,6 @@ packages:
         integrity: sha512-Xa4Nw17FS9ApQFJ9umLiJS4orGjm7ZzwUrwamcGQuHSzDyth9boKDaycYdDcZDuqYATXw4HFXgaqWTctW/v1HA==,
       }
     engines: { node: ">=16 || 14 >=14.18" }
-
-  path-to-regexp@6.3.0:
-    resolution:
-      {
-        integrity: sha512-Yhpw4T9C6hPpgPeA28us07OJeqZ5EzQTkbfwuhsUg0c237RomFoETJgmp2sa3F/41gfLE6G5cqcYwznmeEeOlQ==,
-      }
 
   pathe@1.1.2:
     resolution:
@@ -6827,6 +6839,12 @@ packages:
       }
     engines: { node: ">=6" }
 
+  standardwebhooks@1.0.0:
+    resolution:
+      {
+        integrity: sha512-BbHGOQK9olHPMvQNHWul6MYlrRTAOKn03rOe4A8O3CLWhNf4YHBqq2HJKKC+sfqpxiBY52pNeesD6jIiLDz8jg==,
+      }
+
   std-env@3.9.0:
     resolution:
       {
@@ -6944,6 +6962,14 @@ packages:
         integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==,
       }
     engines: { node: ">= 0.4" }
+
+  swr@2.3.4:
+    resolution:
+      {
+        integrity: sha512-bYd2lrhc+VarcpkgWclcUi92wYCpOgMws9Sd1hG1ntAu0NEy+14CbotuFjshBU2kt9rYj9TSmDcybpxpeTU1fg==,
+      }
+    peerDependencies:
+      react: ^16.11.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
   tailwind-merge@3.3.1:
     resolution:
@@ -7601,22 +7627,52 @@ snapshots:
       "@babel/helper-string-parser": 7.27.1
       "@babel/helper-validator-identifier": 7.27.1
 
-  "@convex-dev/auth@0.0.90(@auth/core@0.41.0)(convex@1.25.4(react@19.1.0))(react@19.1.0)":
+  "@clerk/backend@2.19.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)":
     dependencies:
-      "@auth/core": 0.41.0
-      "@oslojs/crypto": 1.0.1
-      "@oslojs/encoding": 1.1.0
-      convex: 1.25.4(react@19.1.0)
+      "@clerk/shared": 3.28.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      "@clerk/types": 4.95.1
       cookie: 1.0.2
-      is-network-error: 1.3.0
-      jose: 5.10.0
-      jwt-decode: 4.0.0
-      lucia: 3.2.2
-      oauth4webapi: 3.8.2
-      path-to-regexp: 6.3.0
+      standardwebhooks: 1.0.0
+      tslib: 2.8.1
+    transitivePeerDependencies:
+      - react
+      - react-dom
+
+  "@clerk/clerk-react@5.53.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0)":
+    dependencies:
+      "@clerk/shared": 3.28.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      "@clerk/types": 4.95.1
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
+      tslib: 2.8.1
+
+  "@clerk/nextjs@6.34.0(next@15.5.0(@babel/core@7.28.4)(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)":
+    dependencies:
+      "@clerk/backend": 2.19.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      "@clerk/clerk-react": 5.53.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      "@clerk/shared": 3.28.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      "@clerk/types": 4.95.1
+      next: 15.5.0(@babel/core@7.28.4)(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
       server-only: 0.0.1
+      tslib: 2.8.1
+
+  "@clerk/shared@3.28.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0)":
+    dependencies:
+      "@clerk/types": 4.95.1
+      dequal: 2.0.3
+      glob-to-regexp: 0.4.1
+      js-cookie: 3.0.5
+      std-env: 3.9.0
+      swr: 2.3.4(react@19.1.0)
     optionalDependencies:
       react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
+
+  "@clerk/types@4.95.1":
+    dependencies:
+      csstype: 3.1.3
 
   "@cspotcode/source-map-support@0.8.1":
     dependencies:
@@ -8288,19 +8344,6 @@ snapshots:
     dependencies:
       "@opentelemetry/api": 1.9.0
       "@opentelemetry/core": 2.1.0(@opentelemetry/api@1.9.0)
-
-  "@oslojs/asn1@1.0.0":
-    dependencies:
-      "@oslojs/binary": 1.0.0
-
-  "@oslojs/binary@1.0.0": {}
-
-  "@oslojs/crypto@1.0.1":
-    dependencies:
-      "@oslojs/asn1": 1.0.0
-      "@oslojs/binary": 1.0.0
-
-  "@oslojs/encoding@1.1.0": {}
 
   "@panva/hkdf@1.2.1": {}
 
@@ -9265,6 +9308,8 @@ snapshots:
 
   "@sinclair/typebox@0.27.8": {}
 
+  "@stablelib/base64@1.0.1": {}
+
   "@standard-schema/spec@1.0.0": {}
 
   "@standard-schema/utils@0.3.0": {}
@@ -10041,12 +10086,13 @@ snapshots:
 
   convert-source-map@2.0.0: {}
 
-  convex@1.25.4(react@19.1.0):
+  convex@1.25.4(@clerk/clerk-react@5.53.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0):
     dependencies:
       esbuild: 0.25.4
       jwt-decode: 4.0.0
       prettier: 3.5.3
     optionalDependencies:
+      "@clerk/clerk-react": 5.53.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       react: 19.1.0
 
   cookie@1.0.2: {}
@@ -10152,6 +10198,8 @@ snapshots:
       object-keys: 1.1.1
 
   delayed-stream@1.0.0: {}
+
+  dequal@2.0.3: {}
 
   detect-libc@2.0.4: {}
 
@@ -10604,6 +10652,8 @@ snapshots:
 
   fast-redact@3.5.0: {}
 
+  fast-sha256@1.3.0: {}
+
   fast-uri@3.1.0: {}
 
   fastq@1.19.1:
@@ -10869,8 +10919,6 @@ snapshots:
 
   is-negative-zero@2.0.3: {}
 
-  is-network-error@1.3.0: {}
-
   is-number-object@1.1.1:
     dependencies:
       call-bound: 1.0.4
@@ -10944,9 +10992,9 @@ snapshots:
 
   jiti@2.5.1: {}
 
-  jose@5.10.0: {}
-
   jose@6.1.0: {}
+
+  js-cookie@3.0.5: {}
 
   js-tokens@4.0.0: {}
 
@@ -11071,11 +11119,6 @@ snapshots:
   lru-cache@5.1.1:
     dependencies:
       yallist: 3.1.1
-
-  lucia@3.2.2:
-    dependencies:
-      "@oslojs/crypto": 1.0.1
-      "@oslojs/encoding": 1.1.0
 
   lucide-react@0.540.0(react@19.1.0):
     dependencies:
@@ -11298,8 +11341,6 @@ snapshots:
     dependencies:
       lru-cache: 10.4.3
       minipass: 7.1.2
-
-  path-to-regexp@6.3.0: {}
 
   pathe@1.1.2: {}
 
@@ -11761,6 +11802,11 @@ snapshots:
     dependencies:
       type-fest: 0.7.1
 
+  standardwebhooks@1.0.0:
+    dependencies:
+      "@stablelib/base64": 1.0.1
+      fast-sha256: 1.3.0
+
   std-env@3.9.0: {}
 
   stop-iteration-iterator@1.1.0:
@@ -11844,6 +11890,12 @@ snapshots:
       has-flag: 4.0.0
 
   supports-preserve-symlinks-flag@1.0.0: {}
+
+  swr@2.3.4(react@19.1.0):
+    dependencies:
+      dequal: 2.0.3
+      react: 19.1.0
+      use-sync-external-store: 1.5.0(react@19.1.0)
 
   tailwind-merge@3.3.1: {}
 

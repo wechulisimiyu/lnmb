@@ -21,7 +21,7 @@ if (!clerkIssuerDomain) {
   // This warning is intentionally noisy so deploy logs make the problem clear.
   // eslint-disable-next-line no-console
   console.warn(
-    "[convex/auth.config] No Clerk issuer configured. Set CLERK_JWT_ISSUER_DOMAIN on the Convex Dashboard or provide it as an env var."
+    "[convex/auth.config] No Clerk issuer configured. Set CLERK_JWT_ISSUER_DOMAIN on the Convex Dashboard or provide it as an env var.",
   );
 }
 

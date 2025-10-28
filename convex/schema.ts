@@ -20,10 +20,11 @@ export default defineSchema({
     totalAmount: v.number(),
     salesAgentName: v.optional(v.string()), // Optional sales agent who assisted
 
-    // Contact information
-    name: v.string(),
-    email: v.string(),
-    phone: v.string(),
+  // Contact information
+  name: v.string(),
+  email: v.string(),
+  // `phone` was made optional after the frontend removed it from the order form
+  phone: v.optional(v.string()),
 
     // Emergency contact
     nameOfKin: v.string(),

@@ -84,11 +84,51 @@ export const createOrder = mutation({
       return ref.replace(/[^A-Z0-9]/gi, "").toUpperCase();
     };
 
+    // Build an order record that matches the Convex schema exactly.
+    // We intentionally map and coerce optional incoming args to the
+    // required/optional shapes defined in `convex/schema.ts` so the
+    // `ctx.db.insert` call type-checks correctly.
     const orderRecord = {
-      ...args,
+      // Student information
+      student: args.student,
       university: normalizedUniversity,
-      orderReference: sanitizeReference(args.orderReference),
+      // Schema calls this `yearOfStudy` while the client may send `graduationYear`.
+      yearOfStudy: (args as any).graduationYear ?? (args as any).yearOfStudy ?? undefined,
+      regNumber: args.regNumber,
+
+      // Attendance and product details
+      attending: args.attending,
+      tshirtType: args.tshirtType,
+      tshirtSize: args.tshirtSize,
+      quantity: args.quantity,
+      totalAmount: args.totalAmount,
+      salesAgentName: args.salesAgentName,
+
+      // Contact information
+      name: args.name,
+      email: args.email,
+      // `phone` is required in the schema, coerce undefined -> empty string to satisfy types
+      phone: args.phone ?? "",
+
+      // Emergency contact
+      nameOfKin: args.nameOfKin,
+      kinNumber: args.kinNumber,
+
+      // Medical and logistics
+      // schema expects a string for medicalCondition (non-optional), coerce to empty string
+      medicalCondition: args.medicalCondition ?? "",
+      pickUp: args.pickUp,
+
+      // Confirmation and payment status
+      confirm: args.confirm,
       paid: false,
+
+      // Order reference and uploaded id fields
+      orderReference: sanitizeReference(args.orderReference),
+      schoolIdUrl: args.schoolIdUrl ?? null,
+      schoolIdPublicId: args.schoolIdPublicId ?? null,
+
+      // Timestamps
       createdAt: now,
       updatedAt: now,
     };

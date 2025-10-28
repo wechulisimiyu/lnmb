@@ -93,7 +93,8 @@ export const createOrder = mutation({
       student: args.student,
       university: normalizedUniversity,
       // Schema calls this `yearOfStudy` while the client may send `graduationYear`.
-      yearOfStudy: (args as any).graduationYear ?? (args as any).yearOfStudy ?? undefined,
+      yearOfStudy:
+        (args as any).graduationYear ?? (args as any).yearOfStudy ?? undefined,
       regNumber: args.regNumber,
 
       // Attendance and product details

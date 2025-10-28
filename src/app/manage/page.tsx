@@ -180,7 +180,8 @@ function DashboardContent() {
       const diff = Date.now() - timestamp;
       const minutes = Math.floor(diff / (1000 * 60));
       if (minutes < 1) return "Just now";
-      if (minutes < 60) return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
+      if (minutes < 60)
+        return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
       const hours = Math.floor(minutes / 60);
       if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
       const days = Math.floor(hours / 24);
@@ -259,15 +260,24 @@ function DashboardContent() {
           className="space-y-4 sm:space-y-6"
         >
           <TabsList className="grid w-full grid-cols-3 lg:w-fit gap-1">
-            <TabsTrigger value="dashboard" className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm">
+            <TabsTrigger
+              value="dashboard"
+              className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm"
+            >
               <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4" />
               <span>Dashboard</span>
             </TabsTrigger>
-            <TabsTrigger value="orders" className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm">
+            <TabsTrigger
+              value="orders"
+              className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm"
+            >
               <Package className="w-3 h-3 sm:w-4 sm:h-4" />
               <span>Orders</span>
             </TabsTrigger>
-            <TabsTrigger value="payments" className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm">
+            <TabsTrigger
+              value="payments"
+              className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm"
+            >
               <CreditCard className="w-3 h-3 sm:w-4 sm:h-4" />
               <span>Payments</span>
             </TabsTrigger>
@@ -280,8 +290,12 @@ function DashboardContent() {
                   <CardContent className="p-3 sm:p-4 lg:p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-xs sm:text-sm text-slate-600">{label}</p>
-                        <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">{value}</p>
+                        <p className="text-xs sm:text-sm text-slate-600">
+                          {label}
+                        </p>
+                        <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
+                          {value}
+                        </p>
                       </div>
                       <Icon className={`w-6 h-6 sm:w-8 sm:h-8 ${iconClass}`} />
                     </div>
@@ -295,8 +309,12 @@ function DashboardContent() {
                 <CardContent className="p-3 sm:p-4 lg:p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs sm:text-sm text-slate-600">Total Orders</p>
-                      <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">{totalOrders.toLocaleString()}</p>
+                      <p className="text-xs sm:text-sm text-slate-600">
+                        Total Orders
+                      </p>
+                      <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
+                        {totalOrders.toLocaleString()}
+                      </p>
                     </div>
                     <Package className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600" />
                   </div>
@@ -307,8 +325,12 @@ function DashboardContent() {
                 <CardContent className="p-3 sm:p-4 lg:p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs sm:text-sm text-slate-600">Paid Orders</p>
-                      <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">{paidOrders.toLocaleString()}</p>
+                      <p className="text-xs sm:text-sm text-slate-600">
+                        Paid Orders
+                      </p>
+                      <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
+                        {paidOrders.toLocaleString()}
+                      </p>
                     </div>
                     <Package className="w-6 h-6 sm:w-8 sm:h-8 text-green-600" />
                   </div>
@@ -319,8 +341,12 @@ function DashboardContent() {
                 <CardContent className="p-3 sm:p-4 lg:p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs sm:text-sm text-slate-600">Successful Payments</p>
-                      <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">{successfulPayments.toLocaleString()}</p>
+                      <p className="text-xs sm:text-sm text-slate-600">
+                        Successful Payments
+                      </p>
+                      <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
+                        {successfulPayments.toLocaleString()}
+                      </p>
                     </div>
                     <CreditCard className="w-6 h-6 sm:w-8 sm:h-8 text-green-600" />
                   </div>
@@ -331,8 +357,12 @@ function DashboardContent() {
                 <CardContent className="p-3 sm:p-4 lg:p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs sm:text-sm text-slate-600">Pending Payments</p>
-                      <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">{pendingPayments.toLocaleString()}</p>
+                      <p className="text-xs sm:text-sm text-slate-600">
+                        Pending Payments
+                      </p>
+                      <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
+                        {pendingPayments.toLocaleString()}
+                      </p>
                     </div>
                     <CreditCard className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-600" />
                   </div>
@@ -342,25 +372,40 @@ function DashboardContent() {
 
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-lg sm:text-xl">Recent Activity</CardTitle>
+                <CardTitle className="text-lg sm:text-xl">
+                  Recent Activity
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3 sm:space-y-4">
                   {recentActivity.length > 0 ? (
                     recentActivity.map((activity, index) => (
-                      <div key={`${activity.action}-${activity.time}-${index}`} className="flex items-center justify-between p-3 bg-secondary rounded-lg">
+                      <div
+                        key={`${activity.action}-${activity.time}-${index}`}
+                        className="flex items-center justify-between p-3 bg-secondary rounded-lg"
+                      >
                         <div className="flex items-center space-x-3">
-                          <div className={`w-2 h-2 rounded-full ${activity.type === "order" ? "bg-blue-600" : activity.type === "payment-success" ? "bg-green-600" : activity.type === "payment-pending" ? "bg-yellow-600" : "bg-slate-400"}`}></div>
+                          <div
+                            className={`w-2 h-2 rounded-full ${activity.type === "order" ? "bg-blue-600" : activity.type === "payment-success" ? "bg-green-600" : activity.type === "payment-pending" ? "bg-yellow-600" : "bg-slate-400"}`}
+                          ></div>
                           <div>
-                            <p className="font-medium text-foreground text-sm sm:text-base">{activity.action}</p>
-                            <p className="text-xs sm:text-sm text-slate-600">by {activity.user}</p>
+                            <p className="font-medium text-foreground text-sm sm:text-base">
+                              {activity.action}
+                            </p>
+                            <p className="text-xs sm:text-sm text-slate-600">
+                              by {activity.user}
+                            </p>
                           </div>
                         </div>
-                        <span className="text-xs sm:text-sm text-slate-500">{activity.time}</span>
+                        <span className="text-xs sm:text-sm text-slate-500">
+                          {activity.time}
+                        </span>
                       </div>
                     ))
                   ) : (
-                    <div className="p-6 text-center text-slate-500 text-sm">No recent activity yet.</div>
+                    <div className="p-6 text-center text-slate-500 text-sm">
+                      No recent activity yet.
+                    </div>
                   )}
                 </div>
               </CardContent>
@@ -369,10 +414,16 @@ function DashboardContent() {
 
           <TabsContent value="orders" className="space-y-4 sm:space-y-6">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground">Order Management</h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-foreground">
+                Order Management
+              </h2>
               <div className="flex gap-2">
-                <Badge variant="outline">{totalOrders.toLocaleString()} Total Orders</Badge>
-                <Badge variant="outline" className="bg-green-50 text-green-700">{paidOrders.toLocaleString()} Paid</Badge>
+                <Badge variant="outline">
+                  {totalOrders.toLocaleString()} Total Orders
+                </Badge>
+                <Badge variant="outline" className="bg-green-50 text-green-700">
+                  {paidOrders.toLocaleString()} Paid
+                </Badge>
               </div>
             </div>
             <Card>
@@ -381,50 +432,103 @@ function DashboardContent() {
                   <table className="w-full">
                     <thead className="bg-secondary">
                       <tr>
-                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">Order Ref</th>
-                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">Customer</th>
-                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">T-Shirt</th>
-                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">Amount</th>
-                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">Status</th>
-                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">Date</th>
-                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">Actions</th>
+                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">
+                          Order Ref
+                        </th>
+                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">
+                          Customer
+                        </th>
+                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">
+                          T-Shirt
+                        </th>
+                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">
+                          Amount
+                        </th>
+                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">
+                          Status
+                        </th>
+                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">
+                          Date
+                        </th>
+                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">
+                          Actions
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
-                      {orders && orders.map((order: Order) => (
-                        <tr key={order._id} className="border-t">
-                          <td className="p-3 sm:p-4"><code className="text-xs bg-gray-100 px-2 py-1 rounded">{order.orderReference}</code></td>
-                          <td className="p-3 sm:p-4">
-                            <div>
-                              <p className="font-medium text-sm sm:text-base">{order.name}</p>
-                              <p className="text-xs text-slate-600">{order.email}</p>
-                              <p className="text-xs text-slate-600">{order.phone}</p>
-                            </div>
-                          </td>
-                          <td className="p-3 sm:p-4">
-                            <div>
-                              <p className="text-sm">{order.tshirtType}</p>
-                              <p className="text-xs text-slate-600">Size: {order.tshirtSize}</p>
-                              <p className="text-xs text-slate-600">Qty: {order.quantity}</p>
-                            </div>
-                          </td>
-                          <td className="p-3 sm:p-4"><span className="font-semibold">KES {order.totalAmount.toLocaleString()}</span></td>
-                          <td className="p-3 sm:p-4">
-                            <Badge variant={order.paid ? "default" : "outline"} className={order.paid ? "bg-green-600 text-white" : "bg-yellow-100 text-yellow-800"}>
-                              {order.paid ? "Paid" : "Pending"}
-                            </Badge>
-                          </td>
-                          <td className="p-3 sm:p-4">
-                            <p className="text-sm">{new Date(order.createdAt).toLocaleDateString()}</p>
-                            <p className="text-xs text-slate-600">{new Date(order.createdAt).toLocaleTimeString()}</p>
-                          </td>
-                          <td className="p-3 sm:p-4"><div className="flex space-x-1"><Button variant="outline" size="sm"><Eye className="w-3 h-3" /></Button></div></td>
-                        </tr>
-                      ))}
+                      {orders &&
+                        orders.map((order: Order) => (
+                          <tr key={order._id} className="border-t">
+                            <td className="p-3 sm:p-4">
+                              <code className="text-xs bg-gray-100 px-2 py-1 rounded">
+                                {order.orderReference}
+                              </code>
+                            </td>
+                            <td className="p-3 sm:p-4">
+                              <div>
+                                <p className="font-medium text-sm sm:text-base">
+                                  {order.name}
+                                </p>
+                                <p className="text-xs text-slate-600">
+                                  {order.email}
+                                </p>
+                                <p className="text-xs text-slate-600">
+                                  {order.phone}
+                                </p>
+                              </div>
+                            </td>
+                            <td className="p-3 sm:p-4">
+                              <div>
+                                <p className="text-sm">{order.tshirtType}</p>
+                                <p className="text-xs text-slate-600">
+                                  Size: {order.tshirtSize}
+                                </p>
+                                <p className="text-xs text-slate-600">
+                                  Qty: {order.quantity}
+                                </p>
+                              </div>
+                            </td>
+                            <td className="p-3 sm:p-4">
+                              <span className="font-semibold">
+                                KES {order.totalAmount.toLocaleString()}
+                              </span>
+                            </td>
+                            <td className="p-3 sm:p-4">
+                              <Badge
+                                variant={order.paid ? "default" : "outline"}
+                                className={
+                                  order.paid
+                                    ? "bg-green-600 text-white"
+                                    : "bg-yellow-100 text-yellow-800"
+                                }
+                              >
+                                {order.paid ? "Paid" : "Pending"}
+                              </Badge>
+                            </td>
+                            <td className="p-3 sm:p-4">
+                              <p className="text-sm">
+                                {new Date(order.createdAt).toLocaleDateString()}
+                              </p>
+                              <p className="text-xs text-slate-600">
+                                {new Date(order.createdAt).toLocaleTimeString()}
+                              </p>
+                            </td>
+                            <td className="p-3 sm:p-4">
+                              <div className="flex space-x-1">
+                                <Button variant="outline" size="sm">
+                                  <Eye className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
                     </tbody>
                   </table>
                   {(!orders || orders.length === 0) && (
-                    <div className="p-8 text-center text-slate-500"><Package className="w-12 h-12 mx-auto mb-4 text-slate-300" /><p>No orders found</p></div>
+                    <div className="p-8 text-center text-slate-500">
+                      <Package className="w-12 h-12 mx-auto mb-4 text-slate-300" />
+                      <p>No orders found</p>
+                    </div>
                   )}
                 </div>
               </CardContent>
@@ -433,10 +537,19 @@ function DashboardContent() {
 
           <TabsContent value="payments" className="space-y-4 sm:space-y-6">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground">Payment Management</h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-foreground">
+                Payment Management
+              </h2>
               <div className="flex gap-2">
-                <Badge variant="outline">{successfulPayments.toLocaleString()} Successful</Badge>
-                <Badge variant="outline" className="bg-yellow-50 text-yellow-700">{pendingPayments.toLocaleString()} Pending</Badge>
+                <Badge variant="outline">
+                  {successfulPayments.toLocaleString()} Successful
+                </Badge>
+                <Badge
+                  variant="outline"
+                  className="bg-yellow-50 text-yellow-700"
+                >
+                  {pendingPayments.toLocaleString()} Pending
+                </Badge>
               </div>
             </div>
             <Card>
@@ -445,46 +558,120 @@ function DashboardContent() {
                   <table className="w-full">
                     <thead className="bg-secondary">
                       <tr>
-                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">Order Ref</th>
-                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">Customer</th>
-                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">Amount</th>
-                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">Status</th>
-                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">Transaction ID</th>
-                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">Date</th>
-                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">Actions</th>
+                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">
+                          Order Ref
+                        </th>
+                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">
+                          Customer
+                        </th>
+                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">
+                          Amount
+                        </th>
+                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">
+                          Status
+                        </th>
+                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">
+                          Transaction ID
+                        </th>
+                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">
+                          Date
+                        </th>
+                        <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">
+                          Actions
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
-                      {payments && payments.map((payment: Payment) => (
-                        <tr key={payment._id} className="border-t">
-                          <td className="p-3 sm:p-4"><code className="text-xs bg-gray-100 px-2 py-1 rounded">{payment.orderReference}</code></td>
-                          <td className="p-3 sm:p-4">
-                            <div>
-                              <p className="font-medium text-sm sm:text-base">{payment.customerFirstName || "Unknown"} {payment.customerLastName || "User"}</p>
-                              <p className="text-xs text-slate-600">{payment.customerEmail || payment.phoneNumber || "No email"}</p>
-                              <p className="text-xs text-slate-600">{payment.customerPhone || payment.phoneNumber || "No phone"}</p>
-                            </div>
-                          </td>
-                          <td className="p-3 sm:p-4"><span className="font-semibold">{payment.currency || "KES"} {(payment.orderAmount || payment.amount || 0).toLocaleString()}</span></td>
-                          <td className="p-3 sm:p-4">
-                            <Badge variant="outline" className={payment.status === "paid" ? "bg-green-100 text-green-800" : payment.status === "pending" ? "bg-yellow-100 text-yellow-800" : "bg-red-100 text-red-800"}>
-                              {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
-                            </Badge>
-                          </td>
-                          <td className="p-3 sm:p-4">
-                            {payment.transactionId ? <code className="text-xs bg-gray-100 px-2 py-1 rounded">{payment.transactionId}</code> : <span className="text-xs text-slate-400">-</span>}
-                          </td>
-                          <td className="p-3 sm:p-4">
-                            <p className="text-sm">{new Date(payment.createdAt).toLocaleDateString()}</p>
-                            <p className="text-xs text-slate-600">{new Date(payment.createdAt).toLocaleTimeString()}</p>
-                          </td>
-                          <td className="p-3 sm:p-4"><div className="flex space-x-1"><Button variant="outline" size="sm"><Eye className="w-3 h-3" /></Button></div></td>
-                        </tr>
-                      ))}
+                      {payments &&
+                        payments.map((payment: Payment) => (
+                          <tr key={payment._id} className="border-t">
+                            <td className="p-3 sm:p-4">
+                              <code className="text-xs bg-gray-100 px-2 py-1 rounded">
+                                {payment.orderReference}
+                              </code>
+                            </td>
+                            <td className="p-3 sm:p-4">
+                              <div>
+                                <p className="font-medium text-sm sm:text-base">
+                                  {payment.customerFirstName || "Unknown"}{" "}
+                                  {payment.customerLastName || "User"}
+                                </p>
+                                <p className="text-xs text-slate-600">
+                                  {payment.customerEmail ||
+                                    payment.phoneNumber ||
+                                    "No email"}
+                                </p>
+                                <p className="text-xs text-slate-600">
+                                  {payment.customerPhone ||
+                                    payment.phoneNumber ||
+                                    "No phone"}
+                                </p>
+                              </div>
+                            </td>
+                            <td className="p-3 sm:p-4">
+                              <span className="font-semibold">
+                                {payment.currency || "KES"}{" "}
+                                {(
+                                  payment.orderAmount ||
+                                  payment.amount ||
+                                  0
+                                ).toLocaleString()}
+                              </span>
+                            </td>
+                            <td className="p-3 sm:p-4">
+                              <Badge
+                                variant="outline"
+                                className={
+                                  payment.status === "paid"
+                                    ? "bg-green-100 text-green-800"
+                                    : payment.status === "pending"
+                                      ? "bg-yellow-100 text-yellow-800"
+                                      : "bg-red-100 text-red-800"
+                                }
+                              >
+                                {payment.status.charAt(0).toUpperCase() +
+                                  payment.status.slice(1)}
+                              </Badge>
+                            </td>
+                            <td className="p-3 sm:p-4">
+                              {payment.transactionId ? (
+                                <code className="text-xs bg-gray-100 px-2 py-1 rounded">
+                                  {payment.transactionId}
+                                </code>
+                              ) : (
+                                <span className="text-xs text-slate-400">
+                                  -
+                                </span>
+                              )}
+                            </td>
+                            <td className="p-3 sm:p-4">
+                              <p className="text-sm">
+                                {new Date(
+                                  payment.createdAt,
+                                ).toLocaleDateString()}
+                              </p>
+                              <p className="text-xs text-slate-600">
+                                {new Date(
+                                  payment.createdAt,
+                                ).toLocaleTimeString()}
+                              </p>
+                            </td>
+                            <td className="p-3 sm:p-4">
+                              <div className="flex space-x-1">
+                                <Button variant="outline" size="sm">
+                                  <Eye className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
                     </tbody>
                   </table>
                   {(!payments || payments.length === 0) && (
-                    <div className="p-8 text-center text-slate-500"><CreditCard className="w-12 h-12 mx-auto mb-4 text-slate-300" /><p>No payments found</p></div>
+                    <div className="p-8 text-center text-slate-500">
+                      <CreditCard className="w-12 h-12 mx-auto mb-4 text-slate-300" />
+                      <p>No payments found</p>
+                    </div>
                   )}
                 </div>
               </CardContent>

@@ -1125,7 +1125,9 @@ export default function OrderForm() {
 
       {/* Medical Information */}
       <div className="space-y-2">
-        <Label htmlFor="medicalCondition">Any medical condition? (Optional)</Label>
+        <Label htmlFor="medicalCondition">
+          Any medical condition? (Optional)
+        </Label>
         <Input
           id="medicalCondition"
           value={formData.medicalCondition}

@@ -1,8 +1,6 @@
-import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-const isProtectedRoute = createRouteMatcher([
-  '/manage(.*)',
-]);
+const isProtectedRoute = createRouteMatcher(["/manage(.*)"]);
 
 export default clerkMiddleware(async (auth, req) => {
   if (isProtectedRoute(req)) {
@@ -10,8 +8,10 @@ export default clerkMiddleware(async (auth, req) => {
     // `auth()` returns a runtime object that has `protect()` attached by Clerk,
     // but the exported TypeScript types may not include it. Narrow to an
     // unknown shape and call `protect` if present to satisfy the compiler.
-    const maybeProtect = resolved as unknown as { protect?: (opts?: unknown) => unknown };
-    if (typeof maybeProtect.protect === 'function') {
+    const maybeProtect = resolved as unknown as {
+      protect?: (opts?: unknown) => unknown;
+    };
+    if (typeof maybeProtect.protect === "function") {
       maybeProtect.protect();
     }
   }

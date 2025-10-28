@@ -16,7 +16,7 @@ export const createPaymentRecord = action({
     customerFirstName: v.string(),
     customerLastName: v.string(),
     customerEmail: v.string(),
-    customerPhone: v.string(),
+    customerPhone: v.optional(v.string()),
     customerAddress: v.string(),
     productDescription: v.string(),
   },

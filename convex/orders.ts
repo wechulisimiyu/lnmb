@@ -561,7 +561,7 @@ export const insertPaymentRecord = internalMutation({
       customerPostalCodeZip: v.string(),
       customerAddress: v.string(),
       customerEmail: v.string(),
-      customerPhone: v.string(),
+  customerPhone: v.optional(v.string()),
       countryCode: v.string(),
       callbackUrl: v.string(),
       secondaryReference: v.string(),

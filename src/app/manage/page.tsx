@@ -708,7 +708,7 @@ export default function ManagePage() {
           <p className="text-slate-600 mb-6">
             You must be signed in to access the management dashboard.
           </p>
-          <SignInButton mode="modal">
+          <SignInButton mode="redirect" forceRedirectUrl="/manage">
             <Button className="w-full">
               <LogIn className="w-4 h-4 mr-2" />
               Sign in with Google

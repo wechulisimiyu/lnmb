@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
@@ -11,16 +11,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserButton, useUser } from "@clerk/nextjs";
 import {
   Users,
-  Award,
   ShoppingCart,
-  Plus,
   Eye,
   BarChart3,
   DollarSign,
   Calendar,
   Package,
   CreditCard,
-  LogOut,
   Shield,
 } from "lucide-react";
 

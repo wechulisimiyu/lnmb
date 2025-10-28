@@ -4,9 +4,16 @@ const isProtectedRoute = createRouteMatcher([
   '/manage(.*)',
 ]);
 
-export default clerkMiddleware((auth, req) => {
+export default clerkMiddleware(async (auth, req) => {
   if (isProtectedRoute(req)) {
-    auth().protect();
+    const resolved = await auth();
+    // `auth()` returns a runtime object that has `protect()` attached by Clerk,
+    // but the exported TypeScript types may not include it. Narrow to an
+    // unknown shape and call `protect` if present to satisfy the compiler.
+    const maybeProtect = resolved as unknown as { protect?: (opts?: unknown) => unknown };
+    if (typeof maybeProtect.protect === 'function') {
+      maybeProtect.protect();
+    }
   }
 });
 

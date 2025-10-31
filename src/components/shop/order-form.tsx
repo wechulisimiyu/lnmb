@@ -812,7 +812,7 @@ export default function OrderForm() {
             <div className="space-y-2">
               <Label htmlFor="tshirtSize">Size *</Label>
               <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
-                {["XS", "S", "M", "L", "XL", "XXL", "XXXL"].map((size) => (
+                {["S", "M", "L", "XL", "XXL", "XXXL"].map((size) => (
                   <button
                     key={size}
                     type="button"

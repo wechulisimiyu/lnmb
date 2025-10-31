@@ -102,9 +102,9 @@ export function ImpactSnapshot() {
             <div>
               <p className="text-blue-700 font-semibold">Accountability</p>
               <p>
-                Overseen by a board of trustees made up of doctors from the Kenya
-                Medical Association, University of Nairobi Faculty of Health
-                Sciences, and family of the late Prof. Saidi.
+                Overseen by a board of trustees made up of doctors from the
+                Kenya Medical Association, University of Nairobi Faculty of
+                Health Sciences, and family of the late Prof. Saidi.
               </p>
             </div>
             <div>

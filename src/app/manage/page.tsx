@@ -20,6 +20,8 @@ import {
   CreditCard,
   Shield,
   LogIn,
+  CheckCircle,
+  AlertCircle,
 } from "lucide-react";
 
 interface Order {
@@ -54,6 +56,13 @@ interface Payment {
 
 function DashboardContent() {
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [reconcileLoading, setReconcileLoading] = useState(false);
+  const [reconcileResult, setReconcileResult] = useState<{
+    success: boolean;
+    message: string;
+    reconciled?: number;
+    skipped?: number;
+  } | null>(null);
   const { user } = useUser();
 
   // Fetch data from Convex - now safe to call
@@ -77,10 +86,10 @@ function DashboardContent() {
       : 0);
   const totalRevenue =
     orderStats?.totalRevenue ??
-    (orders
-      ? orders
-          .filter((order) => order.paid)
-          .reduce((sum, order) => sum + order.totalAmount, 0)
+    (payments
+      ? payments
+          .filter((payment) => payment.status === "paid")
+          .reduce((sum, payment) => sum + (payment.orderAmount ?? payment.amount ?? 0), 0)
       : 0);
   const monthlyOrders =
     orderStats?.monthlyOrders ??
@@ -94,9 +103,16 @@ function DashboardContent() {
           );
         }).length
       : 0);
-  const itemsSold = orders
-    ? orders.reduce((sum, order) => sum + order.quantity, 0)
-    : 0;
+  const itemsSold =
+    payments
+      ? payments
+          .filter((payment) => payment.status === "paid")
+          .reduce((sum, payment) => {
+            // Try to get quantity from orders by matching orderReference
+            const order = orders?.find((o) => o.orderReference === payment.orderReference);
+            return sum + (order?.quantity ?? 0);
+          }, 0)
+      : 0;
   const uniqueCustomers = orders
     ? new Set(
         orders
@@ -159,12 +175,12 @@ function DashboardContent() {
       icon: BarChart3,
       iconClass: "text-indigo-600",
     },
-    {
-      label: "Outstanding Balance",
-      value: formatCurrency(outstandingBalance),
-      icon: CreditCard,
-      iconClass: "text-rose-600",
-    },
+    // {
+    //   label: "Outstanding Balance",
+    //   value: formatCurrency(outstandingBalance),
+    //   icon: CreditCard,
+    //   iconClass: "text-rose-600",
+    // },
   ];
 
   const generateRecentActivity = () => {
@@ -228,6 +244,44 @@ function DashboardContent() {
   };
 
   const recentActivity = generateRecentActivity();
+
+  const handleReconcileOrders = async () => {
+    setReconcileLoading(true);
+    setReconcileResult(null);
+
+    try {
+      const response = await fetch("/api/reconcile-orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setReconcileResult({
+          success: true,
+          message: data.message,
+          reconciled: data.reconciled,
+          skipped: data.skipped,
+        });
+      } else {
+        setReconcileResult({
+          success: false,
+          message: data.message || data.error || "Failed to reconcile orders",
+        });
+      }
+    } catch (error) {
+      setReconcileResult({
+        success: false,
+        message:
+          error instanceof Error ? error.message : "Failed to reconcile orders",
+      });
+    } finally {
+      setReconcileLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-secondary py-4 sm:py-6 lg:py-8">
@@ -369,6 +423,82 @@ function DashboardContent() {
                 </CardContent>
               </Card>
             </div>
+
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg sm:text-xl">
+                    Order Management Tools
+                  </CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="font-semibold text-sm sm:text-base mb-2">
+                      Reconcile Orders
+                    </h3>
+                    <p className="text-xs sm:text-sm text-slate-600 mb-4">
+                      Check all paid payments and update corresponding orders.
+                      This ensures your orders table stays in sync with the
+                      payments table.
+                    </p>
+                    <Button
+                      onClick={handleReconcileOrders}
+                      disabled={reconcileLoading}
+                      className="w-full sm:w-auto"
+                    >
+                      {reconcileLoading ? (
+                        <>
+                          <div className="animate-spin inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full mr-2" />
+                          Reconciling...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Reconcile Orders
+                        </>
+                      )}
+                    </Button>
+                  </div>
+
+                  {reconcileResult && (
+                    <div
+                      className={`p-4 rounded-lg ${
+                        reconcileResult.success
+                          ? "bg-green-50 border border-green-200"
+                          : "bg-red-50 border border-red-200"
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        {reconcileResult.success ? (
+                          <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                        ) : (
+                          <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                        )}
+                        <div className="flex-1">
+                          <p
+                            className={`font-medium text-sm ${
+                              reconcileResult.success
+                                ? "text-green-800"
+                                : "text-red-800"
+                            }`}
+                          >
+                            {reconcileResult.message}
+                          </p>
+                          {reconcileResult.reconciled !== undefined && (
+                            <p className="text-xs text-slate-600 mt-1">
+                              Updated: {reconcileResult.reconciled} | Skipped:{" "}
+                              {reconcileResult.skipped}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
 
             <Card>
               <CardHeader className="pb-3">

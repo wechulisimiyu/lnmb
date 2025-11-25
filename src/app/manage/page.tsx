@@ -120,11 +120,11 @@ function DashboardContent() {
           .filter((email): email is string => Boolean(email)),
       ).size
     : 0;
-  const outstandingBalance = orders
-    ? orders
-        .filter((order) => !order.paid)
-        .reduce((sum, order) => sum + order.totalAmount, 0)
-    : 0;
+  // const outstandingBalance = orders
+  //   ? orders
+  //       .filter((order) => !order.paid)
+  //       .reduce((sum, order) => sum + order.totalAmount, 0)
+  //   : 0;
   const averageOrderValue =
     paidOrders > 0 ? Math.round(totalRevenue / paidOrders) : 0;
   const pendingOrders = Math.max(totalOrders - paidOrders, 0);

@@ -5,12 +5,20 @@ import * as Sentry from "@sentry/nextjs";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
-export async function POST(request: NextRequest): Promise<Response> {
+interface Payment {
+  orderReference: string;
+  status: string;
+  transactionId?: string;
+  orderAmount?: number;
+  amount?: number;
+}
+
+export async function POST(): Promise<Response> {
   try {
     // Get all payments with status "paid"
     const allPayments = await convex.query(api.orders.getAllPayments, {});
-    const paidPayments = allPayments.filter(
-      (payment: any) => payment.status === "paid",
+    const paidPayments = (allPayments as Payment[]).filter(
+      (payment: Payment) => payment.status === "paid",
     );
 
     if (!paidPayments || paidPayments.length === 0) {

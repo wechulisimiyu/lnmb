@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { LucideIcon } from "lucide-react";
-import { useConvexAuth, useQuery } from "convex/react";
+import { useConvexAuth, useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -89,7 +89,11 @@ function DashboardContent() {
     (payments
       ? payments
           .filter((payment) => payment.status === "paid")
-          .reduce((sum, payment) => sum + (payment.orderAmount ?? payment.amount ?? 0), 0)
+          .reduce(
+            (sum, payment) =>
+              sum + (payment.orderAmount ?? payment.amount ?? 0),
+            0,
+          )
       : 0);
   const monthlyOrders =
     orderStats?.monthlyOrders ??
@@ -103,16 +107,17 @@ function DashboardContent() {
           );
         }).length
       : 0);
-  const itemsSold =
-    payments
-      ? payments
-          .filter((payment) => payment.status === "paid")
-          .reduce((sum, payment) => {
-            // Try to get quantity from orders by matching orderReference
-            const order = orders?.find((o) => o.orderReference === payment.orderReference);
-            return sum + (order?.quantity ?? 0);
-          }, 0)
-      : 0;
+  const itemsSold = payments
+    ? payments
+        .filter((payment) => payment.status === "paid")
+        .reduce((sum, payment) => {
+          // Try to get quantity from orders by matching orderReference
+          const order = orders?.find(
+            (o) => o.orderReference === payment.orderReference,
+          );
+          return sum + (order?.quantity ?? 0);
+        }, 0)
+    : 0;
   const uniqueCustomers = orders
     ? new Set(
         orders
@@ -245,33 +250,21 @@ function DashboardContent() {
 
   const recentActivity = generateRecentActivity();
 
+  const reconcileOrdersMutation = useMutation(api.orders.reconcileOrders);
+
   const handleReconcileOrders = async () => {
     setReconcileLoading(true);
     setReconcileResult(null);
 
     try {
-      const response = await fetch("/api/reconcile-orders", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+      const result = await reconcileOrdersMutation({});
+
+      setReconcileResult({
+        success: true,
+        message: `Reconciliation completed. ${result.reconciled} orders updated.`,
+        reconciled: result.reconciled,
+        skipped: result.skipped,
       });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setReconcileResult({
-          success: true,
-          message: data.message,
-          reconciled: data.reconciled,
-          skipped: data.skipped,
-        });
-      } else {
-        setReconcileResult({
-          success: false,
-          message: data.message || data.error || "Failed to reconcile orders",
-        });
-      }
     } catch (error) {
       setReconcileResult({
         success: false,

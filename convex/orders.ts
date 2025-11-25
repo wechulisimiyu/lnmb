@@ -575,3 +575,64 @@ export const insertPaymentRecord = internalMutation({
     return await ctx.db.insert("payments", args.paymentData);
   },
 });
+
+// Public mutation to reconcile orders (update orders where payment status is paid)
+// Requires authentication via Clerk
+export const reconcileOrders = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Unauthorized");
+    }
+
+    const paidPayments = await ctx.db
+      .query("payments")
+      .withIndex("by_status", (q) => q.eq("status", "paid"))
+      .collect();
+
+    let reconciled = 0;
+    let skipped = 0;
+    const errors: string[] = [];
+
+    for (const payment of paidPayments) {
+      const orderReference = payment.orderReference;
+
+      try {
+        const order = await ctx.db
+          .query("orders")
+          .withIndex("by_reference", (q) =>
+            q.eq("orderReference", orderReference),
+          )
+          .first();
+
+        if (!order) {
+          skipped++;
+          errors.push(`Order not found for reference ${orderReference}`);
+          continue;
+        }
+
+        if (!order.paid) {
+          await ctx.db.patch(order._id, {
+            paid: true,
+            updatedAt: Date.now(),
+          });
+          reconciled++;
+        } else {
+          skipped++;
+        }
+      } catch (error) {
+        skipped++;
+        const errorMsg =
+          error instanceof Error ? error.message : "Unknown error";
+        errors.push(`Failed to update order ${orderReference}: ${errorMsg}`);
+      }
+    }
+
+    return {
+      reconciled,
+      skipped,
+      errors,
+    };
+  },
+});

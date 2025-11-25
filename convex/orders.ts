@@ -581,58 +581,120 @@ export const insertPaymentRecord = internalMutation({
 export const reconcileOrders = mutation({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
+    try {
+      const identity = await ctx.auth.getUserIdentity();
+      if (!identity) {
+        throw new Error("Unauthorized: No user identity found");
+      }
 
-    const paidPayments = await ctx.db
-      .query("payments")
-      .withIndex("by_status", (q) => q.eq("status", "paid"))
-      .collect();
+      console.log("[reconcileOrders] Starting reconciliation for user:", {
+        id: identity.userId,
+      });
 
-    let reconciled = 0;
-    let skipped = 0;
-    const errors: string[] = [];
-
-    for (const payment of paidPayments) {
-      const orderReference = payment.orderReference;
-
+      // Query all paid payments using the index
+      let paidPayments: any[] = [];
       try {
-        const order = await ctx.db
-          .query("orders")
-          .withIndex("by_reference", (q) =>
-            q.eq("orderReference", orderReference),
-          )
-          .first();
+        paidPayments = await ctx.db
+          .query("payments")
+          .withIndex("by_status", (q) => q.eq("status", "paid"))
+          .collect();
+      } catch (indexError) {
+        console.error("[reconcileOrders] Error querying payments by index:", indexError);
+        // Fallback: query all payments and filter
+        const allPayments = await ctx.db.query("payments").collect();
+        paidPayments = allPayments.filter((p: any) => p.status === "paid");
+      }
 
-        if (!order) {
+      console.log(
+        `[reconcileOrders] Found ${paidPayments.length} paid payments`,
+      );
+
+      let reconciled = 0;
+      let skipped = 0;
+      const errors: string[] = [];
+
+      if (!paidPayments || paidPayments.length === 0) {
+        console.log("[reconcileOrders] No paid payments found");
+        return {
+          reconciled: 0,
+          skipped: 0,
+          errors: ["No paid payments found"],
+        };
+      }
+
+      // Process each paid payment
+      for (const payment of paidPayments) {
+        const orderReference = payment.orderReference as string | undefined;
+
+        if (!orderReference) {
           skipped++;
-          errors.push(`Order not found for reference ${orderReference}`);
+          errors.push("Payment has no orderReference");
+          console.warn("[reconcileOrders] Payment missing orderReference:", {
+            paymentId: (payment as any)._id,
+          });
           continue;
         }
 
-        if (!order.paid) {
-          await ctx.db.patch(order._id, {
-            paid: true,
-            updatedAt: Date.now(),
-          });
-          reconciled++;
-        } else {
-          skipped++;
-        }
-      } catch (error) {
-        skipped++;
-        const errorMsg =
-          error instanceof Error ? error.message : "Unknown error";
-        errors.push(`Failed to update order ${orderReference}: ${errorMsg}`);
-      }
-    }
+        try {
+          // Find the corresponding order
+          const order = await ctx.db
+            .query("orders")
+            .withIndex("by_reference", (q) =>
+              q.eq("orderReference", orderReference),
+            )
+            .first();
 
-    return {
-      reconciled,
-      skipped,
-      errors,
-    };
+          if (!order) {
+            skipped++;
+            errors.push(`Order not found for reference ${orderReference}`);
+            console.warn(
+              `[reconcileOrders] Order not found for reference ${orderReference}`,
+            );
+            continue;
+          }
+
+          // Update order if not already paid
+          if (!(order as any).paid) {
+            await ctx.db.patch(order._id, {
+              paid: true,
+              updatedAt: Date.now(),
+            });
+            reconciled++;
+            console.log(
+              `[reconcileOrders] Updated order ${orderReference} to paid`,
+            );
+          } else {
+            skipped++;
+            console.log(
+              `[reconcileOrders] Order ${orderReference} already paid, skipping`,
+            );
+          }
+        } catch (orderError) {
+          skipped++;
+          const errorMsg =
+            orderError instanceof Error ? orderError.message : "Unknown error";
+          errors.push(
+            `Failed to update order ${orderReference}: ${errorMsg}`,
+          );
+          console.error(
+            `[reconcileOrders] Error processing payment ${orderReference}:`,
+            orderError,
+          );
+        }
+      }
+
+      console.log(
+        `[reconcileOrders] Completed: reconciled=${reconciled}, skipped=${skipped}, errors=${errors.length}`,
+      );
+
+      return {
+        reconciled,
+        skipped,
+        errors,
+      };
+    } catch (error) {
+      console.error("[reconcileOrders] Fatal error:", error);
+      throw error;
+    }
   },
 });

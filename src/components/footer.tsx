@@ -130,9 +130,9 @@ export function Footer() {
               <div className="flex items-start space-x-3">
                 <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400 mt-1 flex-shrink-0" />
                 <div className="text-slate-400 text-sm sm:text-base">
-                  KNH Hospital Drive
+                  KMA Centre 4th Floor, Chyulu Road, Upperhill
                   <br />
-                  Nairobi, Kenya
+                  P.O Box 46999 - 00100, Nairobi, Kenya
                 </div>
               </div>
               <div className="flex items-center space-x-3">
@@ -144,7 +144,7 @@ export function Footer() {
               <div className="flex items-center space-x-3">
                 <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400 flex-shrink-0" />
                 <div className="text-slate-400 text-sm sm:text-base">
-                  communication@lnmb-run.org
+                  info@lnmb-run.org
                 </div>
               </div>
             </div>

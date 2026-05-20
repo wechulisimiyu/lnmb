@@ -10,7 +10,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { CheckCircle, XCircle, Clock, AlertTriangle } from "lucide-react";
+import {
+  CheckCircle,
+  XCircle,
+  Clock,
+  AlertTriangle,
+  Inbox,
+} from "lucide-react";
 
 function PaymentResultContent() {
   const router = useRouter();
@@ -19,6 +25,9 @@ function PaymentResultContent() {
   const [reference, setReference] = useState<string | null>(null);
   const [transactionId, setTransactionId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  // 'checking' indicates whether the client is polling the server for status.
+  // It's intentionally unused directly in the render but useful for debugging; keep the state to preserve intent.
+  const [checking, setChecking] = useState(false);
 
   useEffect(() => {
     setStatus(searchParams.get("status"));
@@ -26,6 +35,86 @@ function PaymentResultContent() {
     setTransactionId(searchParams.get("transactionId"));
     setMessage(searchParams.get("message"));
   }, [searchParams]);
+
+  // If status is missing or unknown, try to fetch authoritative status from server
+  useEffect(() => {
+    let mounted = true;
+
+    async function fetchStatus() {
+      if (!mounted) return;
+
+      // Only attempt check when status is null or 'unknown' (or empty)
+      if (status && status !== "unknown") return;
+
+      // Need at least a reference or transactionId to check
+      if (!reference && !transactionId) return;
+
+      setChecking(true);
+
+      const params = new URLSearchParams();
+      if (reference) params.set("reference", reference);
+      if (transactionId) params.set("transactionId", transactionId);
+
+      // Polling: try a few times with small delays to account for webhook/write races
+      for (let attempt = 0; attempt < 5; attempt++) {
+        try {
+          const res = await fetch(`/api/checkout/status?${params.toString()}`);
+          if (!res.ok) {
+            // wait and retry
+            await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
+            continue;
+          }
+
+          const body = await res.json();
+          if (body && body.success && body.payment) {
+            const payment = body.payment as {
+              status?: string;
+              transactionId?: string;
+            };
+            if (payment.status) {
+              // Map backend payment.status to UI status expectations
+              let mapped = payment.status;
+              if (mapped === "processing") mapped = "processing";
+              if (mapped === "paid") mapped = "paid";
+              if (mapped === "failed") mapped = "failed";
+
+              if (mounted) {
+                setStatus(mapped);
+                if (payment.transactionId)
+                  setTransactionId(payment.transactionId);
+                setMessage(null);
+                setChecking(false);
+              }
+              return;
+            }
+          }
+
+          // If not found, wait a bit and try again
+          await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
+        } catch (error) {
+          // ignore transient errors and retry; log in development
+
+          if (process.env.NODE_ENV === "development")
+            console.debug("status check error", error);
+          await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
+        }
+      }
+
+      if (mounted) {
+        setChecking(false);
+        // if still unknown after retries, surface user-friendly guidance
+        setMessage(
+          "We couldn't confirm your payment immediately. Please check your bank/app for a transaction receipt or contact support with your order reference.",
+        );
+      }
+    }
+
+    fetchStatus();
+
+    return () => {
+      mounted = false;
+    };
+  }, [status, reference, transactionId]);
 
   const getStatusIcon = () => {
     switch (status) {
@@ -38,7 +127,7 @@ function PaymentResultContent() {
       case "error":
         return <AlertTriangle className="h-16 w-16 text-red-500" />;
       default:
-        return <AlertTriangle className="h-16 w-16 text-gray-500" />;
+        return <Inbox className="h-16 w-16 text-gray-500" />;
     }
   };
 
@@ -53,7 +142,7 @@ function PaymentResultContent() {
       case "error":
         return "Payment Error";
       default:
-        return "Payment Status Unknown";
+        return "Check your email";
     }
   };
 
@@ -70,7 +159,7 @@ function PaymentResultContent() {
       case "error":
         return "An error occurred while processing your payment. Please contact support for assistance.";
       default:
-        return "We couldn't determine the status of your payment. Please contact support with your order reference.";
+        return "You will receive an email confirmation shortly with your order details.";
     }
   };
 
@@ -99,6 +188,11 @@ function PaymentResultContent() {
             </CardTitle>
             <CardDescription className="text-center">
               {getStatusMessage()}
+              {checking && !status && (
+                <div className="text-xs text-slate-500 mt-2">
+                  Checking payment status...
+                </div>
+              )}
             </CardDescription>
           </CardHeader>
 
@@ -195,7 +289,15 @@ function PaymentResultContent() {
                     Try Again
                   </Button>
                   <Button
-                    onClick={() => router.push("/contact")}
+                    onClick={() => {
+                      const subject = encodeURIComponent(
+                        `Help needed: payment ${reference || "(no-ref)"}`,
+                      );
+                      const body = encodeURIComponent(
+                        `Order Reference: ${reference || "N/A"}%0D%0ATransaction ID: ${transactionId || "N/A"}%0D%0A\nPlease describe what happened:`,
+                      );
+                      window.location.href = `mailto:info@lnmb-run.org?subject=${subject}&body=${body}`;
+                    }}
                     variant="outline"
                     className="w-full"
                   >

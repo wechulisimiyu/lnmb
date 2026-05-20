@@ -5,7 +5,9 @@ This directory contains comprehensive documentation for the Jenga Payment Gatewa
 ## Documentation Files
 
 ### 📘 [PAYMENT_SECURITY.md](./PAYMENT_SECURITY.md)
+
 **Complete Security Documentation**
+
 - Detailed explanation of all security features
 - Implementation details and code locations
 - Configuration requirements
@@ -18,7 +20,9 @@ This directory contains comprehensive documentation for the Jenga Payment Gatewa
 ---
 
 ### 📋 [QUICK_REFERENCE.md](./QUICK_REFERENCE.md)
+
 **Developer Quick Reference Card**
+
 - Webhook endpoints and URLs
 - Environment variables
 - Signature verification examples
@@ -32,7 +36,9 @@ This directory contains comprehensive documentation for the Jenga Payment Gatewa
 ---
 
 ### 🚀 [MIGRATION_GUIDE.md](./MIGRATION_GUIDE.md)
+
 **Step-by-Step Migration Guide**
+
 - Migration steps from old to new webhook
 - Environment variable setup
 - Jenga dashboard configuration
@@ -46,7 +52,9 @@ This directory contains comprehensive documentation for the Jenga Payment Gatewa
 ---
 
 ### 📊 [SECURITY_HARDENING_SUMMARY.md](./SECURITY_HARDENING_SUMMARY.md)
+
 **Executive Summary**
+
 - What changed and why
 - Security impact analysis
 - Files modified
@@ -61,14 +69,17 @@ This directory contains comprehensive documentation for the Jenga Payment Gatewa
 ## Quick Start
 
 ### For Developers
+
 1. Start with [QUICK_REFERENCE.md](./QUICK_REFERENCE.md) for immediate needs
 2. Reference [PAYMENT_SECURITY.md](./PAYMENT_SECURITY.md) for deep dives
 
 ### For DevOps/Deployment
+
 1. Follow [MIGRATION_GUIDE.md](./MIGRATION_GUIDE.md) step by step
 2. Use [QUICK_REFERENCE.md](./QUICK_REFERENCE.md) for troubleshooting
 
 ### For Security Review
+
 1. Read [SECURITY_HARDENING_SUMMARY.md](./SECURITY_HARDENING_SUMMARY.md) first
 2. Deep dive into [PAYMENT_SECURITY.md](./PAYMENT_SECURITY.md)
 3. Review test coverage in `../src/lib/__tests__/payment-security.test.ts`
@@ -78,18 +89,21 @@ This directory contains comprehensive documentation for the Jenga Payment Gatewa
 ## Key Changes Summary
 
 ### New Secure Webhook Endpoint
+
 ```
 https://yourdomain.com/api/pgw-webhook-4365c21f
 ```
 
 ### Security Features
+
 ✅ Signature verification (SHA-256)  
 ✅ Request validation  
 ✅ Idempotency checks  
 ✅ Secure logging (PII sanitized)  
-✅ Unpredictable endpoint path  
+✅ Unpredictable endpoint path
 
 ### Required Environment Variables
+
 ```bash
 JENGA_MERCHANT_CODE=xxx    # Required for signature verification
 JENGA_CONSUMER_SECRET=xxx  # Already required
@@ -101,28 +115,31 @@ SITE_URL=https://domain   # Must match production
 
 ## Documentation Status
 
-| Document | Status | Last Updated |
-|----------|--------|--------------|
-| PAYMENT_SECURITY.md | ✅ Complete | 2024 |
-| QUICK_REFERENCE.md | ✅ Complete | 2024 |
-| MIGRATION_GUIDE.md | ✅ Complete | 2024 |
-| SECURITY_HARDENING_SUMMARY.md | ✅ Complete | 2024 |
+| Document                      | Status      | Last Updated |
+| ----------------------------- | ----------- | ------------ |
+| PAYMENT_SECURITY.md           | ✅ Complete | 2024         |
+| QUICK_REFERENCE.md            | ✅ Complete | 2024         |
+| MIGRATION_GUIDE.md            | ✅ Complete | 2024         |
+| SECURITY_HARDENING_SUMMARY.md | ✅ Complete | 2024         |
 
 ---
 
 ## Related Files
 
 ### Implementation
+
 - `src/lib/payment-security.ts` - Security utilities
 - `src/app/api/pgw-webhook-4365c21f/route.ts` - Secure webhook handler
 - `src/app/api/payment/callback/route.ts` - Legacy endpoint (deprecated)
 
 ### Configuration
+
 - `env.sample` - Environment variable template with security notes
 - `convex/orders.ts` - Payment record creation with new webhook URL
 - `convex/checkout.ts` - STK push with new webhook URL
 
 ### Testing
+
 - `src/lib/__tests__/payment-security.test.ts` - Comprehensive security tests
 
 ---
@@ -141,6 +158,7 @@ For questions or issues:
 ## Version History
 
 ### v1.0.0 (Current)
+
 - Initial security hardening implementation
 - Signature verification
 - Unpredictable webhook endpoint

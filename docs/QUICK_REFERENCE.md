@@ -3,14 +3,17 @@
 ## Webhook Endpoints
 
 ### Production Endpoint (Secure)
+
 ```
 POST https://yourdomain.com/api/pgw-webhook-4365c21f
 ```
 
 ### Legacy Endpoint (Deprecated)
+
 ```
 POST https://yourdomain.com/api/payment/callback
 ```
+
 ⚠️ Shows deprecation warnings - migrate to new endpoint
 
 ## Required Environment Variables
@@ -25,24 +28,27 @@ SITE_URL=https://yourdomain   # Must match production domain
 ## Webhook Signature Verification
 
 ### Formula
+
 ```
 merchantCode + orderReference + currency + orderAmount + callbackUrl
 ```
 
 ### Example
+
 ```javascript
 // Input
-merchantCode = "TEST123"
-orderReference = "ORD1234567890"
-currency = "KES"
-orderAmount = "1000"
-callbackUrl = "https://yourdomain.com/api/pgw-webhook-4365c21f"
+merchantCode = "TEST123";
+orderReference = "ORD1234567890";
+currency = "KES";
+orderAmount = "1000";
+callbackUrl = "https://yourdomain.com/api/pgw-webhook-4365c21f";
 
 // Signature data
-signatureData = "TEST123ORD1234567890KES1000https://yourdomain.com/api/pgw-webhook-4365c21f"
+signatureData =
+  "TEST123ORD1234567890KES1000https://yourdomain.com/api/pgw-webhook-4365c21f";
 
 // Hash (SHA-256)
-hash = sha256(signatureData)
+hash = sha256(signatureData);
 ```
 
 ## Expected Webhook Payload
@@ -63,6 +69,7 @@ hash = sha256(signatureData)
 ## Webhook Responses
 
 ### Success (200)
+
 ```json
 {
   "success": true,
@@ -71,6 +78,7 @@ hash = sha256(signatureData)
 ```
 
 ### Duplicate (200)
+
 ```json
 {
   "success": true,
@@ -80,6 +88,7 @@ hash = sha256(signatureData)
 ```
 
 ### Invalid Signature (401)
+
 ```json
 {
   "error": "Webhook authentication failed",
@@ -88,6 +97,7 @@ hash = sha256(signatureData)
 ```
 
 ### Missing Fields (400)
+
 ```json
 {
   "error": "Invalid payload",
@@ -96,6 +106,7 @@ hash = sha256(signatureData)
 ```
 
 ### Server Error (500)
+
 ```json
 {
   "error": "Failed to process payment callback"
@@ -104,33 +115,37 @@ hash = sha256(signatureData)
 
 ## Security Features
 
-| Feature | Status | Description |
-|---------|--------|-------------|
-| Signature Verification | ✅ Enabled | SHA-256 hash verification |
-| Request Validation | ✅ Enabled | Required fields checked |
-| Idempotency | ✅ Enabled | Prevents duplicate processing |
-| Secure Logging | ✅ Enabled | PII automatically sanitized |
-| Unpredictable Path | ✅ Enabled | Random 16-char hex path |
+| Feature                | Status     | Description                   |
+| ---------------------- | ---------- | ----------------------------- |
+| Signature Verification | ✅ Enabled | SHA-256 hash verification     |
+| Request Validation     | ✅ Enabled | Required fields checked       |
+| Idempotency            | ✅ Enabled | Prevents duplicate processing |
+| Secure Logging         | ✅ Enabled | PII automatically sanitized   |
+| Unpredictable Path     | ✅ Enabled | Random 16-char hex path       |
 
 ## Log Patterns
 
 ### Successful Webhook
+
 ```
 [2024-01-01T12:00:00.000Z] [SECURITY] [CALLBACK_POST_RECEIVED] {"orderReference":"ORD1234567890","status":"paid","hasHash":true}
 [2024-01-01T12:00:00.001Z] [SECURITY] [CALLBACK_PROCESSED] {"orderReference":"ORD1234567890","status":"paid","transactionId":"TXN123456789","channel":"MPESA"}
 ```
 
 ### Signature Failure
+
 ```
 [2024-01-01T12:00:00.000Z] [SECURITY_ERROR] [CALLBACK_AUTH_FAILED] {"reason":"Invalid signature","orderReference":"ORD1234567890"}
 ```
 
 ### Duplicate Request
+
 ```
 [2024-01-01T12:00:00.000Z] [SECURITY_WARNING] [CALLBACK_DUPLICATE] {"orderReference":"ORD1234567890","transactionId":"TXN123456789","idempotencyKey":"abc123..."}
 ```
 
 ### Missing Fields
+
 ```
 [2024-01-01T12:00:00.000Z] [SECURITY_WARNING] [CALLBACK_INVALID_PAYLOAD] {"missing":["orderReference","status"]}
 ```
@@ -138,6 +153,7 @@ hash = sha256(signatureData)
 ## Testing Commands
 
 ### Test Signature Generation (Bash)
+
 ```bash
 MERCHANT_CODE="TEST123"
 ORDER_REF="ORD1234567890"
@@ -152,6 +168,7 @@ echo "Signature: $HASH"
 ```
 
 ### Test Webhook (cURL)
+
 ```bash
 curl -X POST https://yourdomain.com/api/pgw-webhook-4365c21f \
   -H "Content-Type: application/json" \
@@ -166,6 +183,7 @@ curl -X POST https://yourdomain.com/api/pgw-webhook-4365c21f \
 ```
 
 ### Check Logs (Production)
+
 ```bash
 # View security events
 grep "SECURITY" logs.txt | tail -20
@@ -180,12 +198,14 @@ grep "ORD1234567890" logs.txt
 ## Common Tasks
 
 ### Add New Payment Method
+
 1. No changes needed to webhook handler
 2. Jenga handles payment method routing
 3. Webhook receives payment regardless of method
 4. Check `desc` field for payment channel
 
 ### Debug Failed Webhook
+
 1. Check logs for `SECURITY_ERROR` entries
 2. Verify `JENGA_MERCHANT_CODE` environment variable
 3. Confirm callback URL in Jenga dashboard matches code
@@ -193,6 +213,7 @@ grep "ORD1234567890" logs.txt
 5. Check database for order existence
 
 ### Rotate Credentials
+
 1. Update `JENGA_MERCHANT_CODE` in environment
 2. Update Jenga dashboard settings
 3. Redeploy application
@@ -200,8 +221,10 @@ grep "ORD1234567890" logs.txt
 5. Monitor logs for signature errors
 
 ### Scale to Multiple Instances
+
 1. Implement Redis for idempotency checks
 2. Replace in-memory Set with Redis:
+
 ```javascript
 // Replace processedTransactions Set with:
 const redis = new Redis(process.env.REDIS_URL);
@@ -213,12 +236,12 @@ const isDuplicate = await redis.exists(`idem:${key}`);
 
 Set up alerts for:
 
-| Condition | Threshold | Action |
-|-----------|-----------|---------|
-| Signature failures | > 5/min | Alert DevOps |
-| Invalid payloads | > 10/min | Alert DevOps |
-| Missing merchant code | Any | Critical alert |
-| Duplicate rate | > 50% | Investigate Jenga |
+| Condition             | Threshold | Action            |
+| --------------------- | --------- | ----------------- |
+| Signature failures    | > 5/min   | Alert DevOps      |
+| Invalid payloads      | > 10/min  | Alert DevOps      |
+| Missing merchant code | Any       | Critical alert    |
+| Duplicate rate        | > 50%     | Investigate Jenga |
 
 ## File Locations
 
@@ -237,6 +260,7 @@ Set up alerts for:
 ---
 
 **Quick Links**:
+
 - [Full Security Documentation](./PAYMENT_SECURITY.md)
 - [Migration Guide](./MIGRATION_GUIDE.md)
 - [Security Hardening Summary](./SECURITY_HARDENING_SUMMARY.md)

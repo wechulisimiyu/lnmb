@@ -1,6 +1,9 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
+// Note: For full OAuth integration with Convex Auth, see docs/AUTH_OAUTH.md
+// The authTables from @convex-dev/auth/server can be added when setting up OAuth
+
 export default defineSchema({
   orders: defineTable({
     // Student information
@@ -12,14 +15,16 @@ export default defineSchema({
     // Attendance and product details
     attending: v.string(), // "attending" or "notattending"
     tshirtType: v.string(), // "polo" or "round"
-    tshirtSize: v.string(), // "small", "medium", "large", "extra-large"
+    tshirtSize: v.string(), // "small", "medium", "large", "extra-large", or cart format "M:2,L:3,XL:1"
     quantity: v.number(),
     totalAmount: v.number(),
+    salesAgentName: v.optional(v.string()), // Optional sales agent who assisted
 
     // Contact information
     name: v.string(),
     email: v.string(),
-    phone: v.string(),
+    // `phone` was made optional after the frontend removed it from the order form
+    phone: v.optional(v.string()),
 
     // Emergency contact
     nameOfKin: v.string(),
@@ -35,10 +40,11 @@ export default defineSchema({
 
     // Order reference for payment tracking
     orderReference: v.string(),
-    // Uploaded school ID image URL (Cloudinary)
-    schoolIdUrl: v.optional(v.string()),
+    // Uploaded school ID image URL (Cloudinary) - nullable for compatibility
+    // Allow string, null, or undefined so old orders and new null values are accepted
+    schoolIdUrl: v.optional(v.union(v.string(), v.null())),
     // Cloudinary public id for the uploaded school ID (for later management)
-    schoolIdPublicId: v.optional(v.string()),
+    schoolIdPublicId: v.optional(v.union(v.string(), v.null())),
 
     // Timestamps
     createdAt: v.number(),
@@ -85,6 +91,7 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_reference", ["orderReference"])
+    .index("by_transactionId", ["transactionId"])
     .index("by_status", ["status"])
     .index("by_created_at", ["createdAt"]),
 });

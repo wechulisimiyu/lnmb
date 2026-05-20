@@ -51,9 +51,14 @@ import Image from "next/image";
 
 interface OrderFormData {
   // Step 1: Product Selection
-  tshirtType: string;
-  tshirtSize: string;
-  quantity: number;
+  // Product Selections
+  roundSelected: boolean;
+  roundSize: string;
+  roundQuantity: number;
+  poloSelected: boolean;
+  poloSize: string;
+  poloQuantity: number;
+  
   student: string;
   university?: string;
   universityUserEntered?: boolean;
@@ -80,6 +85,7 @@ interface OrderFormData {
 // Pricing constants from PRD (authoritative)
 const PRICING = {
   round: { regular: 1500, student: 850 },     // updated regular and student price
+  polo: { regular: 2000, student: 1000 },
 };
 
 const STEPS = {
@@ -103,9 +109,12 @@ export default function OrderForm() {
   const formRef = useRef<HTMLDivElement | null>(null);
   const [formData, setFormData] = useState<OrderFormData>({
     // Step 1: Product Selection
-    tshirtType: "round",
-    tshirtSize: "",
-    quantity: 1,
+    roundSelected: true,
+    roundSize: "",
+    roundQuantity: 1,
+    poloSelected: false,
+    poloSize: "",
+    poloQuantity: 1,
     student: "",
     university: "",
     universityUserEntered: false,
@@ -142,25 +151,34 @@ export default function OrderForm() {
   const [showManualUniversity, setShowManualUniversity] = useState(false);
 
   // Calculate unit price based on product type and student status
-  const getUnitPrice = (tshirtType: string, isStudent: boolean) => {
-    if (!tshirtType) return 0;
-    const pricing = PRICING[tshirtType as keyof typeof PRICING];
-    if (!pricing) return 0;
+  const getUnitPrice = (tshirtType: "round" | "polo", isStudent: boolean) => {
+    const pricing = PRICING[tshirtType];
     return isStudent ? pricing.student : pricing.regular;
   };
 
   // Update pricing when product or student status changes
   useEffect(() => {
     const isStudent = formData.student === "yes";
-    const unitPrice = getUnitPrice(formData.tshirtType, isStudent);
-    const totalAmount = unitPrice * formData.quantity;
+    
+    let totalAmount = 0;
+    if (formData.roundSelected) {
+      totalAmount += getUnitPrice("round", isStudent) * formData.roundQuantity;
+    }
+    if (formData.poloSelected) {
+      totalAmount += getUnitPrice("polo", isStudent) * formData.poloQuantity;
+    }
 
     setFormData((prev) => ({
       ...prev,
-      unitPrice,
       totalAmount,
     }));
-  }, [formData.tshirtType, formData.student, formData.quantity]);
+  }, [
+    formData.roundSelected,
+    formData.roundQuantity,
+    formData.poloSelected,
+    formData.poloQuantity,
+    formData.student,
+  ]);
 
   // Save draft to localStorage
   useEffect(() => {
@@ -212,12 +230,17 @@ export default function OrderForm() {
 
     switch (step) {
       case STEPS.PRODUCT_SELECTION:
-        if (!formData.tshirtType)
-          newErrors.tshirtType = "Please select t-shirt type";
-        if (!formData.tshirtSize)
-          newErrors.tshirtSize = "Please select t-shirt size";
-        if (formData.quantity < 1 || formData.quantity > 3)
-          newErrors.quantity = "Quantity must be between 1 and 3";
+        if (!formData.roundSelected && !formData.poloSelected) {
+          newErrors.productSelection = "Please select at least one t-shirt type";
+        }
+        if (formData.roundSelected) {
+          if (!formData.roundSize) newErrors.roundSize = "Please select a size for the Round Neck T-shirt";
+          if (formData.roundQuantity < 1 || formData.roundQuantity > 5) newErrors.roundQuantity = "Quantity must be between 1 and 5";
+        }
+        if (formData.poloSelected) {
+          if (!formData.poloSize) newErrors.poloSize = "Please select a size for the Polo Neck T-shirt";
+          if (formData.poloQuantity < 1 || formData.poloQuantity > 5) newErrors.poloQuantity = "Quantity must be between 1 and 5";
+        }
         if (!formData.student)
           newErrors.student = "Please select if you are a student";
 
@@ -457,9 +480,28 @@ export default function OrderForm() {
   const normalizedPhone = normalizeKenyaPhone(formData.phone as string)
   const normalizedKin = normalizeKenyaPhone(formData.kinNumber as string)
 
+      // Combine types and sizes
+      const types = [];
+      const sizes = [];
+      let totalQuantity = 0;
+      
+      if (formData.roundSelected) {
+        types.push("round");
+        sizes.push(`Round: ${formData.roundSize}`);
+        totalQuantity += formData.roundQuantity;
+      }
+      if (formData.poloSelected) {
+        types.push("polo");
+        sizes.push(`Polo: ${formData.poloSize}`);
+        totalQuantity += formData.poloQuantity;
+      }
+
       // Prepare order data for checkout
       const orderData = {
         ...formData,
+        tshirtType: types.join(" and "),
+        tshirtSize: sizes.join(", "),
+        quantity: totalQuantity,
         phone: normalizedPhone,
         kinNumber: normalizedKin,
         // Remove File from the saved order; include uploaded URL if available
@@ -512,57 +554,128 @@ export default function OrderForm() {
     </div>
   );
 
-  const renderProductCard = (type: "round") => {
+  const renderProductCard = (type: "round" | "polo") => {
     const pricing = PRICING[type];
     const isStudent = formData.student === "yes";
     const currentPrice = isStudent ? pricing.student : pricing.regular;
-    const isSelected = formData.tshirtType === type;
+    const isSelected = type === "round" ? formData.roundSelected : formData.poloSelected;
+    
+    // Set product details based on type
+    const imageSrc = type === "round" ? "/images/shop/lnmb 2026 roundneck.webp" : "/images/shop/lnmb 2026 poloshirt.webp";
+    const title = type === "round" ? "Round Neck T-shirt" : "Polo Neck T-Shirt";
 
     return (
-      <div
-        className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-          isSelected
-            ? "border-blue-600 bg-blue-50"
-            : "border-gray-200 hover:border-gray-300"
-        }`}
-        onClick={() => handleInputChange("tshirtType", type)}
-      >
-        <div className="relative aspect-square mb-4">
-          <Image
-            src="/images/shop/lnmb-tshirt-2025.webp"
-            alt="Round Neck T-shirt"
-            fill
-            className="object-cover rounded-md"
-          />
-        </div>
-        <div className="text-center">
-          <h3 className="font-semibold text-lg mb-2">Round Neck T-shirt</h3>
-          <div className="space-y-1">
-            <div className="flex items-center justify-center space-x-2">
-              <span className="text-xl font-bold text-blue-600">
-                KES {currentPrice.toLocaleString()}
-              </span>
-              {isStudent && pricing.regular > currentPrice && (
-                <span className="text-sm text-gray-400 line-through">
-                  KES {pricing.regular.toLocaleString()}
-                </span>
-              )}
-            </div>
-            {isStudent && pricing.regular > currentPrice && (
-              <Badge
-                variant="secondary"
-                className="text-xs bg-green-100 text-green-800"
-              >
-                Student Discount
-              </Badge>
-            )}
-            {isStudent && (
-              <p className="text-sm text-green-600">
-                Save KES {(pricing.regular - currentPrice).toLocaleString()}!
-              </p>
+      <div className="space-y-4">
+        <div
+          className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+            isSelected
+              ? "border-blue-600 bg-blue-50"
+              : "border-gray-200 hover:border-gray-300"
+          }`}
+          onClick={() => handleInputChange(type === "round" ? "roundSelected" : "poloSelected", !isSelected)}
+        >
+          <div className="relative aspect-square mb-4">
+            <Image
+              src={imageSrc}
+              alt={title}
+              fill
+              className="object-cover rounded-md"
+            />
+            {isSelected && (
+              <div className="absolute top-2 right-2 bg-blue-600 text-white p-1 rounded-full">
+                <Check className="w-4 h-4" />
+              </div>
             )}
           </div>
+          <div className="text-center">
+            <h3 className="font-semibold text-lg mb-2">{title}</h3>
+            <div className="space-y-1">
+              <div className="flex items-center justify-center space-x-2">
+                <span className="text-xl font-bold text-blue-600">
+                  KES {currentPrice.toLocaleString()}
+                </span>
+                {isStudent && pricing.regular > currentPrice && (
+                  <span className="text-sm text-gray-400 line-through">
+                    KES {pricing.regular.toLocaleString()}
+                  </span>
+                )}
+              </div>
+              {isStudent && pricing.regular > currentPrice && (
+                <Badge
+                  variant="secondary"
+                  className="text-xs bg-green-100 text-green-800"
+                >
+                  Save KES {(pricing.regular - currentPrice).toLocaleString()}!
+                </Badge>
+              )}
+            </div>
+          </div>
         </div>
+
+        {isSelected && (
+          <div className="p-4 bg-gray-50 rounded-lg space-y-4 border border-gray-100 animate-in fade-in slide-in-from-top-2">
+            <div className="space-y-2">
+              <Label className="text-sm">Size *</Label>
+              <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+                {["XS", "S", "M", "L", "XL", "XXL", "XXXL"].map((size) => {
+                  const currentSize = type === "round" ? formData.roundSize : formData.poloSize;
+                  return (
+                    <button
+                      key={size}
+                      type="button"
+                      className={`h-8 flex items-center justify-center px-2 text-xs rounded-md border transition-colors leading-none ${
+                        currentSize === size
+                          ? "bg-blue-600 text-white border-blue-600"
+                          : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
+                      }`}
+                      onClick={() => handleInputChange(type === "round" ? "roundSize" : "poloSize", size)}
+                    >
+                      {size}
+                    </button>
+                  );
+                })}
+              </div>
+              {errors[`${type}Size`] && (
+                <p className="text-red-500 text-xs">{errors[`${type}Size`]}</p>
+              )}
+            </div>
+
+            <div className="space-y-2 flex flex-col">
+              <Label className="text-sm">Quantity *</Label>
+              <div className="flex items-center space-x-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={() => {
+                    const field = type === "round" ? "roundQuantity" : "poloQuantity";
+                    const currentQty = type === "round" ? formData.roundQuantity : formData.poloQuantity;
+                    handleInputChange(field, Math.max(1, currentQty - 1));
+                  }}
+                >
+                  -
+                </Button>
+                <div className="w-12 text-center text-sm font-semibold">
+                  {type === "round" ? formData.roundQuantity : formData.poloQuantity}
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={() => {
+                    const field = type === "round" ? "roundQuantity" : "poloQuantity";
+                    const currentQty = type === "round" ? formData.roundQuantity : formData.poloQuantity;
+                    handleInputChange(field, Math.min(5, currentQty + 1));
+                  }}
+                >
+                  +
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -726,104 +839,31 @@ export default function OrderForm() {
       {/* Product Selection Cards */}
       <div className="space-y-4">
         <Label className="text-base font-semibold">Choose Your T-shirt *</Label>
-        <div className="grid md:grid-cols-1 gap-6 max-w-md mx-auto">
+        <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
           {renderProductCard("round")}
+          {renderProductCard("polo")}
         </div>
-        {errors.tshirtType && (
-          <p className="text-red-500 text-sm">{errors.tshirtType}</p>
+        {errors.productSelection && (
+          <p className="text-red-500 text-sm">{errors.productSelection}</p>
         )}
       </div>
 
-      {/* Size and Quantity Selection */}
-      {formData.tshirtType && (
-        <div className="grid md:grid-cols-2 gap-4 items-center">
-          <div className="space-y-2">
-            <Label htmlFor="tshirtSize">Size *</Label>
-            <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
-              {["XS", "S", "M", "L", "XL", "XXL", "XXXL"].map((size) => (
-                <button
-                  key={size}
-                  type="button"
-                  className={`h-9 flex items-center justify-center px-3 text-sm rounded-md border transition-colors leading-none ${
-                    formData.tshirtSize === size
-                      ? "bg-blue-600 text-white border-blue-600"
-                      : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
-                  }`}
-                  onClick={() => handleInputChange("tshirtSize", size)}
-                >
-                  {size}
-                </button>
-              ))}
-            </div>
-            {errors.tshirtSize && (
-              <p className="text-red-500 text-sm">{errors.tshirtSize}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="quantity">Quantity *</Label>
-            <div className="flex items-center space-x-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="leading-none"
-                onClick={() =>
-                  handleInputChange(
-                    "quantity",
-                    Math.max(1, formData.quantity - 1),
-                  )
-                }
-                disabled={formData.quantity <= 1}
-              >
-                -
-              </Button>
-              <Input
-                type="number"
-                min={1}
-                max={3}
-                value={formData.quantity}
-                onChange={(e) => {
-                  const v = parseInt(e.target.value) || 1;
-                  const clamped = Math.min(3, Math.max(1, v));
-                  handleInputChange("quantity", clamped);
-                }}
-                className="w-20 text-center"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="leading-none"
-                onClick={() =>
-                  handleInputChange(
-                    "quantity",
-                    Math.min(3, formData.quantity + 1),
-                  )
-                }
-                disabled={formData.quantity >= 3}
-              >
-                +
-              </Button>
-            </div>
-            {errors.quantity && (
-              <p className="text-red-500 text-sm">{errors.quantity}</p>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* Price Summary */}
-      {formData.tshirtType && formData.quantity > 0 && (
+      {(formData.roundSelected || formData.poloSelected) && formData.totalAmount > 0 && (
         <div className="bg-blue-50 p-4 rounded-lg">
           <div className="flex justify-between items-center">
             <div>
               <p className="font-semibold">Order Summary</p>
-              <p className="text-sm text-gray-600">
-                {formData.quantity}x Round Neck T-shirt ({formData.tshirtSize})
-              </p>
+              <div className="text-sm text-gray-600">
+                {formData.roundSelected && formData.roundQuantity > 0 && (
+                  <p>{formData.roundQuantity}x Round Neck ({formData.roundSize || "No size"})</p>
+                )}
+                {formData.poloSelected && formData.poloQuantity > 0 && (
+                  <p>{formData.poloQuantity}x Polo Neck ({formData.poloSize || "No size"})</p>
+                )}
+              </div>
               {formData.student === "yes" && (
-                <p className="text-sm text-green-600">
+                <p className="text-sm text-green-600 mt-1">
                   Student discount applied
                 </p>
               )}
@@ -832,11 +872,6 @@ export default function OrderForm() {
               <p className="text-2xl font-bold text-blue-800">
                 KES {formData.totalAmount.toLocaleString()}
               </p>
-              {formData.student === "yes" && formData.unitPrice > 0 && (
-                <p className="text-sm text-gray-600">
-                  (KES {formData.unitPrice.toLocaleString()} each)
-                </p>
-              )}
             </div>
           </div>
         </div>
@@ -1248,17 +1283,16 @@ export default function OrderForm() {
               Product Details
             </h5>
             <div className="space-y-1 text-sm">
-              <p>
-                <strong>T-shirt:</strong> Round Neck
-              </p>
-              <p>
-                <strong>Size:</strong>{" "}
-                {formData.tshirtSize?.charAt(0).toUpperCase() +
-                  formData.tshirtSize?.slice(1)}
-              </p>
-              <p>
-                <strong>Quantity:</strong> {formData.quantity}
-              </p>
+                {formData.roundSelected && (
+                  <p>
+                    <strong>Round Neck:</strong> {formData.roundQuantity}x (Size {formData.roundSize})
+                  </p>
+                )}
+                {formData.poloSelected && (
+                  <p>
+                    <strong>Polo Neck:</strong> {formData.poloQuantity}x (Size {formData.poloSize})
+                  </p>
+                )}
               <p>
                 <strong>Student:</strong>{" "}
                 {formData.student === "yes" ? "Yes" : "No"}
@@ -1311,10 +1345,16 @@ export default function OrderForm() {
           <div>
             <h5 className="font-semibold text-lg">Total Amount</h5>
             <div className="text-sm text-gray-600">
-              <p>
-                {formData.quantity}x Round Neck @ KES{" "}
-                {formData.unitPrice.toLocaleString()} each
-              </p>
+              {formData.roundSelected && formData.roundQuantity > 0 && (
+                <p>
+                  {formData.roundQuantity}x Round Neck @ KES {getUnitPrice("round", formData.student === "yes").toLocaleString()} each
+                </p>
+              )}
+              {formData.poloSelected && formData.poloQuantity > 0 && (
+                <p>
+                  {formData.poloQuantity}x Polo Neck @ KES {getUnitPrice("polo", formData.student === "yes").toLocaleString()} each
+                </p>
+              )}
               {formData.student === "yes" && (
                 <p className="text-green-600">Student discount applied</p>
               )}

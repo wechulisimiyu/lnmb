@@ -13,9 +13,10 @@ export function ContactInfo() {
             <div>
               <p className="font-semibold">Address</p>
               <p className="text-slate-600">
-                KNH Hospital Drive
+                KMA Centre 4th Floor, Chyulu Road, Upperhill
                 <br />
-                Nairobi, Kenya
+                
+                P.O Box 46999 - 00100, Nairobi, Kenya
               </p>
             </div>
           </div>

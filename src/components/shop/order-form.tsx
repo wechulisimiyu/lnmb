@@ -178,7 +178,11 @@ export default function OrderForm() {
 
   // Save draft to localStorage
   useEffect(() => {
-    const draft = { ...formData, currentStep };
+    const draft = { 
+      ...formData, 
+      schoolIdFile: undefined, // Don't persist real files
+      currentStep 
+    };
     localStorage.setItem("orderFormDraft", JSON.stringify(draft));
   }, [formData, currentStep]);
 
@@ -188,7 +192,10 @@ export default function OrderForm() {
       const draft = localStorage.getItem("orderFormDraft");
       if (draft) {
         const parsed = JSON.parse(draft);
-        setFormData(parsed);
+        setFormData({
+          ...parsed,
+          schoolIdFile: undefined, // Prevents a raw object satisfying truthy file checks
+        });
         setCurrentStep(parsed.currentStep || STEPS.PRODUCT_SELECTION);
       }
     } catch (error) {
@@ -255,12 +262,12 @@ export default function OrderForm() {
         if (!formData.phone || !formData.phone.toString().trim())
           newErrors.phone = "Phone number is required";
 
-        // Accept +254 or +257 (country code) followed by 9 digits
-        const phoneRegex = /^(?:254|257)\d{9}$/;
+        // Accept +254 (country code) followed by 9 digits
+        const phoneRegex = /^254\d{9}$/;
 
         if (formData.phone && !phoneRegex.test(normalizedPhoneForValidation)) {
           newErrors.phone =
-            "Please enter a valid phone number (examples: +254712345678, 0712345678, +257712345678)";
+            "Please enter a valid phone number (examples: +254712345678, 0712345678)";
         }
 
         if (formData.kinNumber) {
@@ -275,6 +282,10 @@ export default function OrderForm() {
         if (formData.student === "yes") {
           if (!formData.schoolIdFile && !formData.schoolIdUrl)
             newErrors.schoolIdFile = "Please upload your school ID picture";
+        }
+
+        if (!formData.medicalCondition.trim()) {
+          newErrors.medicalCondition = "Please enter 'None' if you have no medical conditions";
         }
         break;
       }
@@ -866,8 +877,13 @@ export default function OrderForm() {
                     setSchoolIdUploadError("File is too large. Maximum size is 5MB.");
                     setIsUploadingSchoolId(false);
                     setUploadProgress(0);
-                    // keep the selected file in state briefly so user can see name, but don't start upload
-                    handleInputChange("schoolIdFile", file);
+                    // clear the file from state completely so it can't bypass 5MB guard downstream
+                    setFormData((prev) => ({
+                      ...prev,
+                      schoolIdFile: undefined,
+                      schoolIdUrl: undefined,
+                      schoolIdPublicId: undefined,
+                    }));
                     return;
                   }
 

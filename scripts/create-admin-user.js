@@ -14,10 +14,10 @@ console.log(`
 To create an admin user, use the Convex CLI:
 
 For Admin:
-npx convex run auth:createUser --name "Admin User" --email "admin@lnmb.org" --password "changeme123" --role "admin"
+npx convex run auth:createUser --name "Admin User" --email "admin@lnmb.org" --password "<INSERT_SECURE_PASSWORD>" --role "admin"
 
 For Director:
-npx convex run auth:createUser --name "Director Name" --email "director@lnmb.org" --password "changeme123" --role "director"
+npx convex run auth:createUser --name "Director Name" --email "director@lnmb.org" --password "<INSERT_SECURE_PASSWORD>" --role "director"
 
 Make sure to change the password after first login!
 `);

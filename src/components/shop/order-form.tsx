@@ -30,8 +30,10 @@ import {
   ChevronRight,
   Upload,
 } from "lucide-react";
+import { PRICING } from "./pricing";
 import { matchUniversity } from "@/lib/normalizeUniversity";
 import generateOrderReference from "@/lib/generateOrderReference";
+import { normalizeKenyaPhone } from "@/lib/utils";
 import * as React from "react";
 import {
   Popover,
@@ -81,12 +83,6 @@ interface OrderFormData {
   attending: string;
   confirm: string;
 }
-
-// Pricing constants from PRD (authoritative)
-const PRICING = {
-  round: { regular: 1500, student: 850 },     // updated regular and student price
-  polo: { regular: 2000, student: 1000 },
-};
 
 const STEPS = {
   PRODUCT_SELECTION: 1,
@@ -250,32 +246,11 @@ export default function OrderForm() {
         }
         break;
 
-      case STEPS.PERSONAL_DETAILS:
+      case STEPS.PERSONAL_DETAILS: {
         if (!formData.name.trim()) newErrors.name = "Name is required";
         if (!formData.email.trim()) newErrors.email = "Email is required";
-        // Normalize phone for validation without mutating UI immediately
-        const normalizeKenyaPhone = (raw: string | undefined) => {
-          if (!raw) return ""
-          const digits = (raw || "").replace(/\D/g, "")
-          // Already contains country code 254 or 257 (e.g. 2547xxxxxxxx)
-          if (digits.startsWith("254") || digits.startsWith("257")) {
-            // keep country + 9 digits if available
-            if (digits.length >= 12) return digits.slice(0, 12)
-            return digits
-          }
-          // Local numbers:
-          // 0XXXXXXXXX (10 digits) -> drop leading 0 and prefix 254
-          if (digits.length === 10 && digits.startsWith("0")) {
-            return `254${digits.slice(1)}`
-          }
-          // 9-digit local like 7XXXXXXXX or 1XXXXXXXX -> prefix 254
-          if (digits.length === 9) {
-            return `254${digits}`
-          }
-          return digits
-        }
 
-        const normalizedPhoneForValidation = normalizeKenyaPhone(formData.phone as string)
+        const normalizedPhoneForValidation = normalizeKenyaPhone(formData.phone as string);
 
         if (!formData.phone || !formData.phone.toString().trim())
           newErrors.phone = "Phone number is required";
@@ -289,7 +264,7 @@ export default function OrderForm() {
         }
 
         if (formData.kinNumber) {
-          const normalizedKin = normalizeKenyaPhone(formData.kinNumber as string)
+          const normalizedKin = normalizeKenyaPhone(formData.kinNumber as string);
           if (!phoneRegex.test(normalizedKin)) {
             newErrors.kinNumber =
               "Please enter a valid phone number (examples: +254712345678, 0712345678)";
@@ -302,6 +277,7 @@ export default function OrderForm() {
             newErrors.schoolIdFile = "Please upload your school ID picture";
         }
         break;
+      }
 
       case STEPS.ATTENDANCE_LIABILITY:
         if (!formData.attending)
@@ -461,24 +437,8 @@ export default function OrderForm() {
       }
 
       // Normalize phone and kinNumber before saving order
-      const normalizeKenyaPhone = (raw: string | undefined) => {
-        if (!raw) return ""
-        const digits = (raw || "").replace(/\D/g, "")
-        if (digits.startsWith("254") || digits.startsWith("257")) {
-          if (digits.length >= 12) return digits.slice(0, 12)
-          return digits
-        }
-        if (digits.length === 10 && digits.startsWith("0")) {
-          return `254${digits.slice(1)}`
-        }
-        if (digits.length === 9) {
-          return `254${digits}`
-        }
-        return digits
-      }
-
-  const normalizedPhone = normalizeKenyaPhone(formData.phone as string)
-  const normalizedKin = normalizeKenyaPhone(formData.kinNumber as string)
+      const normalizedPhone = normalizeKenyaPhone(formData.phone as string)
+      const normalizedKin = normalizeKenyaPhone(formData.kinNumber as string)
 
       // Combine types and sizes
       const types = [];

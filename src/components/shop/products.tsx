@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingCart } from "lucide-react";
 import Image from "next/image";
+import { PRICING } from "./pricing";
 import React, { useState, useEffect } from "react";
 import { useCart } from "./cart-context";
 import { Input } from "@/components/ui/input";
@@ -38,8 +39,8 @@ export function ShopProducts() {
     {
       id: "polo",
       name: "Polo Neck T-Shirt",
-      price: 2000,
-      studentPrice: 1000,
+      price: PRICING.polo.regular,
+      studentPrice: PRICING.polo.student,
       image: "/images/shop/lnmb 2026 poloshirt.webp",
       description: "Classic polo neck with embroidered logo",
       sizes: ["S", "M", "L", "XL"],
@@ -47,8 +48,8 @@ export function ShopProducts() {
     {
       id: "round",
       name: "Round Neck T-Shirt",
-      price: 1500,
-      studentPrice: 800,
+      price: PRICING.round.regular,
+      studentPrice: PRICING.round.student,
       image: "/images/shop/lnmb 2026 roundneck.webp",
       description: "Comfortable round neck tee",
       sizes: ["S", "M", "L", "XL"],

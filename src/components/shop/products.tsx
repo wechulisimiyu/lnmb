@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingCart } from "lucide-react";
 import Image from "next/image";
+import { PRICING } from "./pricing";
 import React, { useState, useEffect } from "react";
 import { useCart } from "./cart-context";
 import { Input } from "@/components/ui/input";
@@ -38,18 +39,18 @@ export function ShopProducts() {
     {
       id: "polo",
       name: "Polo Neck T-Shirt",
-      price: 1500,
-      studentPrice: 1000,
-      image: "/images/shop/lnmb-tshirt-2025.webp?v=2", // Add version number
+      price: PRICING.polo.regular,
+      studentPrice: PRICING.polo.student,
+      image: "/images/shop/lnmb 2026 poloshirt.webp",
       description: "Classic polo neck with embroidered logo",
       sizes: ["S", "M", "L", "XL"],
     },
     {
       id: "round",
       name: "Round Neck T-Shirt",
-      price: 1200,
-      studentPrice: 600,
-      image: "/images/shop/lnmb-tshirt-2025.webp?v=2", // Add version number
+      price: PRICING.round.regular,
+      studentPrice: PRICING.round.student,
+      image: "/images/shop/lnmb 2026 roundneck.webp",
       description: "Comfortable round neck tee",
       sizes: ["S", "M", "L", "XL"],
     },
@@ -62,6 +63,7 @@ export function ShopProducts() {
   const [uniQuery, setUniQuery] = useState("");
   const [showManualUniversity, setShowManualUniversity] = useState(false);
   const [selectedUniversity, setSelectedUniversity] = useState<string>("");
+  const [salesAgent, setSalesAgent] = useState<Record<string, string>>({});
 
   // Lazy-load universities when the user toggles student = true
   useEffect(() => {
@@ -104,6 +106,8 @@ export function ShopProducts() {
         : selectedUniversity
       : undefined;
 
+    const agent = salesAgent[product.id]?.trim();
+
     cart.addItem({
       id: product.id,
       name: product.name,
@@ -113,8 +117,15 @@ export function ShopProducts() {
       quantity: qty,
       student: studentFlag,
       university: universityData,
+      salesAgent: agent ? agent : undefined,
     });
     setQuantity((s) => ({ ...s, [product.id]: 1 }));
+    setSalesAgent((s) => ({ ...s, [product.id]: "" }));
+    setSelectedSize((s) => {
+      const draft = { ...s };
+      delete draft[product.id];
+      return draft;
+    });
   };
 
   // Reset university selection when student status changes
@@ -177,7 +188,7 @@ export function ShopProducts() {
             </label>
             {isStudent && (
               <p className="text-sm text-green-600">
-                🎓 Student discount applied! Save up to KES 900 per item.
+                🎓 Student discount applied! Save up to KES 1000 per item.
               </p>
             )}
           </div>
@@ -297,21 +308,113 @@ export function ShopProducts() {
 
                 <div>
                   <p className="text-sm font-semibold text-slate-900 mb-2">
-                    Size:
+                    Size *
                   </p>
-                  <div className="flex gap-2">
+                  <div className="grid grid-cols-4 gap-2">
                     {product.sizes.map((size) => (
                       <button
                         key={size}
                         onClick={() =>
                           setSelectedSize((s) => ({ ...s, [product.id]: size }))
                         }
-                        className={`px-3 py-1 rounded ${selectedSize[product.id] === size ? "bg-blue-600 text-white" : "bg-gray-100"}`}
+                        className={`h-10 flex items-center justify-center rounded-md border transition-colors ${
+                          selectedSize[product.id] === size
+                            ? "bg-blue-600 text-white border-blue-600"
+                            : "bg-white text-slate-700 border-slate-200 hover:border-slate-300"
+                        }`}
                       >
                         {size}
                       </button>
                     ))}
                   </div>
+                </div>
+
+                <div>
+                  <p className="text-sm font-semibold text-slate-900 mb-2">
+                    Quantity *
+                  </p>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-10 w-10 p-0"
+                      onClick={() =>
+                        setQuantity((s) => ({
+                          ...s,
+                          [product.id]: Math.min(99, Math.max(1, (s[product.id] || 1) - 1)),
+                        }))
+                      }
+                      disabled={(quantity[product.id] || 1) <= 1}
+                    >
+                      -
+                    </Button>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={99}
+                      value={quantity[product.id] || 1}
+                      onChange={(e) => {
+                        const v = parseInt(e.target.value) || 1;
+                        setQuantity((s) => ({
+                          ...s,
+                          [product.id]: Math.min(99, Math.max(1, v)),
+                        }));
+                      }}
+                      className="w-16 h-10 text-center"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-10 w-10 p-0"
+                      onClick={() =>
+                        setQuantity((s) => ({
+                          ...s,
+                          [product.id]: Math.min(99, Math.max(1, (s[product.id] || 1) + 1)),
+                        }))
+                      }
+                    >
+                      +
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <Button
+                    className={`w-full h-12 text-base ${
+                      !selectedSize[product.id]
+                        ? "bg-slate-400 cursor-not-allowed"
+                        : "bg-blue-600 hover:bg-blue-700"
+                    } text-white`}
+                    disabled={!selectedSize[product.id]}
+                    onClick={() => {
+                      if (selectedSize[product.id]) handleAdd(product);
+                    }}
+                  >
+                    <ShoppingCart className="w-5 h-5 mr-2" />
+                    Add to Cart
+                  </Button>
+                </div>
+
+                <div className="pt-4 border-t border-slate-100">
+                  <p className="text-sm font-semibold text-slate-900 mb-2">
+                    Assisted by (Optional)
+                  </p>
+                  <Input
+                    placeholder="Sales agent name"
+                    value={salesAgent[product.id] || ""}
+                    onChange={(e) =>
+                      setSalesAgent((s) => ({
+                        ...s,
+                        [product.id]: e.target.value,
+                      }))
+                    }
+                    className="h-11"
+                  />
+                  <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+                    If a sales agent helped you with your order, enter their name here
+                  </p>
                 </div>
 
                 <div className="flex items-center justify-between pt-4 border-t border-slate-200">
@@ -322,31 +425,6 @@ export function ShopProducts() {
                         Save KES {product.price - product.studentPrice}!
                       </span>
                     )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <input
-                      aria-label={`quantity-${product.id}`}
-                      type="number"
-                      min={1}
-                      value={quantity[product.id] || 1}
-                      onChange={(e) =>
-                        setQuantity((s) => ({
-                          ...s,
-                          [product.id]: Math.max(
-                            1,
-                            parseInt(e.target.value || "1"),
-                          ),
-                        }))
-                      }
-                      className="w-20 p-1 border rounded"
-                    />
-                    <Button
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
-                      onClick={() => handleAdd(product)}
-                    >
-                      <ShoppingCart className="w-4 h-4 mr-2" />
-                      Add to Cart
-                    </Button>
                   </div>
                 </div>
               </div>

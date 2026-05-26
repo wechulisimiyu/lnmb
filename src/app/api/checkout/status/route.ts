@@ -3,7 +3,7 @@ import { ConvexHttpClient } from "convex/browser";
 import { api } from "../../../../../convex/_generated/api";
 import * as Sentry from "@sentry/nextjs";
 
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+const getConvexClient = () => new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL || "https://dummy.convex.cloud");
 
 export async function GET(request: NextRequest): Promise<Response> {
   const url = new URL(request.url);
@@ -20,6 +20,7 @@ export async function GET(request: NextRequest): Promise<Response> {
 
     // Prefer lookup by reference
     if (reference) {
+      const convex = getConvexClient();
       const payment = await convex.query(api.orders.getPaymentStatus, {
         reference,
       });
@@ -28,6 +29,7 @@ export async function GET(request: NextRequest): Promise<Response> {
 
     // If only transactionId provided, use Convex query by transactionId
     if (transactionId) {
+      const convex = getConvexClient();
       const paymentByTx = await convex.query(
         api.orders.getPaymentByTransactionId,
         {

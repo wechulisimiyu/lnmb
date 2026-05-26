@@ -188,7 +188,7 @@ export function ShopProducts() {
             </label>
             {isStudent && (
               <p className="text-sm text-green-600">
-                🎓 Student discount applied! Save up to KES 900 per item.
+                🎓 Student discount applied! Save up to KES 1000 per item.
               </p>
             )}
           </div>
@@ -342,7 +342,7 @@ export function ShopProducts() {
                       onClick={() =>
                         setQuantity((s) => ({
                           ...s,
-                          [product.id]: Math.max(1, (s[product.id] || 1) - 1),
+                          [product.id]: Math.min(99, Math.max(1, (s[product.id] || 1) - 1)),
                         }))
                       }
                       disabled={(quantity[product.id] || 1) <= 1}
@@ -358,7 +358,7 @@ export function ShopProducts() {
                         const v = parseInt(e.target.value) || 1;
                         setQuantity((s) => ({
                           ...s,
-                          [product.id]: Math.max(1, v),
+                          [product.id]: Math.min(99, Math.max(1, v)),
                         }));
                       }}
                       className="w-16 h-10 text-center"
@@ -371,7 +371,7 @@ export function ShopProducts() {
                       onClick={() =>
                         setQuantity((s) => ({
                           ...s,
-                          [product.id]: (s[product.id] || 1) + 1,
+                          [product.id]: Math.min(99, Math.max(1, (s[product.id] || 1) + 1)),
                         }))
                       }
                     >

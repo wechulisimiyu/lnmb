@@ -270,6 +270,11 @@ export default function OrderForm() {
             "Please enter a valid phone number (examples: +254712345678, 0712345678)";
         }
 
+        if (formData.phone && !phoneRegex.test(normalizedPhoneForValidation)) {
+          newErrors.phone =
+            "Please enter a valid phone number (examples: +254712345678, 0712345678, +257712345678)";
+        }
+
         if (formData.kinNumber) {
           const normalizedKin = normalizeKenyaPhone(formData.kinNumber as string);
           if (!phoneRegex.test(normalizedKin)) {

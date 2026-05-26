@@ -8,8 +8,8 @@ export function cn(...inputs: ClassValue[]) {
 export const normalizeKenyaPhone = (raw: string | undefined): string => {
   if (!raw) return ""
   const digits = (raw || "").replace(/\D/g, "")
-  // Already contains Kenya country code 254
-  if (digits.startsWith("254")) {
+  // Already contains country code 254 or 257 (e.g. 2547xxxxxxxx)
+  if (digits.startsWith("254") || digits.startsWith("257")) {
     // keep country + 9 digits if available
     if (digits.length >= 12) return digits.slice(0, 12)
     return digits

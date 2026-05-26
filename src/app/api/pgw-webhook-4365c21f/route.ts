@@ -20,7 +20,7 @@ import {
 } from "@/lib/paymentSecurity";
 import * as Sentry from "@sentry/nextjs";
 
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+const getConvexClient = () => new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL || "https://dummy.convex.cloud");
 const { logger } = Sentry;
 
 // Site URL (can default to localhost for tests)
@@ -289,6 +289,7 @@ export async function POST(request: NextRequest) {
         // This helps avoid errors when webhook arrives before order is created
         if (orderReference) {
           try {
+            const convex = getConvexClient();
             const paymentExists = await convex.query(
               api.orders.getPaymentStatus,
               {
@@ -402,6 +403,7 @@ export async function POST(request: NextRequest) {
             rawBody,
           });
 
+          const convex = getConvexClient();
           const result = await convex.mutation(
             api.orders.handlePaymentCallback,
             {

@@ -28,9 +28,12 @@ import {
   Info,
   ChevronLeft,
   ChevronRight,
+  Upload,
 } from "lucide-react";
+import { PRICING } from "./pricing";
 import { matchUniversity } from "@/lib/normalizeUniversity";
 import generateOrderReference from "@/lib/generateOrderReference";
+import { normalizeKenyaPhone } from "@/lib/utils";
 import * as React from "react";
 import {
   Popover,
@@ -48,31 +51,29 @@ import {
 } from "@/components/ui/command";
 import Image from "next/image";
 
-interface CartItem {
-  size: string;
-  quantity: number;
-}
-
 interface OrderFormData {
   // Step 1: Product Selection
-  tshirtType: string;
-  tshirtSize: string;
-  quantity: number;
-  cartItems: CartItem[]; // NEW: Support multiple sizes
+  // Product Selections
+  roundSelected: boolean;
+  roundSize: string;
+  roundQuantity: number;
+  poloSelected: boolean;
+  poloSize: string;
+  poloQuantity: number;
+  
   student: string;
   university?: string;
   universityUserEntered?: boolean;
   unitPrice: number;
   totalAmount: number;
-  salesAgentName?: string; // NEW: Optional sales agent field
 
   // Step 2: Personal & Registration Details
-  registrationNumber?: string; // new: registration number in place of uploaded ID
-  // legacy: image fields may exist but are now optional/null in the DB
-  schoolIdUrl?: string | null;
-  schoolIdPublicId?: string | null;
+  schoolIdFile?: File;
+  schoolIdUrl?: string;
+  schoolIdPublicId?: string;
   name: string;
   email: string;
+  phone: string;
   nameOfKin: string;
   kinNumber: string;
   medicalCondition: string;
@@ -82,11 +83,6 @@ interface OrderFormData {
   attending: string;
   confirm: string;
 }
-
-// Pricing constants from PRD (authoritative)
-const PRICING = {
-  round: { regular: 1500, student: 850 }, // updated regular and student price
-};
 
 const STEPS = {
   PRODUCT_SELECTION: 1,
@@ -109,21 +105,23 @@ export default function OrderForm() {
   const formRef = useRef<HTMLDivElement | null>(null);
   const [formData, setFormData] = useState<OrderFormData>({
     // Step 1: Product Selection
-    tshirtType: "round",
-    tshirtSize: "",
-    quantity: 1,
-    cartItems: [], // NEW: Initialize empty cart
+    roundSelected: true,
+    roundSize: "",
+    roundQuantity: 1,
+    poloSelected: false,
+    poloSize: "",
+    poloQuantity: 1,
     student: "",
     university: "",
     universityUserEntered: false,
     unitPrice: 0,
     totalAmount: 0,
-    salesAgentName: "", // NEW: Initialize sales agent field
 
     // Step 2: Personal & Registration Details
-    registrationNumber: "",
+    schoolIdFile: undefined,
     name: "",
     email: "",
+    phone: "",
     nameOfKin: "",
     kinNumber: "",
     medicalCondition: "",
@@ -136,39 +134,55 @@ export default function OrderForm() {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploadingSchoolId, setIsUploadingSchoolId] = useState(false);
+  const [schoolIdUploadError, setSchoolIdUploadError] = useState<string | null>(
+    null,
+  );
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  // Maximum upload size (5MB)
+  const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
   const [universities, setUniversities] = useState<string[] | null>(null);
   const [uniQuery, setUniQuery] = useState("");
   const [uniPopoverOpen, setUniPopoverOpen] = useState(false);
   const [showManualUniversity, setShowManualUniversity] = useState(false);
 
   // Calculate unit price based on product type and student status
-  const getUnitPrice = (tshirtType: string, isStudent: boolean) => {
-    if (!tshirtType) return 0;
-    const pricing = PRICING[tshirtType as keyof typeof PRICING];
-    if (!pricing) return 0;
+  const getUnitPrice = (tshirtType: "round" | "polo", isStudent: boolean) => {
+    const pricing = PRICING[tshirtType];
     return isStudent ? pricing.student : pricing.regular;
   };
 
   // Update pricing when product or student status changes
   useEffect(() => {
     const isStudent = formData.student === "yes";
-    const unitPrice = getUnitPrice(formData.tshirtType, isStudent);
-
-    // Calculate total from cart items
-    const cartTotal = formData.cartItems.reduce((sum, item) => {
-      return sum + unitPrice * item.quantity;
-    }, 0);
+    
+    let totalAmount = 0;
+    if (formData.roundSelected) {
+      totalAmount += getUnitPrice("round", isStudent) * formData.roundQuantity;
+    }
+    if (formData.poloSelected) {
+      totalAmount += getUnitPrice("polo", isStudent) * formData.poloQuantity;
+    }
 
     setFormData((prev) => ({
       ...prev,
-      unitPrice,
-      totalAmount: cartTotal,
+      totalAmount,
     }));
-  }, [formData.tshirtType, formData.student, formData.cartItems]);
+  }, [
+    formData.roundSelected,
+    formData.roundQuantity,
+    formData.poloSelected,
+    formData.poloQuantity,
+    formData.student,
+  ]);
 
   // Save draft to localStorage
   useEffect(() => {
-    const draft = { ...formData, currentStep };
+    const draft = { 
+      ...formData, 
+      schoolIdFile: undefined, // Don't persist real files
+      currentStep 
+    };
     localStorage.setItem("orderFormDraft", JSON.stringify(draft));
   }, [formData, currentStep]);
 
@@ -178,7 +192,10 @@ export default function OrderForm() {
       const draft = localStorage.getItem("orderFormDraft");
       if (draft) {
         const parsed = JSON.parse(draft);
-        setFormData(parsed);
+        setFormData({
+          ...parsed,
+          schoolIdFile: undefined, // Prevents a raw object satisfying truthy file checks
+        });
         setCurrentStep(parsed.currentStep || STEPS.PRODUCT_SELECTION);
       }
     } catch (error) {
@@ -186,86 +203,12 @@ export default function OrderForm() {
     }
   }, []);
 
-  // Cart management functions
-  const addToCart = () => {
-    if (!formData.tshirtSize || formData.quantity < 1) {
-      setErrors((prev) => ({
-        ...prev,
-        tshirtSize: !formData.tshirtSize ? "Please select a size" : "",
-        quantity: formData.quantity < 1 ? "Please enter a valid quantity" : "",
-      }));
-      return;
-    }
-
-    setFormData((prev) => {
-      const existingItemIndex = prev.cartItems.findIndex(
-        (item) => item.size === prev.tshirtSize,
-      );
-
-      let newCartItems;
-      if (existingItemIndex >= 0) {
-        // Update existing item quantity
-        newCartItems = [...prev.cartItems];
-        newCartItems[existingItemIndex] = {
-          ...newCartItems[existingItemIndex],
-          quantity: newCartItems[existingItemIndex].quantity + prev.quantity,
-        };
-      } else {
-        // Add new item
-        newCartItems = [
-          ...prev.cartItems,
-          { size: prev.tshirtSize, quantity: prev.quantity },
-        ];
-      }
-
-      // Reset size and quantity after adding
-      return {
-        ...prev,
-        cartItems: newCartItems,
-        tshirtSize: "",
-        quantity: 1,
-      };
-    });
-
-    // Clear any errors
-    setErrors((prev) => ({
-      ...prev,
-      tshirtSize: "",
-      quantity: "",
-    }));
-  };
-
-  const removeFromCart = (size: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      cartItems: prev.cartItems.filter((item) => item.size !== size),
-    }));
-  };
-
-  const updateCartItemQuantity = (size: string, quantity: number) => {
-    if (quantity < 1) {
-      removeFromCart(size);
-      return;
-    }
-
-    setFormData((prev) => ({
-      ...prev,
-      cartItems: prev.cartItems.map((item) =>
-        item.size === size ? { ...item, quantity } : item,
-      ),
-    }));
-  };
-
-  const getTotalQuantity = () => {
-    return formData.cartItems.reduce((sum, item) => sum + item.quantity, 0);
-  };
-
   const handleInputChange = (
     field: keyof OrderFormData,
     value: string | number | boolean | File,
   ) => {
     // Live-normalize phone-like fields so users can type 070... or 2547...
-    if (field === "kinNumber") {
+    if (field === "phone" || field === "kinNumber") {
       if (typeof value === "string") {
         let digits = value.replace(/\D/g, "");
         if (digits.startsWith("254")) digits = digits.slice(3);
@@ -284,30 +227,23 @@ export default function OrderForm() {
     }
   };
 
-  // Normalize sales agent name when field loses focus
-  const handleSalesAgentBlur = () => {
-    if (formData.salesAgentName) {
-      const normalized = formData.salesAgentName
-        .trim()
-        .toLowerCase()
-        .split(" ")
-        .filter((word) => word.length > 0) // Remove empty strings from multiple spaces
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" ");
-      setFormData((prev) => ({ ...prev, salesAgentName: normalized }));
-    }
-  };
-
   // Step-specific validation
   const validateStep = (step: Step): boolean => {
     const newErrors: Record<string, string> = {};
 
     switch (step) {
       case STEPS.PRODUCT_SELECTION:
-        if (!formData.tshirtType)
-          newErrors.tshirtType = "Please select t-shirt type";
-        if (formData.cartItems.length === 0)
-          newErrors.cart = "Please add at least one item to your cart";
+        if (!formData.roundSelected && !formData.poloSelected) {
+          newErrors.productSelection = "Please select at least one t-shirt type";
+        }
+        if (formData.roundSelected) {
+          if (!formData.roundSize) newErrors.roundSize = "Please select a size for the Round Neck T-shirt";
+          if (formData.roundQuantity < 1 || formData.roundQuantity > 5) newErrors.roundQuantity = "Quantity must be between 1 and 5";
+        }
+        if (formData.poloSelected) {
+          if (!formData.poloSize) newErrors.poloSize = "Please select a size for the Polo Neck T-shirt";
+          if (formData.poloQuantity < 1 || formData.poloQuantity > 5) newErrors.poloQuantity = "Quantity must be between 1 and 5";
+        }
         if (!formData.student)
           newErrors.student = "Please select if you are a student";
 
@@ -317,38 +253,25 @@ export default function OrderForm() {
         }
         break;
 
-      case STEPS.PERSONAL_DETAILS:
+      case STEPS.PERSONAL_DETAILS: {
         if (!formData.name.trim()) newErrors.name = "Name is required";
         if (!formData.email.trim()) newErrors.email = "Email is required";
-        // Normalize phone for validation without mutating UI immediately
-        const normalizeKenyaPhone = (raw: string | undefined) => {
-          if (!raw) return "";
-          const digits = (raw || "").replace(/\D/g, "");
-          // Already contains country code 254 or 257 (e.g. 2547xxxxxxxx)
-          if (digits.startsWith("254") || digits.startsWith("257")) {
-            // keep country + 9 digits if available
-            if (digits.length >= 12) return digits.slice(0, 12);
-            return digits;
-          }
-          // Local numbers:
-          // 0XXXXXXXXX (10 digits) -> drop leading 0 and prefix 254
-          if (digits.length === 10 && digits.startsWith("0")) {
-            return `254${digits.slice(1)}`;
-          }
-          // 9-digit local like 7XXXXXXXX or 1XXXXXXXX -> prefix 254
-          if (digits.length === 9) {
-            return `254${digits}`;
-          }
-          return digits;
-        };
 
-        // Accept +254 or +257 (country code) followed by 9 digits
-        const phoneRegex = /^(?:254|257)\d{9}$/;
+        const normalizedPhoneForValidation = normalizeKenyaPhone(formData.phone as string);
+
+        if (!formData.phone || !formData.phone.toString().trim())
+          newErrors.phone = "Phone number is required";
+
+        // Accept +254 (country code) followed by 9 digits
+        const phoneRegex = /^254\d{9}$/;
+
+        if (formData.phone && !phoneRegex.test(normalizedPhoneForValidation)) {
+          newErrors.phone =
+            "Please enter a valid phone number (examples: +254712345678, 0712345678)";
+        }
 
         if (formData.kinNumber) {
-          const normalizedKin = normalizeKenyaPhone(
-            formData.kinNumber as string,
-          );
+          const normalizedKin = normalizeKenyaPhone(formData.kinNumber as string);
           if (!phoneRegex.test(normalizedKin)) {
             newErrors.kinNumber =
               "Please enter a valid phone number (examples: +254712345678, 0712345678)";
@@ -357,12 +280,15 @@ export default function OrderForm() {
 
         // Student-specific validation: accept either a selected File or an already uploaded URL
         if (formData.student === "yes") {
-          // Require either registration number or an already uploaded school ID URL
-          if (!formData.registrationNumber && !formData.schoolIdUrl)
-            newErrors.registrationNumber =
-              "Please provide your registration number";
+          if (!formData.schoolIdFile && !formData.schoolIdUrl)
+            newErrors.schoolIdFile = "Please upload your school ID picture";
+        }
+
+        if (!formData.medicalCondition.trim()) {
+          newErrors.medicalCondition = "Please enter 'None' if you have no medical conditions";
         }
         break;
+      }
 
       case STEPS.ATTENDANCE_LIABILITY:
         if (!formData.attending)
@@ -475,8 +401,8 @@ export default function OrderForm() {
     setIsSubmitting(true);
 
     try {
-      // Create order reference using shared generator
-      const orderReference = generateOrderReference("LNMB");
+  // Create order reference using shared generator
+  const orderReference = generateOrderReference("LNMB");
 
       // Try to normalize university client-side if we have the canonical list
       let universityToSave = formData.university;
@@ -492,48 +418,65 @@ export default function OrderForm() {
         }
       }
 
-      // No client-side upload step anymore. If server already has a schoolIdUrl
-      // it will be preserved via formData.schoolIdUrl. Prefer registrationNumber.
-      const schoolIdUrl: string | undefined = formData.schoolIdUrl || undefined;
+      // If student uploaded a school ID file, upload it first to Cloudinary
+      let schoolIdUrl: string | undefined = undefined;
+      if (formData.schoolIdFile) {
+        try {
+          const uploadForm = new FormData();
+          uploadForm.append("file", formData.schoolIdFile);
+
+          const res = await fetch("/api/upload-school-id", {
+            method: "POST",
+            body: uploadForm,
+          });
+
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err?.error || "Upload failed");
+          }
+
+          const body = await res.json();
+          schoolIdUrl = body.url;
+        } catch (uploadError) {
+          console.error("School ID upload failed", uploadError);
+          setErrors({
+            general: "Failed to upload school ID. Please try again.",
+          });
+          setIsSubmitting(false);
+          return;
+        }
+      }
 
       // Normalize phone and kinNumber before saving order
-      const normalizeKenyaPhone = (raw: string | undefined) => {
-        if (!raw) return "";
-        const digits = (raw || "").replace(/\D/g, "");
-        if (digits.startsWith("254") || digits.startsWith("257")) {
-          if (digits.length >= 12) return digits.slice(0, 12);
-          return digits;
-        }
-        if (digits.length === 10 && digits.startsWith("0")) {
-          return `254${digits.slice(1)}`;
-        }
-        if (digits.length === 9) {
-          return `254${digits}`;
-        }
-        return digits;
-      };
+      const normalizedPhone = normalizeKenyaPhone(formData.phone as string)
+      const normalizedKin = normalizeKenyaPhone(formData.kinNumber as string)
 
-      const normalizedKin = normalizeKenyaPhone(formData.kinNumber as string);
-
-      // Serialize cart items into a format that fits existing schema
-      // tshirtSize will be comma-separated like "M:2,L:3,XL:1"
-      // quantity will be total quantity
-      const cartSummary = formData.cartItems
-        .map((item) => `${item.size}:${item.quantity}`)
-        .join(",");
-      const totalQuantity = getTotalQuantity();
+      // Combine types and sizes
+      const types = [];
+      const sizes = [];
+      let totalQuantity = 0;
+      
+      if (formData.roundSelected) {
+        types.push("round");
+        sizes.push(`Round: ${formData.roundSize}`);
+        totalQuantity += formData.roundQuantity;
+      }
+      if (formData.poloSelected) {
+        types.push("polo");
+        sizes.push(`Polo: ${formData.poloSize}`);
+        totalQuantity += formData.poloQuantity;
+      }
 
       // Prepare order data for checkout
       const orderData = {
         ...formData,
+        tshirtType: types.join(" and "),
+        tshirtSize: sizes.join(", "),
+        quantity: totalQuantity,
+        phone: normalizedPhone,
         kinNumber: normalizedKin,
-        tshirtSize: cartSummary, // Store cart as serialized string
-        quantity: totalQuantity, // Store total quantity
         // Remove File from the saved order; include uploaded URL if available
-        // registrationNumber replaces client upload UX; keep schoolIdUrl if present
-        registrationNumber: formData.registrationNumber,
-        // Map to server-expected field name so checkout/createOrder receives it
-        regNumber: formData.registrationNumber,
+        schoolIdFile: undefined,
         schoolIdUrl,
         university: universityToSave,
         universityUserEntered: userEntered,
@@ -582,57 +525,128 @@ export default function OrderForm() {
     </div>
   );
 
-  const renderProductCard = (type: "round") => {
+  const renderProductCard = (type: "round" | "polo") => {
     const pricing = PRICING[type];
     const isStudent = formData.student === "yes";
     const currentPrice = isStudent ? pricing.student : pricing.regular;
-    const isSelected = formData.tshirtType === type;
+    const isSelected = type === "round" ? formData.roundSelected : formData.poloSelected;
+    
+    // Set product details based on type
+    const imageSrc = type === "round" ? "/images/shop/lnmb 2026 roundneck.webp" : "/images/shop/lnmb 2026 poloshirt.webp";
+    const title = type === "round" ? "Round Neck T-shirt" : "Polo Neck T-Shirt";
 
     return (
-      <div
-        className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-          isSelected
-            ? "border-blue-600 bg-blue-50"
-            : "border-gray-200 hover:border-gray-300"
-        }`}
-        onClick={() => handleInputChange("tshirtType", type)}
-      >
-        <div className="relative aspect-square mb-4">
-          <Image
-            src="/images/shop/lnmb-tshirt-2025.webp"
-            alt="Round Neck T-shirt"
-            fill
-            className="object-cover rounded-md"
-          />
-        </div>
-        <div className="text-center">
-          <h3 className="font-semibold text-lg mb-2">Round Neck T-shirt</h3>
-          <div className="space-y-1">
-            <div className="flex items-center justify-center space-x-2">
-              <span className="text-xl font-bold text-blue-600">
-                KES {currentPrice.toLocaleString()}
-              </span>
-              {isStudent && pricing.regular > currentPrice && (
-                <span className="text-sm text-gray-400 line-through">
-                  KES {pricing.regular.toLocaleString()}
-                </span>
-              )}
-            </div>
-            {isStudent && pricing.regular > currentPrice && (
-              <Badge
-                variant="secondary"
-                className="text-xs bg-green-100 text-green-800"
-              >
-                Student Discount
-              </Badge>
-            )}
-            {isStudent && (
-              <p className="text-sm text-green-600">
-                Save KES {(pricing.regular - currentPrice).toLocaleString()}!
-              </p>
+      <div className="space-y-4">
+        <div
+          className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+            isSelected
+              ? "border-blue-600 bg-blue-50"
+              : "border-gray-200 hover:border-gray-300"
+          }`}
+          onClick={() => handleInputChange(type === "round" ? "roundSelected" : "poloSelected", !isSelected)}
+        >
+          <div className="relative aspect-square mb-4">
+            <Image
+              src={imageSrc}
+              alt={title}
+              fill
+              className="object-cover rounded-md"
+            />
+            {isSelected && (
+              <div className="absolute top-2 right-2 bg-blue-600 text-white p-1 rounded-full">
+                <Check className="w-4 h-4" />
+              </div>
             )}
           </div>
+          <div className="text-center">
+            <h3 className="font-semibold text-lg mb-2">{title}</h3>
+            <div className="space-y-1">
+              <div className="flex items-center justify-center space-x-2">
+                <span className="text-xl font-bold text-blue-600">
+                  KES {currentPrice.toLocaleString()}
+                </span>
+                {isStudent && pricing.regular > currentPrice && (
+                  <span className="text-sm text-gray-400 line-through">
+                    KES {pricing.regular.toLocaleString()}
+                  </span>
+                )}
+              </div>
+              {isStudent && pricing.regular > currentPrice && (
+                <Badge
+                  variant="secondary"
+                  className="text-xs bg-green-100 text-green-800"
+                >
+                  Save KES {(pricing.regular - currentPrice).toLocaleString()}!
+                </Badge>
+              )}
+            </div>
+          </div>
         </div>
+
+        {isSelected && (
+          <div className="p-4 bg-gray-50 rounded-lg space-y-4 border border-gray-100 animate-in fade-in slide-in-from-top-2">
+            <div className="space-y-2">
+              <Label className="text-sm">Size *</Label>
+              <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+                {["XS", "S", "M", "L", "XL", "XXL", "XXXL"].map((size) => {
+                  const currentSize = type === "round" ? formData.roundSize : formData.poloSize;
+                  return (
+                    <button
+                      key={size}
+                      type="button"
+                      className={`h-8 flex items-center justify-center px-2 text-xs rounded-md border transition-colors leading-none ${
+                        currentSize === size
+                          ? "bg-blue-600 text-white border-blue-600"
+                          : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
+                      }`}
+                      onClick={() => handleInputChange(type === "round" ? "roundSize" : "poloSize", size)}
+                    >
+                      {size}
+                    </button>
+                  );
+                })}
+              </div>
+              {errors[`${type}Size`] && (
+                <p className="text-red-500 text-xs">{errors[`${type}Size`]}</p>
+              )}
+            </div>
+
+            <div className="space-y-2 flex flex-col">
+              <Label className="text-sm">Quantity *</Label>
+              <div className="flex items-center space-x-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={() => {
+                    const field = type === "round" ? "roundQuantity" : "poloQuantity";
+                    const currentQty = type === "round" ? formData.roundQuantity : formData.poloQuantity;
+                    handleInputChange(field, Math.max(1, currentQty - 1));
+                  }}
+                >
+                  -
+                </Button>
+                <div className="w-12 text-center text-sm font-semibold">
+                  {type === "round" ? formData.roundQuantity : formData.poloQuantity}
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={() => {
+                    const field = type === "round" ? "roundQuantity" : "poloQuantity";
+                    const currentQty = type === "round" ? formData.roundQuantity : formData.poloQuantity;
+                    handleInputChange(field, Math.min(5, currentQty + 1));
+                  }}
+                >
+                  +
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -713,8 +727,7 @@ export default function OrderForm() {
         {formData.student === "yes" && (
           <div className="p-3 bg-green-50 rounded-lg">
             <p className="text-green-700 text-sm">
-              🎓 Student discount activated! You saved up to KES 650 per
-              t-shirt.
+              🎓 Student discount activated! You saved up to KES 650 per t-shirt.
             </p>
           </div>
         )}
@@ -797,209 +810,43 @@ export default function OrderForm() {
       {/* Product Selection Cards */}
       <div className="space-y-4">
         <Label className="text-base font-semibold">Choose Your T-shirt *</Label>
-        <div className="grid md:grid-cols-1 gap-6 max-w-md mx-auto">
+        <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
           {renderProductCard("round")}
+          {renderProductCard("polo")}
         </div>
-        {errors.tshirtType && (
-          <p className="text-red-500 text-sm">{errors.tshirtType}</p>
+        {errors.productSelection && (
+          <p className="text-red-500 text-sm">{errors.productSelection}</p>
         )}
       </div>
 
-      {/* Size and Quantity Selection */}
-      {formData.tshirtType && (
-        <div className="space-y-4">
-          <div className="grid md:grid-cols-2 gap-4 items-end">
-            <div className="space-y-2">
-              <Label htmlFor="tshirtSize">Size *</Label>
-              <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
-                {["S", "M", "L", "XL", "XXL", "XXXL"].map((size) => (
-                  <button
-                    key={size}
-                    type="button"
-                    className={`h-9 flex items-center justify-center px-3 text-sm rounded-md border transition-colors leading-none ${
-                      formData.tshirtSize === size
-                        ? "bg-blue-600 text-white border-blue-600"
-                        : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
-                    }`}
-                    onClick={() => handleInputChange("tshirtSize", size)}
-                  >
-                    {size}
-                  </button>
-                ))}
-              </div>
-              {errors.tshirtSize && (
-                <p className="text-red-500 text-sm">{errors.tshirtSize}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="quantity">Quantity *</Label>
-              <div className="flex items-center space-x-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="leading-none"
-                  onClick={() =>
-                    handleInputChange(
-                      "quantity",
-                      Math.max(1, formData.quantity - 1),
-                    )
-                  }
-                  disabled={formData.quantity <= 1}
-                >
-                  -
-                </Button>
-                <Input
-                  type="number"
-                  min={1}
-                  value={formData.quantity}
-                  onChange={(e) => {
-                    const v = parseInt(e.target.value) || 1;
-                    const clamped = Math.max(1, v);
-                    handleInputChange("quantity", clamped);
-                  }}
-                  className="w-20 text-center"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="leading-none"
-                  onClick={() =>
-                    handleInputChange("quantity", formData.quantity + 1)
-                  }
-                >
-                  +
-                </Button>
-              </div>
-              {errors.quantity && (
-                <p className="text-red-500 text-sm">{errors.quantity}</p>
-              )}
-            </div>
-          </div>
-
-          {/* Add to Cart Button */}
-          <div className="flex justify-center">
-            <Button
-              type="button"
-              onClick={addToCart}
-              className="w-full md:w-auto"
-              disabled={!formData.tshirtSize || formData.quantity < 1}
-            >
-              <ShoppingCart className="mr-2 h-4 w-4" />
-              Add to Cart
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Cart Display */}
-      {formData.cartItems.length > 0 && (
-        <div className="bg-blue-50 p-4 rounded-lg space-y-3">
-          <div className="flex justify-between items-center">
-            <p className="font-semibold">Your Cart</p>
-            <Badge variant="secondary">{getTotalQuantity()} items</Badge>
-          </div>
-          <div className="space-y-2">
-            {formData.cartItems.map((item) => (
-              <div
-                key={item.size}
-                className="flex items-center justify-between bg-white p-3 rounded-md"
-              >
-                <div className="flex items-center space-x-3">
-                  <span className="font-medium">Size {item.size}</span>
-                  <span className="text-gray-600">× {item.quantity}</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      updateCartItemQuantity(item.size, item.quantity - 1)
-                    }
-                  >
-                    -
-                  </Button>
-                  <span className="w-8 text-center">{item.quantity}</span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      updateCartItemQuantity(item.size, item.quantity + 1)
-                    }
-                  >
-                    +
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeFromCart(item.size)}
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    Remove
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-          {errors.cart && <p className="text-red-500 text-sm">{errors.cart}</p>}
-        </div>
-      )}
-
       {/* Price Summary */}
-      {formData.cartItems.length > 0 && (
-        <div className="bg-green-50 border border-green-200 p-4 rounded-lg">
+      {(formData.roundSelected || formData.poloSelected) && formData.totalAmount > 0 && (
+        <div className="bg-blue-50 p-4 rounded-lg">
           <div className="flex justify-between items-center">
             <div>
-              <p className="font-semibold">Order Total</p>
-              <p className="text-sm text-gray-600">
-                {getTotalQuantity()} t-shirt
-                {getTotalQuantity() !== 1 ? "s" : ""} (
-                {formData.cartItems
-                  .map((item) => `${item.quantity}×${item.size}`)
-                  .join(", ")}
-                )
-              </p>
+              <p className="font-semibold">Order Summary</p>
+              <div className="text-sm text-gray-600">
+                {formData.roundSelected && formData.roundQuantity > 0 && (
+                  <p>{formData.roundQuantity}x Round Neck ({formData.roundSize || "No size"})</p>
+                )}
+                {formData.poloSelected && formData.poloQuantity > 0 && (
+                  <p>{formData.poloQuantity}x Polo Neck ({formData.poloSize || "No size"})</p>
+                )}
+              </div>
               {formData.student === "yes" && (
-                <p className="text-sm text-green-600">
-                  ✓ Student discount applied
+                <p className="text-sm text-green-600 mt-1">
+                  Student discount applied
                 </p>
               )}
             </div>
             <div className="text-right">
-              <p className="text-2xl font-bold text-green-800">
+              <p className="text-2xl font-bold text-blue-800">
                 KES {formData.totalAmount.toLocaleString()}
               </p>
-              {formData.unitPrice > 0 && (
-                <p className="text-sm text-gray-600">
-                  KES {formData.unitPrice.toLocaleString()} each
-                </p>
-              )}
             </div>
           </div>
         </div>
       )}
-
-      {/* Sales Agent Field */}
-      <div className="space-y-2">
-        <Label htmlFor="salesAgentName">Assisted by (Optional)</Label>
-        <Input
-          id="salesAgentName"
-          type="text"
-          placeholder="Sales agent name"
-          value={formData.salesAgentName || ""}
-          onChange={(e) => handleInputChange("salesAgentName", e.target.value)}
-          onBlur={handleSalesAgentBlur}
-          className="max-w-md"
-        />
-        <p className="text-sm text-gray-500">
-          If a sales agent helped you with your order, enter their name here
-        </p>
-      </div>
     </div>
   );
 
@@ -1011,40 +858,195 @@ export default function OrderForm() {
           <h4 className="font-semibold text-gray-800">Student Information</h4>
 
           <div className="space-y-2">
-            <Label htmlFor="registrationNumber">Registration Number *</Label>
-            <Input
-              id="registrationNumber"
-              value={formData.registrationNumber || ""}
-              onChange={(e) =>
-                handleInputChange("registrationNumber", e.target.value)
-              }
-              placeholder="Enter your registration / matric number"
-              className="max-w-md"
-            />
-            <p className="text-sm text-gray-500">
-              Enter your institutional registration number here.
-            </p>
-            {errors.registrationNumber && (
-              <p className="text-red-500 text-sm">
-                {errors.registrationNumber}
+            <Label htmlFor="schoolId">School ID Picture *</Label>
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+              <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+              <p className="text-sm text-gray-600 mb-2">
+                Upload a clear photo of your student ID
               </p>
-            )}
-            {formData.schoolIdUrl && (
-              <div className="mt-3 flex items-center space-x-3">
-                <Image
-                  src={formData.schoolIdUrl as string}
-                  alt="Previously uploaded school ID"
-                  width={64}
-                  height={64}
-                  unoptimized
-                  className="w-16 h-16 object-cover rounded-md border"
-                />
-                <div className="text-sm">
-                  <p className="font-medium">
-                    Previously uploaded school ID on file
-                  </p>
+              <Input
+                id="schoolId"
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+
+                  // Client-side file size check
+                  if (file.size > MAX_UPLOAD_BYTES) {
+                    setSchoolIdUploadError("File is too large. Maximum size is 5MB.");
+                    setIsUploadingSchoolId(false);
+                    setUploadProgress(0);
+                    // clear the file from state completely so it can't bypass 5MB guard downstream
+                    setFormData((prev) => ({
+                      ...prev,
+                      schoolIdFile: undefined,
+                      schoolIdUrl: undefined,
+                      schoolIdPublicId: undefined,
+                    }));
+                    return;
+                  }
+
+                  // Start upload flow: resize client-side, then upload with XHR to show progress
+                  handleInputChange("schoolIdFile", file);
+                  setIsUploadingSchoolId(true);
+                  setSchoolIdUploadError(null);
+                  setUploadProgress(0);
+
+                  const reader = new FileReader();
+                  reader.onload = async () => {
+                    try {
+                      const img = document.createElement("img");
+                      img.src = reader.result as string;
+                      await new Promise<void>((res, rej) => {
+                        img.onload = () => res();
+                        img.onerror = () => rej(new Error("Image load error"));
+                      });
+
+                      // Resize logic: max 1200px on longest edge
+                      const maxSize = 1200;
+                      let { width, height } = img;
+                      if (width > maxSize || height > maxSize) {
+                        const ratio = width / height;
+                        if (ratio > 1) {
+                          width = maxSize;
+                          height = Math.round(maxSize / ratio);
+                        } else {
+                          height = maxSize;
+                          width = Math.round(maxSize * ratio);
+                        }
+                      }
+
+                      const canvas = document.createElement("canvas");
+                      canvas.width = width;
+                      canvas.height = height;
+                      const ctx = canvas.getContext("2d");
+                      if (!ctx) throw new Error("Canvas not supported");
+                      ctx.drawImage(img, 0, 0, width, height);
+
+                      // Convert to blob (jpeg) at 0.85 quality
+                      const blob: Blob | null = await new Promise((resolve) =>
+                        canvas.toBlob((b) => resolve(b), "image/jpeg", 0.85),
+                      );
+                      if (!blob) throw new Error("Failed to create image blob");
+
+                      // Upload via XMLHttpRequest to capture progress
+                      const form = new FormData();
+                      form.append("file", blob, file.name.replace(/\.[^.]+$/, ".jpg"));
+
+                      const xhr = new XMLHttpRequest();
+                      xhr.open("POST", "/api/upload-school-id");
+
+                      xhr.upload.onprogress = (evt) => {
+                        if (evt.lengthComputable) {
+                          const percent = Math.round((evt.loaded / evt.total) * 100);
+                          setUploadProgress(percent);
+                        }
+                      };
+
+                      xhr.onload = () => {
+                        setIsUploadingSchoolId(false);
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                          try {
+                            const body = JSON.parse(xhr.responseText);
+                            handleInputChange("schoolIdUrl", body.url);
+                            handleInputChange("schoolIdPublicId", body.public_id);
+                            // clear local File reference to avoid storing large objects in localStorage draft
+                            handleInputChange("schoolIdFile", undefined as unknown as File);
+                          } catch {
+                            setSchoolIdUploadError("Upload succeeded but response parsing failed");
+                          }
+                        } else {
+                          let errMsg = "Upload failed";
+                          try {
+                            const body = JSON.parse(xhr.responseText);
+                            errMsg = body.error || errMsg;
+                          } catch {
+                            // ignore parse errors
+                          }
+                          setSchoolIdUploadError(errMsg);
+                        }
+                      };
+
+                      xhr.onerror = () => {
+                        setIsUploadingSchoolId(false);
+                        setSchoolIdUploadError("Upload failed (network error)");
+                      };
+
+                      xhr.send(form);
+                    } catch (err) {
+                      console.error("School ID processing failed", err);
+                      setIsUploadingSchoolId(false);
+                      setSchoolIdUploadError((err as Error)?.message || "Upload failed");
+                    }
+                  };
+                  reader.readAsDataURL(file);
+                }}
+                className="hidden"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => document.getElementById("schoolId")?.click()}
+              >
+                Choose File
+              </Button>
+              {formData.schoolIdFile && (
+                <p className="text-sm text-green-600 mt-2">
+                  File selected: {formData.schoolIdFile.name}
+                </p>
+              )}
+              {formData.schoolIdUrl && (
+                <div className="mt-3 flex items-center space-x-3">
+                  <Image
+                    src={formData.schoolIdUrl as string}
+                    alt="Uploaded school ID"
+                    width={64}
+                    height={64}
+                    unoptimized
+                    className="w-16 h-16 object-cover rounded-md border"
+                  />
+                  <div className="text-sm">
+                    <p className="font-medium">School ID uploaded</p>
+                    {isUploadingSchoolId ? (
+                      <div className="space-y-1">
+                        <div className="text-xs text-gray-500">Uploading... {uploadProgress}%</div>
+                        <progress
+                          value={uploadProgress}
+                          max={100}
+                          className="w-40 h-2 rounded-full overflow-hidden"
+                        />
+                      </div>
+                    ) : schoolIdUploadError ? (
+                      <p className="text-xs text-red-500">{schoolIdUploadError}</p>
+                    ) : (
+                      <p className="text-xs text-gray-500">Tap &quot;Choose File&quot; to replace</p>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
+              {/* If a file is selected but not yet uploaded (e.g., too large or waiting), show progress or message */}
+              {formData.schoolIdFile && !formData.schoolIdUrl && (
+                <div className="mt-2">
+                  {schoolIdUploadError ? (
+                    <p className="text-xs text-red-500">{schoolIdUploadError}</p>
+                  ) : isUploadingSchoolId ? (
+                    <div className="flex items-center space-x-3">
+                      <progress
+                        value={uploadProgress}
+                        max={100}
+                        className="w-40 h-2 rounded-full overflow-hidden"
+                      />
+                      <div className="text-xs text-gray-500">{uploadProgress}%</div>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-600">Selected: {formData.schoolIdFile.name}</p>
+                  )}
+                </div>
+              )}
+            </div>
+            {errors.schoolIdFile && (
+              <p className="text-red-500 text-sm">{errors.schoolIdFile}</p>
             )}
           </div>
         </div>
@@ -1080,6 +1082,25 @@ export default function OrderForm() {
               <p className="text-red-500 text-sm">{errors.email}</p>
             )}
           </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="phone">Phone Number *</Label>
+          <div className="flex">
+            <span className="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-l-md">
+              +254
+            </span>
+            <Input
+              id="phone"
+              value={formData.phone}
+              onChange={(e) => handleInputChange("phone", e.target.value)}
+              placeholder="000000000"
+              className="rounded-l-none"
+            />
+          </div>
+          {errors.phone && (
+            <p className="text-red-500 text-sm">{errors.phone}</p>
+          )}
         </div>
       </div>
 
@@ -1125,9 +1146,7 @@ export default function OrderForm() {
 
       {/* Medical Information */}
       <div className="space-y-2">
-        <Label htmlFor="medicalCondition">
-          Any medical condition? (Optional)
-        </Label>
+        <Label htmlFor="medicalCondition">Any medical condition? *</Label>
         <Input
           id="medicalCondition"
           value={formData.medicalCondition}
@@ -1240,22 +1259,16 @@ export default function OrderForm() {
               Product Details
             </h5>
             <div className="space-y-1 text-sm">
-              <p>
-                <strong>T-shirt:</strong> Round Neck
-              </p>
-              <p>
-                <strong>Items:</strong>
-              </p>
-              <ul className="list-disc list-inside ml-4 space-y-1">
-                {formData.cartItems.map((item) => (
-                  <li key={item.size}>
-                    Size {item.size} × {item.quantity}
-                  </li>
-                ))}
-              </ul>
-              <p>
-                <strong>Total Quantity:</strong> {getTotalQuantity()}
-              </p>
+                {formData.roundSelected && (
+                  <p>
+                    <strong>Round Neck:</strong> {formData.roundQuantity}x (Size {formData.roundSize})
+                  </p>
+                )}
+                {formData.poloSelected && (
+                  <p>
+                    <strong>Polo Neck:</strong> {formData.poloQuantity}x (Size {formData.poloSize})
+                  </p>
+                )}
               <p>
                 <strong>Student:</strong>{" "}
                 {formData.student === "yes" ? "Yes" : "No"}
@@ -1263,11 +1276,6 @@ export default function OrderForm() {
               {formData.student === "yes" && formData.university && (
                 <p>
                   <strong>University:</strong> {formData.university}
-                </p>
-              )}
-              {formData.salesAgentName && (
-                <p>
-                  <strong>Assisted by:</strong> {formData.salesAgentName}
                 </p>
               )}
             </div>
@@ -1283,6 +1291,9 @@ export default function OrderForm() {
               </p>
               <p>
                 <strong>Email:</strong> {formData.email}
+              </p>
+              <p>
+                <strong>Phone:</strong> +254{formData.phone}
               </p>
               <p>
                 <strong>Next of Kin:</strong> {formData.nameOfKin} (+254
@@ -1309,18 +1320,19 @@ export default function OrderForm() {
         <div className="flex justify-between items-center">
           <div>
             <h5 className="font-semibold text-lg">Total Amount</h5>
-            <div className="text-sm text-gray-600 space-y-1">
-              {formData.cartItems.map((item) => (
-                <p key={item.size}>
-                  {item.quantity}×{item.size} @ KES{" "}
-                  {formData.unitPrice.toLocaleString()} each = KES{" "}
-                  {(item.quantity * formData.unitPrice).toLocaleString()}
+            <div className="text-sm text-gray-600">
+              {formData.roundSelected && formData.roundQuantity > 0 && (
+                <p>
+                  {formData.roundQuantity}x Round Neck @ KES {getUnitPrice("round", formData.student === "yes").toLocaleString()} each
                 </p>
-              ))}
+              )}
+              {formData.poloSelected && formData.poloQuantity > 0 && (
+                <p>
+                  {formData.poloQuantity}x Polo Neck @ KES {getUnitPrice("polo", formData.student === "yes").toLocaleString()} each
+                </p>
+              )}
               {formData.student === "yes" && (
-                <p className="text-green-600 font-medium">
-                  ✓ Student discount applied
-                </p>
+                <p className="text-green-600">Student discount applied</p>
               )}
               <p>
                 <strong>Attendance:</strong>{" "}

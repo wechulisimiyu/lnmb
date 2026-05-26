@@ -12,6 +12,7 @@ export type CartItem = {
   quantity: number;
   student?: boolean;
   university?: string;
+  salesAgent?: string;
 };
 
 type CartContextType = {

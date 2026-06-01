@@ -14,6 +14,8 @@ export const createOrder = mutation({
     tshirtType: v.string(),
     tshirtSize: v.string(),
     quantity: v.number(),
+    totebagQuantity: v.optional(v.number()),
+    laptopsleeveQuantity: v.optional(v.number()),
     totalAmount: v.number(),
     salesAgentName: v.optional(v.string()),
     name: v.string(),
@@ -31,6 +33,38 @@ export const createOrder = mutation({
   },
   handler: async (ctx, args) => {
     const now = Date.now();
+    const requestedMerch = [
+      {
+        item: "totebag",
+        label: "Tote Bag",
+        quantity: args.totebagQuantity ?? 0,
+      },
+      {
+        item: "laptopsleeve",
+        label: "Laptop Sleeve",
+        quantity: args.laptopsleeveQuantity ?? 0,
+      },
+    ];
+
+    for (const request of requestedMerch) {
+      if (request.quantity <= 0) continue;
+      const stock = await ctx.db
+        .query("merchInventory")
+        .withIndex("by_item", (q) => q.eq("item", request.item))
+        .first();
+
+      if (!stock) {
+        throw new Error(
+          `${request.label} stock is not configured. Please contact support.`,
+        );
+      }
+
+      if (stock.available < request.quantity) {
+        throw new Error(
+          `${request.label} is out of stock. Only ${stock.available} left.`,
+        );
+      }
+    }
     // Server-side normalization: attempt to map incoming university to canonical names
     const canonical = [
       "University of Nairobi",
@@ -102,6 +136,8 @@ export const createOrder = mutation({
       tshirtType: args.tshirtType,
       tshirtSize: args.tshirtSize,
       quantity: args.quantity,
+      totebagQuantity: args.totebagQuantity ?? 0,
+      laptopsleeveQuantity: args.laptopsleeveQuantity ?? 0,
       totalAmount: args.totalAmount,
       salesAgentName: args.salesAgentName,
 
@@ -135,6 +171,21 @@ export const createOrder = mutation({
     };
 
     const orderId = await ctx.db.insert("orders", orderRecord);
+
+    for (const request of requestedMerch) {
+      if (request.quantity <= 0) continue;
+      const stock = await ctx.db
+        .query("merchInventory")
+        .withIndex("by_item", (q) => q.eq("item", request.item))
+        .first();
+
+      if (!stock) continue;
+
+      await ctx.db.patch(stock._id, {
+        available: stock.available - request.quantity,
+        updatedAt: now,
+      });
+    }
 
     return orderId;
   },
@@ -417,6 +468,8 @@ export const handlePaymentCallback = mutation({
       };
     }
 
+    const previousStatus = payment.status;
+
     // Patch the payment record with new status and transactionId
     try {
       await ctx.db.patch(payment._id, {
@@ -450,6 +503,54 @@ export const handlePaymentCallback = mutation({
         error: String(error),
         reference: args.orderReference,
       };
+    }
+
+    if (args.status === "failed" && previousStatus !== "failed") {
+      const order = await ctx.db
+        .query("orders")
+        .withIndex("by_reference", (q) =>
+          q.eq("orderReference", args.orderReference),
+        )
+        .first();
+
+      if (order && !order.paid) {
+        const restockNow = Date.now();
+        const restockItems = [
+          {
+            item: "totebag",
+            label: "Tote Bag",
+            quantity: (order as any).totebagQuantity ?? 0,
+          },
+          {
+            item: "laptopsleeve",
+            label: "Laptop Sleeve",
+            quantity: (order as any).laptopsleeveQuantity ?? 0,
+          },
+        ];
+
+        for (const restock of restockItems) {
+          if (restock.quantity <= 0) continue;
+          const stock = await ctx.db
+            .query("merchInventory")
+            .withIndex("by_item", (q) => q.eq("item", restock.item))
+            .first();
+
+          if (!stock) {
+            console.warn(
+              `[handlePaymentCallback] ${restock.label} stock not found for restock`,
+              {
+                orderReference: args.orderReference,
+              },
+            );
+            continue;
+          }
+
+          await ctx.db.patch(stock._id, {
+            available: stock.available + restock.quantity,
+            updatedAt: restockNow,
+          });
+        }
+      }
     }
 
     // If payment is marked as paid, mark the linked order as paid too

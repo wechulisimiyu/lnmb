@@ -26,8 +26,6 @@ interface OrderData {
   tshirtType: string;
   tshirtSize: string;
   quantity: number;
-  totebagQuantity?: number;
-  laptopsleeveQuantity?: number;
   totalAmount: number;
   salesAgentName?: string;
   name: string;
@@ -126,8 +124,6 @@ export default function CheckoutPage() {
             tshirtType: orderData.tshirtType,
             tshirtSize: orderData.tshirtSize,
             quantity: orderData.quantity,
-            totebagQuantity: orderData.totebagQuantity,
-            laptopsleeveQuantity: orderData.laptopsleeveQuantity,
             totalAmount: orderData.totalAmount,
             salesAgentName: orderData.salesAgentName,
             name: orderData.name,
@@ -147,7 +143,7 @@ export default function CheckoutPage() {
           const lastName = lastNameParts.join(" ") || firstName;
 
           // Sanitize product description for Jenga PGW (only allow alphanumeric, hyphen, quotation mark, forward slash, back slash, underscore, space)
-          const rawDescription = `${orderData.tshirtType} ${orderData.tshirtSize} x${orderData.quantity} - Leave No Medic Behind Charity Run`;
+          const rawDescription = `${orderData.tshirtType} T-shirt ${orderData.tshirtSize} x${orderData.quantity} - Leave No Medic Behind Charity Run`;
           const productDescription = rawDescription.replace(
             /[^a-zA-Z0-9\-"\/\\_\s]/g,
             "",
@@ -193,11 +189,7 @@ export default function CheckoutPage() {
           });
 
           console.error("Error processing payment:", error);
-          setError(
-            error instanceof Error
-              ? error.message
-              : "Failed to process payment. Please try again.",
-          );
+          setError("Failed to process payment. Please try again.");
         } finally {
           setIsProcessing(false);
         }

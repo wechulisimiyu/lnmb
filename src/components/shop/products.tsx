@@ -29,7 +29,7 @@ interface Product {
   studentPrice: number;
   image: string;
   description: string;
-  sizes?: string[];
+  sizes: string[];
 }
 
 export function ShopProducts() {
@@ -52,23 +52,6 @@ export function ShopProducts() {
       studentPrice: PRICING.round.student,
       image: "/images/shop/lnmb 2026 roundneck.webp",
       description: "Comfortable round neck tee",
-      sizes: ["S", "M", "L", "XL"],
-    },
-    {
-      id: "sleeve",
-      name: "Laptop Sleeve",
-      price: (PRICING as Record<string, { regular: number; student: number }>).sleeve.regular,
-      studentPrice: (PRICING as Record<string, { regular: number; student: number }>).sleeve.student,
-      image: "/images/shop/lnmb Laptop Sleeve.webp",
-      description: "Protective laptop sleeve with LNMB branding",
-    },
-    {
-      id: "bag",
-      name: "Tote Bag",
-      price: (PRICING as Record<string, { regular: number; student: number }>).bag.regular,
-      studentPrice: (PRICING as Record<string, { regular: number; student: number }>).bag.student,
-      image: "/images/shop/lnmb Tote Bag.webp",
-      description: "Spacious tote bag with LNMB branding",
       sizes: ["S", "M", "L", "XL"],
     },
   ];
@@ -111,7 +94,7 @@ export function ShopProducts() {
       return;
     }
 
-    const size = selectedSize[product.id] || product.sizes?.[0] || "One Size";
+    const size = selectedSize[product.id] || product.sizes[0];
     const qty = quantity[product.id] || 1;
     const studentFlag = isStudent || false;
     const unitPrice = getProductPrice(product);
@@ -328,7 +311,7 @@ export function ShopProducts() {
                     Size *
                   </p>
                   <div className="grid grid-cols-4 gap-2">
-                    {(product.sizes ?? ["One Size"]).map((size) => (
+                    {product.sizes.map((size) => (
                       <button
                         key={size}
                         onClick={() =>

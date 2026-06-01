@@ -3,9 +3,23 @@ import { ConvexHttpClient } from "convex/browser";
 import { api } from "../../../../../convex/_generated/api";
 import * as Sentry from "@sentry/nextjs";
 
-const getConvexClient = () => new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL || "https://dummy.convex.cloud");
+const getConvexClient = () => {
+  const convexUrl = process.env.CONVEX_URL || process.env.NEXT_PUBLIC_CONVEX_URL;
+  if (!convexUrl) {
+    throw new Error("Missing CONVEX_URL for server-side Convex client");
+  }
+  return new ConvexHttpClient(convexUrl);
+};
 
 export async function GET(request: NextRequest): Promise<Response> {
+  const convexUrl = process.env.CONVEX_URL || process.env.NEXT_PUBLIC_CONVEX_URL;
+  if (!convexUrl) {
+    return NextResponse.json(
+      { success: false, error: "missing_convex_url" },
+      { status: 500 },
+    );
+  }
+
   const url = new URL(request.url);
   const reference = url.searchParams.get("reference");
   const transactionId = url.searchParams.get("transactionId");

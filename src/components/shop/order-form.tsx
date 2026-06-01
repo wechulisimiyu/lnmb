@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -60,6 +62,10 @@ interface OrderFormData {
   poloSelected: boolean;
   poloSize: string;
   poloQuantity: number;
+  totebagSelected: boolean;
+  totebagQuantity: number;
+  laptopsleeveSelected: boolean;
+  laptopsleeveQuantity: number;
   
   student: string;
   university?: string;
@@ -92,7 +98,7 @@ const STEPS = {
 } as const;
 
 const STEP_TITLES = {
-  [STEPS.PRODUCT_SELECTION]: "Choose Your T-shirt",
+  [STEPS.PRODUCT_SELECTION]: "Choose Your Products",
   [STEPS.PERSONAL_DETAILS]: "Personal Information",
   [STEPS.ATTENDANCE_LIABILITY]: "Event & Liability",
   [STEPS.REVIEW]: "Review & Confirm",
@@ -103,6 +109,15 @@ export default function OrderForm() {
   type Step = (typeof STEPS)[keyof typeof STEPS];
   const [currentStep, setCurrentStep] = useState<Step>(STEPS.PRODUCT_SELECTION);
   const formRef = useRef<HTMLDivElement | null>(null);
+  const merchInventory = useQuery(api.inventory.getMerchInventory);
+  const merchStock = React.useMemo(() => {
+    if (!merchInventory) return null;
+    const stock: Record<string, number> = {};
+    merchInventory.forEach((item: { item: string; available: number }) => {
+      stock[item.item] = item.available;
+    });
+    return stock;
+  }, [merchInventory]);
   const [formData, setFormData] = useState<OrderFormData>({
     // Step 1: Product Selection
     roundSelected: true,
@@ -111,6 +126,10 @@ export default function OrderForm() {
     poloSelected: false,
     poloSize: "",
     poloQuantity: 1,
+    totebagSelected: false,
+    totebagQuantity: 1,
+    laptopsleeveSelected: false,
+    laptopsleeveQuantity: 1,
     student: "",
     university: "",
     universityUserEntered: false,
@@ -146,9 +165,15 @@ export default function OrderForm() {
   const [uniPopoverOpen, setUniPopoverOpen] = useState(false);
   const [showManualUniversity, setShowManualUniversity] = useState(false);
 
+  const getAccessoryStock = (item: "totebag" | "laptopsleeve") => {
+    if (!merchStock) return null;
+    if (!Object.prototype.hasOwnProperty.call(merchStock, item)) return null;
+    return merchStock[item];
+  };
+
   // Calculate unit price based on product type and student status
-  const getUnitPrice = (tshirtType: "round" | "polo", isStudent: boolean) => {
-    const pricing = PRICING[tshirtType];
+  const getUnitPrice = (productType: keyof typeof PRICING, isStudent: boolean) => {
+    const pricing = PRICING[productType];
     return isStudent ? pricing.student : pricing.regular;
   };
 
@@ -163,6 +188,12 @@ export default function OrderForm() {
     if (formData.poloSelected) {
       totalAmount += getUnitPrice("polo", isStudent) * formData.poloQuantity;
     }
+    if (formData.totebagSelected) {
+      totalAmount += getUnitPrice("totebag", isStudent) * formData.totebagQuantity;
+    }
+    if (formData.laptopsleeveSelected) {
+      totalAmount += getUnitPrice("laptopsleeve", isStudent) * formData.laptopsleeveQuantity;
+    }
 
     setFormData((prev) => ({
       ...prev,
@@ -173,6 +204,10 @@ export default function OrderForm() {
     formData.roundQuantity,
     formData.poloSelected,
     formData.poloQuantity,
+    formData.totebagSelected,
+    formData.totebagQuantity,
+    formData.laptopsleeveSelected,
+    formData.laptopsleeveQuantity,
     formData.student,
   ]);
 
@@ -233,8 +268,8 @@ export default function OrderForm() {
 
     switch (step) {
       case STEPS.PRODUCT_SELECTION:
-        if (!formData.roundSelected && !formData.poloSelected) {
-          newErrors.productSelection = "Please select at least one t-shirt type";
+        if (!formData.roundSelected && !formData.poloSelected && !formData.totebagSelected && !formData.laptopsleeveSelected) {
+          newErrors.productSelection = "Please select at least one product";
         }
         if (formData.roundSelected) {
           if (!formData.roundSize) newErrors.roundSize = "Please select a size for the Round Neck T-shirt";
@@ -243,6 +278,28 @@ export default function OrderForm() {
         if (formData.poloSelected) {
           if (!formData.poloSize) newErrors.poloSize = "Please select a size for the Polo Neck T-shirt";
           if (formData.poloQuantity < 1 || formData.poloQuantity > 5) newErrors.poloQuantity = "Quantity must be between 1 and 5";
+        }
+        if (formData.totebagSelected) {
+          if (formData.totebagQuantity < 1 || formData.totebagQuantity > 10) newErrors.totebagQuantity = "Quantity must be between 1 and 10";
+          const totebagStock = getAccessoryStock("totebag");
+          if (totebagStock !== null) {
+            if (totebagStock <= 0) {
+              newErrors.totebagQuantity = "Tote Bag is out of stock";
+            } else if (formData.totebagQuantity > totebagStock) {
+              newErrors.totebagQuantity = `Only ${totebagStock} Tote Bag${totebagStock === 1 ? "" : "s"} left`;
+            }
+          }
+        }
+        if (formData.laptopsleeveSelected) {
+          if (formData.laptopsleeveQuantity < 1 || formData.laptopsleeveQuantity > 10) newErrors.laptopsleeveQuantity = "Quantity must be between 1 and 10";
+          const laptopsleeveStock = getAccessoryStock("laptopsleeve");
+          if (laptopsleeveStock !== null) {
+            if (laptopsleeveStock <= 0) {
+              newErrors.laptopsleeveQuantity = "Laptop Sleeve is out of stock";
+            } else if (formData.laptopsleeveQuantity > laptopsleeveStock) {
+              newErrors.laptopsleeveQuantity = `Only ${laptopsleeveStock} Laptop Sleeve${laptopsleeveStock === 1 ? "" : "s"} left`;
+            }
+          }
         }
         if (!formData.student)
           newErrors.student = "Please select if you are a student";
@@ -466,6 +523,16 @@ export default function OrderForm() {
         sizes.push(`Polo: ${formData.poloSize}`);
         totalQuantity += formData.poloQuantity;
       }
+      if (formData.totebagSelected) {
+        types.push("totebag");
+        sizes.push(`Tote Bag: N/A`);
+        totalQuantity += formData.totebagQuantity;
+      }
+      if (formData.laptopsleeveSelected) {
+        types.push("laptopsleeve");
+        sizes.push(`Laptop Sleeve: N/A`);
+        totalQuantity += formData.laptopsleeveQuantity;
+      }
 
       // Prepare order data for checkout
       const orderData = {
@@ -525,25 +592,52 @@ export default function OrderForm() {
     </div>
   );
 
-  const renderProductCard = (type: "round" | "polo") => {
+  const renderProductCard = (type: "round" | "polo" | "totebag" | "laptopsleeve") => {
     const pricing = PRICING[type];
     const isStudent = formData.student === "yes";
     const currentPrice = isStudent ? pricing.student : pricing.regular;
-    const isSelected = type === "round" ? formData.roundSelected : formData.poloSelected;
+    const isSelected = type === "round" ? formData.roundSelected 
+      : type === "polo" ? formData.poloSelected 
+      : type === "totebag" ? formData.totebagSelected 
+      : formData.laptopsleeveSelected;
+    const isAccessory = type === "totebag" || type === "laptopsleeve";
+    const stockLeft = isAccessory ? getAccessoryStock(type) : null;
+    const stockKnown = isAccessory && stockLeft !== null;
+    const isOutOfStock = isAccessory && stockKnown && stockLeft <= 0;
     
     // Set product details based on type
-    const imageSrc = type === "round" ? "/images/shop/lnmb 2026 roundneck.webp" : "/images/shop/lnmb 2026 poloshirt.webp";
-    const title = type === "round" ? "Round Neck T-shirt" : "Polo Neck T-Shirt";
+    let imageSrc = "";
+    let title = "";
+    if (type === "round") {
+      imageSrc = "/images/shop/lnmb 2026 roundneck.webp";
+      title = "Round Neck T-shirt";
+    } else if (type === "polo") {
+      imageSrc = "/images/shop/lnmb 2026 poloshirt.webp";
+      title = "Polo Neck T-Shirt";
+    } else if (type === "totebag") {
+      imageSrc = "/images/shop/lnmb Tote Bag.webp";
+      title = "Tote Bag";
+    } else if (type === "laptopsleeve") {
+      imageSrc = "/images/shop/lnmb Laptop Sleeve.webp";
+      title = "Laptop Sleeve";
+    }
 
     return (
       <div className="space-y-4">
         <div
-          className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+          className={`border-2 rounded-lg p-4 transition-all ${
             isSelected
               ? "border-blue-600 bg-blue-50"
               : "border-gray-200 hover:border-gray-300"
-          }`}
-          onClick={() => handleInputChange(type === "round" ? "roundSelected" : "poloSelected", !isSelected)}
+          } ${isOutOfStock ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
+          onClick={() => {
+            if (isOutOfStock && !isSelected) return;
+            const field = type === "round" ? "roundSelected" 
+              : type === "polo" ? "poloSelected" 
+              : type === "totebag" ? "totebagSelected" 
+              : "laptopsleeveSelected";
+            handleInputChange(field, !isSelected);
+          }}
         >
           <div className="relative aspect-square mb-4">
             <Image
@@ -579,37 +673,47 @@ export default function OrderForm() {
                   Save KES {(pricing.regular - currentPrice).toLocaleString()}!
                 </Badge>
               )}
+              {isAccessory && stockKnown && (
+                <p className={`text-xs ${isOutOfStock ? "text-red-600" : "text-gray-500"}`}>
+                  {isOutOfStock ? "Out of stock" : `${stockLeft} left`}
+                </p>
+              )}
+              {isAccessory && !stockKnown && merchStock && (
+                <p className="text-xs text-amber-600">Stock unavailable</p>
+              )}
             </div>
           </div>
         </div>
 
         {isSelected && (
           <div className="p-4 bg-gray-50 rounded-lg space-y-4 border border-gray-100 animate-in fade-in slide-in-from-top-2">
-            <div className="space-y-2">
-              <Label className="text-sm">Size *</Label>
-              <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
-                {["XS", "S", "M", "L", "XL", "XXL", "XXXL"].map((size) => {
-                  const currentSize = type === "round" ? formData.roundSize : formData.poloSize;
-                  return (
-                    <button
-                      key={size}
-                      type="button"
-                      className={`h-8 flex items-center justify-center px-2 text-xs rounded-md border transition-colors leading-none ${
-                        currentSize === size
-                          ? "bg-blue-600 text-white border-blue-600"
-                          : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
-                      }`}
-                      onClick={() => handleInputChange(type === "round" ? "roundSize" : "poloSize", size)}
-                    >
-                      {size}
-                    </button>
-                  );
-                })}
+            {(type === "round" || type === "polo") && (
+              <div className="space-y-2">
+                <Label className="text-sm">Size *</Label>
+                <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+                  {["XS", "S", "M", "L", "XL", "XXL", "XXXL"].map((size) => {
+                    const currentSize = type === "round" ? formData.roundSize : formData.poloSize;
+                    return (
+                      <button
+                        key={size}
+                        type="button"
+                        className={`h-8 flex items-center justify-center px-2 text-xs rounded-md border transition-colors leading-none ${
+                          currentSize === size
+                            ? "bg-blue-600 text-white border-blue-600"
+                            : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
+                        }`}
+                        onClick={() => handleInputChange(type === "round" ? "roundSize" : "poloSize", size)}
+                      >
+                        {size}
+                      </button>
+                    );
+                  })}
+                </div>
+                {errors[`${type}Size`] && (
+                  <p className="text-red-500 text-xs">{errors[`${type}Size`]}</p>
+                )}
               </div>
-              {errors[`${type}Size`] && (
-                <p className="text-red-500 text-xs">{errors[`${type}Size`]}</p>
-              )}
-            </div>
+            )}
 
             <div className="space-y-2 flex flex-col">
               <Label className="text-sm">Quantity *</Label>
@@ -619,31 +723,54 @@ export default function OrderForm() {
                   variant="outline"
                   size="sm"
                   className="h-8 w-8 p-0"
+                  disabled={isOutOfStock}
                   onClick={() => {
-                    const field = type === "round" ? "roundQuantity" : "poloQuantity";
-                    const currentQty = type === "round" ? formData.roundQuantity : formData.poloQuantity;
+                    const field = type === "round" ? "roundQuantity" 
+                      : type === "polo" ? "poloQuantity" 
+                      : type === "totebag" ? "totebagQuantity" 
+                      : "laptopsleeveQuantity";
+                    const currentQty = type === "round" ? formData.roundQuantity 
+                      : type === "polo" ? formData.poloQuantity 
+                      : type === "totebag" ? formData.totebagQuantity 
+                      : formData.laptopsleeveQuantity;
                     handleInputChange(field, Math.max(1, currentQty - 1));
                   }}
                 >
                   -
                 </Button>
                 <div className="w-12 text-center text-sm font-semibold">
-                  {type === "round" ? formData.roundQuantity : formData.poloQuantity}
+                  {type === "round" ? formData.roundQuantity 
+                    : type === "polo" ? formData.poloQuantity 
+                    : type === "totebag" ? formData.totebagQuantity 
+                    : formData.laptopsleeveQuantity}
                 </div>
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   className="h-8 w-8 p-0"
+                  disabled={isOutOfStock}
                   onClick={() => {
-                    const field = type === "round" ? "roundQuantity" : "poloQuantity";
-                    const currentQty = type === "round" ? formData.roundQuantity : formData.poloQuantity;
-                    handleInputChange(field, Math.min(5, currentQty + 1));
+                    const field = type === "round" ? "roundQuantity" 
+                      : type === "polo" ? "poloQuantity" 
+                      : type === "totebag" ? "totebagQuantity" 
+                      : "laptopsleeveQuantity";
+                    const currentQty = type === "round" ? formData.roundQuantity 
+                      : type === "polo" ? formData.poloQuantity 
+                      : type === "totebag" ? formData.totebagQuantity 
+                      : formData.laptopsleeveQuantity;
+                    const stockMax = isAccessory && stockLeft !== null ? Math.max(0, stockLeft) : 10;
+                    const maxQty = type === "round" || type === "polo" ? 5 : Math.min(10, stockMax);
+                    if (maxQty < 1) return;
+                    handleInputChange(field, Math.min(maxQty, currentQty + 1));
                   }}
                 >
                   +
                 </Button>
               </div>
+              {errors[`${type}Quantity`] && (
+                <p className="text-red-500 text-xs">{errors[`${type}Quantity`]}</p>
+              )}
             </div>
           </div>
         )}
@@ -727,7 +854,7 @@ export default function OrderForm() {
         {formData.student === "yes" && (
           <div className="p-3 bg-green-50 rounded-lg">
             <p className="text-green-700 text-sm">
-              🎓 Student discount activated! You saved up to KES 650 per t-shirt.
+              🎓 Student discount activated!
             </p>
           </div>
         )}
@@ -809,10 +936,12 @@ export default function OrderForm() {
 
       {/* Product Selection Cards */}
       <div className="space-y-4">
-        <Label className="text-base font-semibold">Choose Your T-shirt *</Label>
+        <Label className="text-base font-semibold">Choose Your Products *</Label>
         <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
           {renderProductCard("round")}
           {renderProductCard("polo")}
+          {renderProductCard("totebag")}
+          {renderProductCard("laptopsleeve")}
         </div>
         {errors.productSelection && (
           <p className="text-red-500 text-sm">{errors.productSelection}</p>
@@ -820,7 +949,7 @@ export default function OrderForm() {
       </div>
 
       {/* Price Summary */}
-      {(formData.roundSelected || formData.poloSelected) && formData.totalAmount > 0 && (
+      {(formData.roundSelected || formData.poloSelected || formData.totebagSelected || formData.laptopsleeveSelected) && formData.totalAmount > 0 && (
         <div className="bg-blue-50 p-4 rounded-lg">
           <div className="flex justify-between items-center">
             <div>
@@ -831,6 +960,12 @@ export default function OrderForm() {
                 )}
                 {formData.poloSelected && formData.poloQuantity > 0 && (
                   <p>{formData.poloQuantity}x Polo Neck ({formData.poloSize || "No size"})</p>
+                )}
+                {formData.totebagSelected && formData.totebagQuantity > 0 && (
+                  <p>{formData.totebagQuantity}x Tote Bag</p>
+                )}
+                {formData.laptopsleeveSelected && formData.laptopsleeveQuantity > 0 && (
+                  <p>{formData.laptopsleeveQuantity}x Laptop Sleeve</p>
                 )}
               </div>
               {formData.student === "yes" && (
@@ -1203,7 +1338,7 @@ export default function OrderForm() {
           </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="notattending" id="attending-no" />
-            <Label htmlFor="attending-no">Just buying a T-shirt</Label>
+            <Label htmlFor="attending-no">Just buying merchandise</Label>
           </div>
         </RadioGroup>
         {errors.attending && (
@@ -1269,6 +1404,16 @@ export default function OrderForm() {
                     <strong>Polo Neck:</strong> {formData.poloQuantity}x (Size {formData.poloSize})
                   </p>
                 )}
+                {formData.totebagSelected && (
+                  <p>
+                    <strong>Tote Bag:</strong> {formData.totebagQuantity}x
+                  </p>
+                )}
+                {formData.laptopsleeveSelected && (
+                  <p>
+                    <strong>Laptop Sleeve:</strong> {formData.laptopsleeveQuantity}x
+                  </p>
+                )}
               <p>
                 <strong>Student:</strong>{" "}
                 {formData.student === "yes" ? "Yes" : "No"}
@@ -1331,6 +1476,16 @@ export default function OrderForm() {
                   {formData.poloQuantity}x Polo Neck @ KES {getUnitPrice("polo", formData.student === "yes").toLocaleString()} each
                 </p>
               )}
+              {formData.totebagSelected && formData.totebagQuantity > 0 && (
+                <p>
+                  {formData.totebagQuantity}x Tote Bag @ KES {getUnitPrice("totebag", formData.student === "yes").toLocaleString()} each
+                </p>
+              )}
+              {formData.laptopsleeveSelected && formData.laptopsleeveQuantity > 0 && (
+                <p>
+                  {formData.laptopsleeveQuantity}x Laptop Sleeve @ KES {getUnitPrice("laptopsleeve", formData.student === "yes").toLocaleString()} each
+                </p>
+              )}
               {formData.student === "yes" && (
                 <p className="text-green-600">Student discount applied</p>
               )}
@@ -1338,7 +1493,7 @@ export default function OrderForm() {
                 <strong>Attendance:</strong>{" "}
                 {formData.attending === "attending"
                   ? "Will attend"
-                  : "T-shirt only"}
+                  : "Merchandise only"}
               </p>
             </div>
           </div>
@@ -1371,7 +1526,7 @@ export default function OrderForm() {
           </CardTitle>
           <CardDescription>
             {currentStep === STEPS.PRODUCT_SELECTION &&
-              "Choose your t-shirt design, size, and student status"}
+              "Choose your products, size, and student status"}
             {currentStep === STEPS.PERSONAL_DETAILS &&
               "Fill in your personal details and emergency contact"}
             {currentStep === STEPS.ATTENDANCE_LIABILITY &&

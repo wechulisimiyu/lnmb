@@ -17,6 +17,8 @@ export default defineSchema({
     tshirtType: v.string(), // "polo" or "round"
     tshirtSize: v.string(), // "small", "medium", "large", "extra-large", or cart format "M:2,L:3,XL:1"
     quantity: v.number(),
+    totebagQuantity: v.optional(v.number()),
+    laptopsleeveQuantity: v.optional(v.number()),
     totalAmount: v.number(),
     salesAgentName: v.optional(v.string()), // Optional sales agent who assisted
 
@@ -94,4 +96,11 @@ export default defineSchema({
     .index("by_transactionId", ["transactionId"])
     .index("by_status", ["status"])
     .index("by_created_at", ["createdAt"]),
+
+  merchInventory: defineTable({
+    item: v.string(),
+    available: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_item", ["item"]),
 });

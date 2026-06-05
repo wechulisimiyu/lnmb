@@ -62,10 +62,6 @@ interface OrderFormData {
   poloSelected: boolean;
   poloSize: string;
   poloQuantity: number;
-  totebagSelected: boolean;
-  totebagQuantity: number;
-  laptopsleeveSelected: boolean;
-  laptopsleeveQuantity: number;
   
   student: string;
   university?: string;
@@ -74,9 +70,7 @@ interface OrderFormData {
   totalAmount: number;
 
   // Step 2: Personal & Registration Details
-  schoolIdFile?: File;
-  schoolIdUrl?: string;
-  schoolIdPublicId?: string;
+  regNumber?: string;
   name: string;
   email: string;
   phone: string;
@@ -109,15 +103,6 @@ export default function OrderForm() {
   type Step = (typeof STEPS)[keyof typeof STEPS];
   const [currentStep, setCurrentStep] = useState<Step>(STEPS.PRODUCT_SELECTION);
   const formRef = useRef<HTMLDivElement | null>(null);
-  const merchInventory = useQuery(api.inventory.getMerchInventory);
-  const merchStock = React.useMemo(() => {
-    if (!merchInventory) return null;
-    const stock: Record<string, number> = {};
-    merchInventory.forEach((item: { item: string; available: number }) => {
-      stock[item.item] = item.available;
-    });
-    return stock;
-  }, [merchInventory]);
   const [formData, setFormData] = useState<OrderFormData>({
     // Step 1: Product Selection
     roundSelected: true,
@@ -126,10 +111,6 @@ export default function OrderForm() {
     poloSelected: false,
     poloSize: "",
     poloQuantity: 1,
-    totebagSelected: false,
-    totebagQuantity: 1,
-    laptopsleeveSelected: false,
-    laptopsleeveQuantity: 1,
     student: "",
     university: "",
     universityUserEntered: false,
@@ -137,7 +118,7 @@ export default function OrderForm() {
     totalAmount: 0,
 
     // Step 2: Personal & Registration Details
-    schoolIdFile: undefined,
+    regNumber: "",
     name: "",
     email: "",
     phone: "",
@@ -153,23 +134,10 @@ export default function OrderForm() {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isUploadingSchoolId, setIsUploadingSchoolId] = useState(false);
-  const [schoolIdUploadError, setSchoolIdUploadError] = useState<string | null>(
-    null,
-  );
-  const [uploadProgress, setUploadProgress] = useState<number>(0);
-  // Maximum upload size (5MB)
-  const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
   const [universities, setUniversities] = useState<string[] | null>(null);
   const [uniQuery, setUniQuery] = useState("");
   const [uniPopoverOpen, setUniPopoverOpen] = useState(false);
   const [showManualUniversity, setShowManualUniversity] = useState(false);
-
-  const getAccessoryStock = (item: "totebag" | "laptopsleeve") => {
-    if (!merchStock) return null;
-    if (!Object.prototype.hasOwnProperty.call(merchStock, item)) return null;
-    return merchStock[item];
-  };
 
   // Calculate unit price based on product type and student status
   const getUnitPrice = (productType: keyof typeof PRICING, isStudent: boolean) => {
@@ -188,12 +156,6 @@ export default function OrderForm() {
     if (formData.poloSelected) {
       totalAmount += getUnitPrice("polo", isStudent) * formData.poloQuantity;
     }
-    if (formData.totebagSelected) {
-      totalAmount += getUnitPrice("totebag", isStudent) * formData.totebagQuantity;
-    }
-    if (formData.laptopsleeveSelected) {
-      totalAmount += getUnitPrice("laptopsleeve", isStudent) * formData.laptopsleeveQuantity;
-    }
 
     setFormData((prev) => ({
       ...prev,
@@ -204,10 +166,6 @@ export default function OrderForm() {
     formData.roundQuantity,
     formData.poloSelected,
     formData.poloQuantity,
-    formData.totebagSelected,
-    formData.totebagQuantity,
-    formData.laptopsleeveSelected,
-    formData.laptopsleeveQuantity,
     formData.student,
   ]);
 
@@ -215,7 +173,6 @@ export default function OrderForm() {
   useEffect(() => {
     const draft = { 
       ...formData, 
-      schoolIdFile: undefined, // Don't persist real files
       currentStep 
     };
     localStorage.setItem("orderFormDraft", JSON.stringify(draft));
@@ -227,10 +184,7 @@ export default function OrderForm() {
       const draft = localStorage.getItem("orderFormDraft");
       if (draft) {
         const parsed = JSON.parse(draft);
-        setFormData({
-          ...parsed,
-          schoolIdFile: undefined, // Prevents a raw object satisfying truthy file checks
-        });
+        setFormData(parsed);
         setCurrentStep(parsed.currentStep || STEPS.PRODUCT_SELECTION);
       }
     } catch (error) {
@@ -268,7 +222,7 @@ export default function OrderForm() {
 
     switch (step) {
       case STEPS.PRODUCT_SELECTION:
-        if (!formData.roundSelected && !formData.poloSelected && !formData.totebagSelected && !formData.laptopsleeveSelected) {
+        if (!formData.roundSelected && !formData.poloSelected) {
           newErrors.productSelection = "Please select at least one product";
         }
         if (formData.roundSelected) {
@@ -278,28 +232,6 @@ export default function OrderForm() {
         if (formData.poloSelected) {
           if (!formData.poloSize) newErrors.poloSize = "Please select a size for the Polo Neck T-shirt";
           if (formData.poloQuantity < 1 || formData.poloQuantity > 5) newErrors.poloQuantity = "Quantity must be between 1 and 5";
-        }
-        if (formData.totebagSelected) {
-          if (formData.totebagQuantity < 1 || formData.totebagQuantity > 10) newErrors.totebagQuantity = "Quantity must be between 1 and 10";
-          const totebagStock = getAccessoryStock("totebag");
-          if (totebagStock !== null) {
-            if (totebagStock <= 0) {
-              newErrors.totebagQuantity = "Tote Bag is out of stock";
-            } else if (formData.totebagQuantity > totebagStock) {
-              newErrors.totebagQuantity = `Only ${totebagStock} Tote Bag${totebagStock === 1 ? "" : "s"} left`;
-            }
-          }
-        }
-        if (formData.laptopsleeveSelected) {
-          if (formData.laptopsleeveQuantity < 1 || formData.laptopsleeveQuantity > 10) newErrors.laptopsleeveQuantity = "Quantity must be between 1 and 10";
-          const laptopsleeveStock = getAccessoryStock("laptopsleeve");
-          if (laptopsleeveStock !== null) {
-            if (laptopsleeveStock <= 0) {
-              newErrors.laptopsleeveQuantity = "Laptop Sleeve is out of stock";
-            } else if (formData.laptopsleeveQuantity > laptopsleeveStock) {
-              newErrors.laptopsleeveQuantity = `Only ${laptopsleeveStock} Laptop Sleeve${laptopsleeveStock === 1 ? "" : "s"} left`;
-            }
-          }
         }
         if (!formData.student)
           newErrors.student = "Please select if you are a student";
@@ -335,10 +267,11 @@ export default function OrderForm() {
           }
         }
 
-        // Student-specific validation: accept either a selected File or an already uploaded URL
+        // Student-specific validation: must provide regNumber
         if (formData.student === "yes") {
-          if (!formData.schoolIdFile && !formData.schoolIdUrl)
-            newErrors.schoolIdFile = "Please upload your school ID picture";
+          if (!formData.regNumber?.trim()) {
+            newErrors.regNumber = "Please provide your registration number";
+          }
         }
 
         if (!formData.medicalCondition.trim()) {
@@ -476,33 +409,7 @@ export default function OrderForm() {
       }
 
       // If student uploaded a school ID file, upload it first to Cloudinary
-      let schoolIdUrl: string | undefined = undefined;
-      if (formData.schoolIdFile) {
-        try {
-          const uploadForm = new FormData();
-          uploadForm.append("file", formData.schoolIdFile);
-
-          const res = await fetch("/api/upload-school-id", {
-            method: "POST",
-            body: uploadForm,
-          });
-
-          if (!res.ok) {
-            const err = await res.json().catch(() => ({}));
-            throw new Error(err?.error || "Upload failed");
-          }
-
-          const body = await res.json();
-          schoolIdUrl = body.url;
-        } catch (uploadError) {
-          console.error("School ID upload failed", uploadError);
-          setErrors({
-            general: "Failed to upload school ID. Please try again.",
-          });
-          setIsSubmitting(false);
-          return;
-        }
-      }
+      // (Removed in favor of regNumber)
 
       // Normalize phone and kinNumber before saving order
       const normalizedPhone = normalizeKenyaPhone(formData.phone as string)
@@ -523,16 +430,6 @@ export default function OrderForm() {
         sizes.push(`Polo: ${formData.poloSize}`);
         totalQuantity += formData.poloQuantity;
       }
-      if (formData.totebagSelected) {
-        types.push("totebag");
-        sizes.push(`Tote Bag: N/A`);
-        totalQuantity += formData.totebagQuantity;
-      }
-      if (formData.laptopsleeveSelected) {
-        types.push("laptopsleeve");
-        sizes.push(`Laptop Sleeve: N/A`);
-        totalQuantity += formData.laptopsleeveQuantity;
-      }
 
       // Prepare order data for checkout
       const orderData = {
@@ -542,9 +439,6 @@ export default function OrderForm() {
         quantity: totalQuantity,
         phone: normalizedPhone,
         kinNumber: normalizedKin,
-        // Remove File from the saved order; include uploaded URL if available
-        schoolIdFile: undefined,
-        schoolIdUrl,
         university: universityToSave,
         universityUserEntered: userEntered,
         orderReference,
@@ -592,18 +486,13 @@ export default function OrderForm() {
     </div>
   );
 
-  const renderProductCard = (type: "round" | "polo" | "totebag" | "laptopsleeve") => {
+  const renderProductCard = (type: "round" | "polo") => {
     const pricing = PRICING[type];
     const isStudent = formData.student === "yes";
     const currentPrice = isStudent ? pricing.student : pricing.regular;
     const isSelected = type === "round" ? formData.roundSelected 
-      : type === "polo" ? formData.poloSelected 
-      : type === "totebag" ? formData.totebagSelected 
-      : formData.laptopsleeveSelected;
-    const isAccessory = type === "totebag" || type === "laptopsleeve";
-    const stockLeft = isAccessory ? getAccessoryStock(type) : null;
-    const stockKnown = isAccessory && stockLeft !== null;
-    const isOutOfStock = isAccessory && stockKnown && stockLeft <= 0;
+      : formData.poloSelected;
+    const isOutOfStock = false;
     
     // Set product details based on type
     let imageSrc = "";
@@ -614,12 +503,6 @@ export default function OrderForm() {
     } else if (type === "polo") {
       imageSrc = "/images/shop/lnmb 2026 poloshirt.webp";
       title = "Polo Neck T-Shirt";
-    } else if (type === "totebag") {
-      imageSrc = "/images/shop/lnmb Tote Bag.webp";
-      title = "Tote Bag";
-    } else if (type === "laptopsleeve") {
-      imageSrc = "/images/shop/lnmb Laptop Sleeve.webp";
-      title = "Laptop Sleeve";
     }
 
     return (
@@ -633,9 +516,7 @@ export default function OrderForm() {
           onClick={() => {
             if (isOutOfStock && !isSelected) return;
             const field = type === "round" ? "roundSelected" 
-              : type === "polo" ? "poloSelected" 
-              : type === "totebag" ? "totebagSelected" 
-              : "laptopsleeveSelected";
+              : "poloSelected";
             handleInputChange(field, !isSelected);
           }}
         >
@@ -672,14 +553,6 @@ export default function OrderForm() {
                 >
                   Save KES {(pricing.regular - currentPrice).toLocaleString()}!
                 </Badge>
-              )}
-              {isAccessory && stockKnown && (
-                <p className={`text-xs ${isOutOfStock ? "text-red-600" : "text-gray-500"}`}>
-                  {isOutOfStock ? "Out of stock" : `${stockLeft} left`}
-                </p>
-              )}
-              {isAccessory && !stockKnown && merchStock && (
-                <p className="text-xs text-amber-600">Stock unavailable</p>
               )}
             </div>
           </div>
@@ -726,13 +599,9 @@ export default function OrderForm() {
                   disabled={isOutOfStock}
                   onClick={() => {
                     const field = type === "round" ? "roundQuantity" 
-                      : type === "polo" ? "poloQuantity" 
-                      : type === "totebag" ? "totebagQuantity" 
-                      : "laptopsleeveQuantity";
+                      : "poloQuantity";
                     const currentQty = type === "round" ? formData.roundQuantity 
-                      : type === "polo" ? formData.poloQuantity 
-                      : type === "totebag" ? formData.totebagQuantity 
-                      : formData.laptopsleeveQuantity;
+                      : formData.poloQuantity;
                     handleInputChange(field, Math.max(1, currentQty - 1));
                   }}
                 >
@@ -740,9 +609,7 @@ export default function OrderForm() {
                 </Button>
                 <div className="w-12 text-center text-sm font-semibold">
                   {type === "round" ? formData.roundQuantity 
-                    : type === "polo" ? formData.poloQuantity 
-                    : type === "totebag" ? formData.totebagQuantity 
-                    : formData.laptopsleeveQuantity}
+                    : formData.poloQuantity}
                 </div>
                 <Button
                   type="button"
@@ -752,16 +619,10 @@ export default function OrderForm() {
                   disabled={isOutOfStock}
                   onClick={() => {
                     const field = type === "round" ? "roundQuantity" 
-                      : type === "polo" ? "poloQuantity" 
-                      : type === "totebag" ? "totebagQuantity" 
-                      : "laptopsleeveQuantity";
+                      : "poloQuantity";
                     const currentQty = type === "round" ? formData.roundQuantity 
-                      : type === "polo" ? formData.poloQuantity 
-                      : type === "totebag" ? formData.totebagQuantity 
-                      : formData.laptopsleeveQuantity;
-                    const stockMax = isAccessory && stockLeft !== null ? Math.max(0, stockLeft) : 10;
-                    const maxQty = type === "round" || type === "polo" ? 5 : Math.min(10, stockMax);
-                    if (maxQty < 1) return;
+                      : formData.poloQuantity;
+                    const maxQty = 5;
                     handleInputChange(field, Math.min(maxQty, currentQty + 1));
                   }}
                 >
@@ -940,8 +801,6 @@ export default function OrderForm() {
         <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
           {renderProductCard("round")}
           {renderProductCard("polo")}
-          {renderProductCard("totebag")}
-          {renderProductCard("laptopsleeve")}
         </div>
         {errors.productSelection && (
           <p className="text-red-500 text-sm">{errors.productSelection}</p>
@@ -949,7 +808,7 @@ export default function OrderForm() {
       </div>
 
       {/* Price Summary */}
-      {(formData.roundSelected || formData.poloSelected || formData.totebagSelected || formData.laptopsleeveSelected) && formData.totalAmount > 0 && (
+      {(formData.roundSelected || formData.poloSelected) && formData.totalAmount > 0 && (
         <div className="bg-blue-50 p-4 rounded-lg">
           <div className="flex justify-between items-center">
             <div>
@@ -960,12 +819,6 @@ export default function OrderForm() {
                 )}
                 {formData.poloSelected && formData.poloQuantity > 0 && (
                   <p>{formData.poloQuantity}x Polo Neck ({formData.poloSize || "No size"})</p>
-                )}
-                {formData.totebagSelected && formData.totebagQuantity > 0 && (
-                  <p>{formData.totebagQuantity}x Tote Bag</p>
-                )}
-                {formData.laptopsleeveSelected && formData.laptopsleeveQuantity > 0 && (
-                  <p>{formData.laptopsleeveQuantity}x Laptop Sleeve</p>
                 )}
               </div>
               {formData.student === "yes" && (
@@ -990,198 +843,19 @@ export default function OrderForm() {
       {/* Student-specific fields */}
       {formData.student === "yes" && (
         <div className="space-y-4 border-l-4 border-blue-200 pl-4">
-          <h4 className="font-semibold text-gray-800">Student Information</h4>
-
+          <h4 className="font-semibold text-gray-800">
+            Student Registration Number
+          </h4>
           <div className="space-y-2">
-            <Label htmlFor="schoolId">School ID Picture *</Label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
-              <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-              <p className="text-sm text-gray-600 mb-2">
-                Upload a clear photo of your student ID
-              </p>
-              <Input
-                id="schoolId"
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-
-                  // Client-side file size check
-                  if (file.size > MAX_UPLOAD_BYTES) {
-                    setSchoolIdUploadError("File is too large. Maximum size is 5MB.");
-                    setIsUploadingSchoolId(false);
-                    setUploadProgress(0);
-                    // clear the file from state completely so it can't bypass 5MB guard downstream
-                    setFormData((prev) => ({
-                      ...prev,
-                      schoolIdFile: undefined,
-                      schoolIdUrl: undefined,
-                      schoolIdPublicId: undefined,
-                    }));
-                    return;
-                  }
-
-                  // Start upload flow: resize client-side, then upload with XHR to show progress
-                  handleInputChange("schoolIdFile", file);
-                  setIsUploadingSchoolId(true);
-                  setSchoolIdUploadError(null);
-                  setUploadProgress(0);
-
-                  const reader = new FileReader();
-                  reader.onload = async () => {
-                    try {
-                      const img = document.createElement("img");
-                      img.src = reader.result as string;
-                      await new Promise<void>((res, rej) => {
-                        img.onload = () => res();
-                        img.onerror = () => rej(new Error("Image load error"));
-                      });
-
-                      // Resize logic: max 1200px on longest edge
-                      const maxSize = 1200;
-                      let { width, height } = img;
-                      if (width > maxSize || height > maxSize) {
-                        const ratio = width / height;
-                        if (ratio > 1) {
-                          width = maxSize;
-                          height = Math.round(maxSize / ratio);
-                        } else {
-                          height = maxSize;
-                          width = Math.round(maxSize * ratio);
-                        }
-                      }
-
-                      const canvas = document.createElement("canvas");
-                      canvas.width = width;
-                      canvas.height = height;
-                      const ctx = canvas.getContext("2d");
-                      if (!ctx) throw new Error("Canvas not supported");
-                      ctx.drawImage(img, 0, 0, width, height);
-
-                      // Convert to blob (jpeg) at 0.85 quality
-                      const blob: Blob | null = await new Promise((resolve) =>
-                        canvas.toBlob((b) => resolve(b), "image/jpeg", 0.85),
-                      );
-                      if (!blob) throw new Error("Failed to create image blob");
-
-                      // Upload via XMLHttpRequest to capture progress
-                      const form = new FormData();
-                      form.append("file", blob, file.name.replace(/\.[^.]+$/, ".jpg"));
-
-                      const xhr = new XMLHttpRequest();
-                      xhr.open("POST", "/api/upload-school-id");
-
-                      xhr.upload.onprogress = (evt) => {
-                        if (evt.lengthComputable) {
-                          const percent = Math.round((evt.loaded / evt.total) * 100);
-                          setUploadProgress(percent);
-                        }
-                      };
-
-                      xhr.onload = () => {
-                        setIsUploadingSchoolId(false);
-                        if (xhr.status >= 200 && xhr.status < 300) {
-                          try {
-                            const body = JSON.parse(xhr.responseText);
-                            handleInputChange("schoolIdUrl", body.url);
-                            handleInputChange("schoolIdPublicId", body.public_id);
-                            // clear local File reference to avoid storing large objects in localStorage draft
-                            handleInputChange("schoolIdFile", undefined as unknown as File);
-                          } catch {
-                            setSchoolIdUploadError("Upload succeeded but response parsing failed");
-                          }
-                        } else {
-                          let errMsg = "Upload failed";
-                          try {
-                            const body = JSON.parse(xhr.responseText);
-                            errMsg = body.error || errMsg;
-                          } catch {
-                            // ignore parse errors
-                          }
-                          setSchoolIdUploadError(errMsg);
-                        }
-                      };
-
-                      xhr.onerror = () => {
-                        setIsUploadingSchoolId(false);
-                        setSchoolIdUploadError("Upload failed (network error)");
-                      };
-
-                      xhr.send(form);
-                    } catch (err) {
-                      console.error("School ID processing failed", err);
-                      setIsUploadingSchoolId(false);
-                      setSchoolIdUploadError((err as Error)?.message || "Upload failed");
-                    }
-                  };
-                  reader.readAsDataURL(file);
-                }}
-                className="hidden"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => document.getElementById("schoolId")?.click()}
-              >
-                Choose File
-              </Button>
-              {formData.schoolIdFile && (
-                <p className="text-sm text-green-600 mt-2">
-                  File selected: {formData.schoolIdFile.name}
-                </p>
-              )}
-              {formData.schoolIdUrl && (
-                <div className="mt-3 flex items-center space-x-3">
-                  <Image
-                    src={formData.schoolIdUrl as string}
-                    alt="Uploaded school ID"
-                    width={64}
-                    height={64}
-                    unoptimized
-                    className="w-16 h-16 object-cover rounded-md border"
-                  />
-                  <div className="text-sm">
-                    <p className="font-medium">School ID uploaded</p>
-                    {isUploadingSchoolId ? (
-                      <div className="space-y-1">
-                        <div className="text-xs text-gray-500">Uploading... {uploadProgress}%</div>
-                        <progress
-                          value={uploadProgress}
-                          max={100}
-                          className="w-40 h-2 rounded-full overflow-hidden"
-                        />
-                      </div>
-                    ) : schoolIdUploadError ? (
-                      <p className="text-xs text-red-500">{schoolIdUploadError}</p>
-                    ) : (
-                      <p className="text-xs text-gray-500">Tap &quot;Choose File&quot; to replace</p>
-                    )}
-                  </div>
-                </div>
-              )}
-              {/* If a file is selected but not yet uploaded (e.g., too large or waiting), show progress or message */}
-              {formData.schoolIdFile && !formData.schoolIdUrl && (
-                <div className="mt-2">
-                  {schoolIdUploadError ? (
-                    <p className="text-xs text-red-500">{schoolIdUploadError}</p>
-                  ) : isUploadingSchoolId ? (
-                    <div className="flex items-center space-x-3">
-                      <progress
-                        value={uploadProgress}
-                        max={100}
-                        className="w-40 h-2 rounded-full overflow-hidden"
-                      />
-                      <div className="text-xs text-gray-500">{uploadProgress}%</div>
-                    </div>
-                  ) : (
-                    <p className="text-sm text-gray-600">Selected: {formData.schoolIdFile.name}</p>
-                  )}
-                </div>
-              )}
-            </div>
-            {errors.schoolIdFile && (
-              <p className="text-red-500 text-sm">{errors.schoolIdFile}</p>
+            <Label htmlFor="regNumber">Registration Number *</Label>
+            <Input
+              id="regNumber"
+              value={formData.regNumber || ""}
+              onChange={(e) => handleInputChange("regNumber", e.target.value)}
+              placeholder="e.g. A22/0123/2026"
+            />
+            {errors.regNumber && (
+              <p className="text-red-500 text-sm">{errors.regNumber}</p>
             )}
           </div>
         </div>
@@ -1404,16 +1078,6 @@ export default function OrderForm() {
                     <strong>Polo Neck:</strong> {formData.poloQuantity}x (Size {formData.poloSize})
                   </p>
                 )}
-                {formData.totebagSelected && (
-                  <p>
-                    <strong>Tote Bag:</strong> {formData.totebagQuantity}x
-                  </p>
-                )}
-                {formData.laptopsleeveSelected && (
-                  <p>
-                    <strong>Laptop Sleeve:</strong> {formData.laptopsleeveQuantity}x
-                  </p>
-                )}
               <p>
                 <strong>Student:</strong>{" "}
                 {formData.student === "yes" ? "Yes" : "No"}
@@ -1474,16 +1138,6 @@ export default function OrderForm() {
               {formData.poloSelected && formData.poloQuantity > 0 && (
                 <p>
                   {formData.poloQuantity}x Polo Neck @ KES {getUnitPrice("polo", formData.student === "yes").toLocaleString()} each
-                </p>
-              )}
-              {formData.totebagSelected && formData.totebagQuantity > 0 && (
-                <p>
-                  {formData.totebagQuantity}x Tote Bag @ KES {getUnitPrice("totebag", formData.student === "yes").toLocaleString()} each
-                </p>
-              )}
-              {formData.laptopsleeveSelected && formData.laptopsleeveQuantity > 0 && (
-                <p>
-                  {formData.laptopsleeveQuantity}x Laptop Sleeve @ KES {getUnitPrice("laptopsleeve", formData.student === "yes").toLocaleString()} each
                 </p>
               )}
               {formData.student === "yes" && (

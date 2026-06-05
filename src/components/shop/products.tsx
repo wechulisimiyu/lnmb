@@ -54,23 +54,6 @@ export function ShopProducts() {
       description: "Comfortable round neck tee",
       sizes: ["S", "M", "L", "XL"],
     },
-    {
-      id: "sleeve",
-      name: "Laptop Sleeve",
-      price: (PRICING as Record<string, { regular: number; student: number }>).sleeve.regular,
-      studentPrice: (PRICING as Record<string, { regular: number; student: number }>).sleeve.student,
-      image: "/images/shop/lnmb Laptop Sleeve.webp",
-      description: "Protective laptop sleeve with LNMB branding",
-    },
-    {
-      id: "bag",
-      name: "Tote Bag",
-      price: (PRICING as Record<string, { regular: number; student: number }>).bag.regular,
-      studentPrice: (PRICING as Record<string, { regular: number; student: number }>).bag.student,
-      image: "/images/shop/lnmb Tote Bag.webp",
-      description: "Spacious tote bag with LNMB branding",
-      sizes: ["S", "M", "L", "XL"],
-    },
   ];
 
   const [selectedSize, setSelectedSize] = useState<Record<string, string>>({});

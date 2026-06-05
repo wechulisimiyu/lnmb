@@ -14,8 +14,6 @@ export const createOrder = mutation({
     tshirtType: v.string(),
     tshirtSize: v.string(),
     quantity: v.number(),
-    totebagQuantity: v.optional(v.number()),
-    laptopsleeveQuantity: v.optional(v.number()),
     totalAmount: v.number(),
     salesAgentName: v.optional(v.string()),
     name: v.string(),
@@ -33,18 +31,7 @@ export const createOrder = mutation({
   },
   handler: async (ctx, args) => {
     const now = Date.now();
-    const requestedMerch = [
-      {
-        item: "totebag",
-        label: "Tote Bag",
-        quantity: args.totebagQuantity ?? 0,
-      },
-      {
-        item: "laptopsleeve",
-        label: "Laptop Sleeve",
-        quantity: args.laptopsleeveQuantity ?? 0,
-      },
-    ];
+    const requestedMerch: any[] = []; // No accessories now
 
     for (const request of requestedMerch) {
       if (request.quantity <= 0) continue;
@@ -136,8 +123,6 @@ export const createOrder = mutation({
       tshirtType: args.tshirtType,
       tshirtSize: args.tshirtSize,
       quantity: args.quantity,
-      totebagQuantity: args.totebagQuantity ?? 0,
-      laptopsleeveQuantity: args.laptopsleeveQuantity ?? 0,
       totalAmount: args.totalAmount,
       salesAgentName: args.salesAgentName,
 
@@ -515,18 +500,7 @@ export const handlePaymentCallback = mutation({
 
       if (order && !order.paid) {
         const restockNow = Date.now();
-        const restockItems = [
-          {
-            item: "totebag",
-            label: "Tote Bag",
-            quantity: (order as any).totebagQuantity ?? 0,
-          },
-          {
-            item: "laptopsleeve",
-            label: "Laptop Sleeve",
-            quantity: (order as any).laptopsleeveQuantity ?? 0,
-          },
-        ];
+        const restockItems: any[] = []; // No accessories now
 
         for (const restock of restockItems) {
           if (restock.quantity <= 0) continue;

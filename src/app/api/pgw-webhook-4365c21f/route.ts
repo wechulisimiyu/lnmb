@@ -20,7 +20,13 @@ import {
 } from "@/lib/paymentSecurity";
 import * as Sentry from "@sentry/nextjs";
 
-const getConvexClient = () => new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL || "https://dummy.convex.cloud");
+const getConvexClient = () => {
+  const convexUrl = process.env.CONVEX_URL || process.env.NEXT_PUBLIC_CONVEX_URL;
+  if (!convexUrl) {
+    throw new Error("Missing CONVEX_URL for server-side Convex client");
+  }
+  return new ConvexHttpClient(convexUrl);
+};
 const { logger } = Sentry;
 
 // Site URL (can default to localhost for tests)

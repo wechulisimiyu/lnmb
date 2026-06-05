@@ -26,8 +26,6 @@ interface OrderData {
   tshirtType: string;
   tshirtSize: string;
   quantity: number;
-  totebagQuantity?: number;
-  laptopsleeveQuantity?: number;
   totalAmount: number;
   salesAgentName?: string;
   name: string;
@@ -126,8 +124,6 @@ export default function CheckoutPage() {
             tshirtType: orderData.tshirtType,
             tshirtSize: orderData.tshirtSize,
             quantity: orderData.quantity,
-            totebagQuantity: orderData.totebagQuantity,
-            laptopsleeveQuantity: orderData.laptopsleeveQuantity,
             totalAmount: orderData.totalAmount,
             salesAgentName: orderData.salesAgentName,
             name: orderData.name,

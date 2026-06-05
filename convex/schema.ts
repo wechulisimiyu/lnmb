@@ -17,8 +17,6 @@ export default defineSchema({
     tshirtType: v.string(), // "polo" or "round"
     tshirtSize: v.string(), // "small", "medium", "large", "extra-large", or cart format "M:2,L:3,XL:1"
     quantity: v.number(),
-    totebagQuantity: v.optional(v.number()),
-    laptopsleeveQuantity: v.optional(v.number()),
     totalAmount: v.number(),
     salesAgentName: v.optional(v.string()), // Optional sales agent who assisted
 

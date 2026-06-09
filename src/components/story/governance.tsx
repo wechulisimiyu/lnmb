@@ -37,7 +37,7 @@ export function Governance() {
               , entrusted with organizing and executing the LNMB Annual Charity
               Run. The committee is led by{" "}
               <span className="font-semibold text-emerald-600">
-                Peter Ogutu
+                Fatema Bhaijee
               </span>
               , Race Director, supported by a passionate team of medical
               students who pour their energy into ensuring that the event

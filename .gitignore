@@ -53,3 +53,9 @@ temp
 
 # clerk configuration (can include secrets)
 /.clerk/
+
+# export artifacts and scripts
+/LNMB_orders.json
+/LNMB_orders_clean.csv
+/snapshot.zip
+/scripts/export-orders.ts

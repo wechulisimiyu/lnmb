@@ -71,8 +71,11 @@ export function Governance() {
                   <li className="hover:text-emerald-700 transition-colors">
                     • Dr. Ruby Oswere
                   </li>
-                  <li className="hover:text-emerald-700 transition-colors">
+                   <li className="hover:text-emerald-700 transition-colors">
                     • Dr. Bob Anthony
+                  </li>
+                   <li className="hover:text-emerald-700 transition-colors">
+                    • Dr. Evelynn Chege
                   </li>
                 </ul>
               </CardContent>

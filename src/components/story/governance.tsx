@@ -75,7 +75,7 @@ export function Governance() {
                     • Dr. Bob Anthony
                   </li>
                    <li className="hover:text-emerald-700 transition-colors">
-                    • Dr. Everlyne Chege
+                    • Dr. Evelynn Chege
                   </li>
                 </ul>
               </CardContent>

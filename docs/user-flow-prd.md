@@ -85,7 +85,7 @@ Schema mapping (step output):
 ```ts
 {
   tshirtType: "polo" | "round",
-  tshirtSize: "small" | "medium" | "large" | "extra-large",
+  tshirtSize: "medium" | "large" | "extra-large",
   quantity: number,
   student: "yes" | "no",
   university?: string, // canonical or `Other: <text>` when manual

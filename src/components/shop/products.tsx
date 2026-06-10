@@ -43,7 +43,7 @@ export function ShopProducts() {
       studentPrice: PRICING.polo.student,
       image: "/images/shop/lnmb 2026 poloshirt.webp",
       description: "Classic polo neck with embroidered logo",
-      sizes: ["S", "M", "L", "XL"],
+      sizes: ["M", "L", "XL"],
     },
     {
       id: "round",
@@ -52,7 +52,7 @@ export function ShopProducts() {
       studentPrice: PRICING.round.student,
       image: "/images/shop/lnmb 2026 roundneck.webp",
       description: "Comfortable round neck tee",
-      sizes: ["S", "M", "L", "XL"],
+      sizes: ["M", "L", "XL"],
     },
   ];
 

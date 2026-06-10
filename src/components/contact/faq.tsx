@@ -100,7 +100,7 @@ export function ContactFAQ() {
             <p>
               The t-shirts are white in color. You can see some samples when you
               visit @amsunrunning on Instagram and Twitter. The sizes range from
-              small to XXXL.
+              medium to XXXL.
             </p>
           </AccordionContent>
         </AccordionItem>

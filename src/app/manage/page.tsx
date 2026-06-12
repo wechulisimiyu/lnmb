@@ -724,8 +724,7 @@ function DashboardContent() {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredOrders &&
-                        filteredOrders.map((order: Order) => (
+                      {filteredOrders.map((order: Order) => (
                           <tr key={order._id} className="border-t">
                             <td className="p-3 sm:p-4">
                               <code className="text-xs bg-gray-100 px-2 py-1 rounded">

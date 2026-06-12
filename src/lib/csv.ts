@@ -21,7 +21,7 @@ export function toCsv(
 }
 
 export function downloadCsv(filename: string, csvString: string): void {
-  const blob = new Blob(["﻿" + csvString], {
+  const blob = new Blob(["\uFEFF" + csvString], {
     type: "text/csv;charset=utf-8;",
   });
   const url = URL.createObjectURL(blob);

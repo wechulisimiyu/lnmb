@@ -293,6 +293,33 @@ export default function CheckoutPage() {
     );
   }
 
+  const safeOrderData = orderData;
+  const nonPendingPaymentStatus =
+    paymentStatus && paymentStatus.status !== "pending" ? paymentStatus : null;
+
+  // Sales are paused
+  if (true) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <Card className="max-w-md w-full mx-4">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl text-red-600">
+              Sales Paused
+            </CardTitle>
+            <CardDescription>
+              We have temporarily paused sales as we are currently out of stock. Thank you for your support!
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center">
+            <Button onClick={() => router.push("/")} className="w-full">
+              Return to Home
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   // Check if payment is already successful
   if (paymentStatus?.status === "paid") {
     return (
@@ -352,20 +379,20 @@ export default function CheckoutPage() {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span>Type:</span>
-                    <span>{getTshirtTypeDisplay(orderData.tshirtType)}</span>
+                    <span>{getTshirtTypeDisplay(safeOrderData.tshirtType)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Size:</span>
-                    <span>{getSizeDisplay(orderData.tshirtSize)}</span>
+                    <span>{getSizeDisplay(safeOrderData.tshirtSize)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Quantity:</span>
-                    <span>{orderData.quantity}</span>
+                    <span>{safeOrderData.quantity}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Will attend run:</span>
                     <span>
-                      {orderData.attending === "attending" ? "Yes" : "No"}
+                      {safeOrderData.attending === "attending" ? "Yes" : "No"}
                     </span>
                   </div>
                 </div>
@@ -376,25 +403,25 @@ export default function CheckoutPage() {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span>Name:</span>
-                    <span>{orderData.name}</span>
+                    <span>{safeOrderData.name}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Email:</span>
-                    <span>{orderData.email}</span>
+                    <span>{safeOrderData.email}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Phone:</span>
-                    <span>+{orderData.phone}</span>
+                    <span>+{safeOrderData.phone}</span>
                   </div>
-                  {orderData.student === "yes" && (
+                  {safeOrderData.student === "yes" && (
                     <>
                       <div className="flex justify-between">
                         <span>University:</span>
-                        <span>{orderData.university}</span>
+                        <span>{safeOrderData.university}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Year of Study:</span>
-                        <span>{orderData.yearOfStudy}</span>
+                        <span>{safeOrderData.yearOfStudy}</span>
                       </div>
                     </>
                   )}
@@ -405,12 +432,12 @@ export default function CheckoutPage() {
                 <div className="flex justify-between items-center text-lg font-bold">
                   <span>Total Amount:</span>
                   <span className="text-blue-600">
-                    KES {orderData.totalAmount.toLocaleString()}
+                    KES {safeOrderData.totalAmount.toLocaleString()}
                   </span>
                 </div>
                 {paymentStatus?.status === "paid" ? (
                   <p className="text-sm text-gray-600 mt-2">
-                    Order Reference: {orderData.orderReference}
+                    Order Reference: {safeOrderData.orderReference}
                   </p>
                 ) : null}
               </div>
@@ -445,7 +472,7 @@ export default function CheckoutPage() {
                         Processing...
                       </>
                     ) : (
-                      <>Pay KES {orderData.totalAmount.toLocaleString()}</>
+                      <>Pay KES {safeOrderData.totalAmount.toLocaleString()}</>
                     )}
                   </Button>
 
@@ -481,7 +508,7 @@ export default function CheckoutPage() {
         </div>
 
         {/* Payment Status */}
-        {paymentStatus && paymentStatus.status !== "pending" && (
+        {nonPendingPaymentStatus && (
           <Card className="mt-8">
             <CardHeader>
               <CardTitle>Payment Status</CardTitle>
@@ -490,20 +517,20 @@ export default function CheckoutPage() {
               <div className="flex items-center space-x-2">
                 <div
                   className={`w-3 h-3 rounded-full ${
-                    paymentStatus.status === "paid"
+                    nonPendingPaymentStatus!.status === "paid"
                       ? "bg-green-500"
-                      : paymentStatus.status === "processing"
+                      : nonPendingPaymentStatus!.status === "processing"
                         ? "bg-yellow-500"
                         : "bg-red-500"
                   }`}
                 />
                 <span className="capitalize font-semibold">
-                  {paymentStatus.status}
+                  {nonPendingPaymentStatus!.status}
                 </span>
               </div>
-              {paymentStatus.transactionId && (
+              {nonPendingPaymentStatus!.transactionId && (
                 <p className="text-sm text-gray-600 mt-2">
-                  Transaction ID: {paymentStatus.transactionId}
+                  Transaction ID: {nonPendingPaymentStatus!.transactionId}
                 </p>
               )}
             </CardContent>

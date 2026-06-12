@@ -30,6 +30,11 @@ export const createOrder = mutation({
     schoolIdPublicId: v.optional(v.union(v.string(), v.null())),
   },
   handler: async (ctx, args) => {
+    // Stop all sales as stock is over
+    if (true) {
+      throw new Error("Sales have been paused as we are currently out of stock.");
+    }
+
     const now = Date.now();
     const requestedMerch: any[] = []; // No accessories now
 
@@ -46,9 +51,9 @@ export const createOrder = mutation({
         );
       }
 
-      if (stock.available < request.quantity) {
+      if (stock!.available < request.quantity) {
         throw new Error(
-          `${request.label} is out of stock. Only ${stock.available} left.`,
+          `${request.label} is out of stock. Only ${stock!.available} left.`,
         );
       }
     }
@@ -166,8 +171,8 @@ export const createOrder = mutation({
 
       if (!stock) continue;
 
-      await ctx.db.patch(stock._id, {
-        available: stock.available - request.quantity,
+      await ctx.db.patch(stock!._id as any, {
+        available: stock!.available! - request.quantity,
         updatedAt: now,
       });
     }

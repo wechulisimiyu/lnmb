@@ -61,15 +61,15 @@ export function verifyJengaSignatureBase64(
 // Do not run expensive or throwing checks at module load time because the Convex
 // bundler analyzes modules during deployment. Export a validator function and
 // call it at runtime from actions that require these env vars.
+//
+// SITE_URL is validated separately (and more strictly) in
+// orders_node_actions.ts, since it also needs URL-shape validation. This
+// function only covers JENGA_MERCHANT_CODE, which feeds the signature
+// unconditionally and has the same silent-failure risk if missing.
 export function validateSigningEnvs(): void {
-  if (process.env.NODE_ENV === "production") {
-    const missing: string[] = [];
-    if (!process.env.JENGA_MERCHANT_CODE) missing.push("JENGA_MERCHANT_CODE");
-    if (!process.env.SITE_URL) missing.push("SITE_URL");
-    if (missing.length) {
-      throw new Error(
-        `Missing required environment variables for Jenga signing in production: ${missing.join(", ")}. Aborting to avoid signature mismatch.`,
-      );
-    }
+  if (!process.env.JENGA_MERCHANT_CODE) {
+    throw new Error(
+      "Missing required environment variable JENGA_MERCHANT_CODE for Jenga signing. Aborting to avoid signature mismatch.",
+    );
   }
 }

@@ -26,6 +26,26 @@ export const createPaymentRecord = action({
   ): Promise<{ paymentId: string; paymentData: any }> => {
     const now = Date.now();
 
+    // Validate environment variables at runtime to avoid throwing during
+    // Convex module analysis.
+    validateSigningEnvs();
+
+    // SITE_URL feeds both the callbackUrl Jenga is told to POST to and the
+    // signature data. If it's missing or malformed, Jenga can never reach
+    // our webhook and the resulting payment will be stuck "pending"
+    // forever with no error anywhere. Fail loudly instead.
+    const siteUrl = process.env.SITE_URL;
+    if (!siteUrl || !/^https?:\/\/[^/]+/.test(siteUrl) || siteUrl.endsWith("/")) {
+      const message =
+        `[createPaymentRecord] Invalid or missing SITE_URL Convex env var: "${siteUrl ?? "undefined"}". ` +
+        `Set it to the production site origin (e.g. https://example.com, no trailing slash) via ` +
+        `\`npx convex env set SITE_URL https://your-domain --prod\`. Aborting to avoid an orphaned payment with a broken callbackUrl.`;
+      console.error(message);
+      throw new Error(message);
+    }
+
+    const callbackUrl = `${siteUrl}/api/pgw-webhook-4365c21f`;
+
     // Generate payment token (external API call - this is why we need an action)
     const token = await generateAccessToken();
 
@@ -36,11 +56,7 @@ export const createPaymentRecord = action({
 
     const cleanRef = sanitizeReference(args.orderReference);
 
-    // Validate environment variables in production only at runtime to avoid
-    // throwing during Convex module analysis.
-    validateSigningEnvs();
-
-    const signatureData = `${process.env.JENGA_MERCHANT_CODE || ""}${cleanRef}KES${String(args.orderAmount)}${process.env.SITE_URL ? `${process.env.SITE_URL}/api/pgw-webhook-4365c21f` : "http://localhost:3000/api/pgw-webhook-4365c21f"}`;
+    const signatureData = `${process.env.JENGA_MERCHANT_CODE || ""}${cleanRef}KES${String(args.orderAmount)}${callbackUrl}`;
 
     const privateKey = loadPrivateKeyFromEnvOrFile();
     const signature = privateKey
@@ -63,7 +79,7 @@ export const createPaymentRecord = action({
       customerEmail: args.customerEmail,
       customerPhone: args.customerPhone,
       countryCode: "KE",
-      callbackUrl: `${process.env.SITE_URL}/api/pgw-webhook-4365c21f`,
+      callbackUrl,
       secondaryReference: cleanRef,
       signature,
       status: "pending",

@@ -7,7 +7,10 @@ import { api } from "../../../convex/_generated/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toCsv, downloadCsv, type CsvValue } from "@/lib/csv";
 import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
 import {
   Users,
@@ -27,16 +30,75 @@ import {
 interface Order {
   _id: string;
   orderReference: string;
+  student?: string;
+  university?: string;
+  yearOfStudy?: string;
+  regNumber?: string;
+  attending?: string;
   name: string;
   email: string;
   phone?: string;
+  nameOfKin?: string;
+  kinNumber?: string;
+  medicalCondition?: string;
+  pickUp?: string;
   tshirtType: string;
   tshirtSize: string;
   quantity: number;
   totalAmount: number;
+  salesAgentName?: string;
   paid: boolean;
   createdAt: number;
 }
+
+const ORDER_EXPORT_COLUMNS: {
+  key: keyof Order;
+  label: string;
+  format?: (order: Order) => string | number;
+}[] = [
+  { key: "orderReference", label: "Order Reference" },
+  { key: "name", label: "Name" },
+  { key: "email", label: "Email" },
+  { key: "phone", label: "Phone" },
+  { key: "university", label: "University" },
+  { key: "student", label: "Student" },
+  { key: "yearOfStudy", label: "Year of Study" },
+  { key: "regNumber", label: "Registration Number" },
+  { key: "attending", label: "Attending" },
+  { key: "tshirtType", label: "T-Shirt Type" },
+  { key: "tshirtSize", label: "T-Shirt Size" },
+  { key: "quantity", label: "Quantity" },
+  { key: "totalAmount", label: "Total Amount (KES)" },
+  { key: "salesAgentName", label: "Sales Agent" },
+  { key: "nameOfKin", label: "Next of Kin" },
+  { key: "kinNumber", label: "Kin Number" },
+  { key: "medicalCondition", label: "Medical Condition" },
+  { key: "pickUp", label: "Pick Up Location" },
+  {
+    key: "paid",
+    label: "Payment Status",
+    format: (o) => (o.paid ? "Paid" : "Pending"),
+  },
+  {
+    key: "createdAt",
+    label: "Created At",
+    format: (o) => new Date(o.createdAt).toISOString(),
+  },
+];
+
+const DEFAULT_EXPORT_COLUMN_KEYS: (keyof Order)[] = [
+  "orderReference",
+  "name",
+  "email",
+  "phone",
+  "university",
+  "tshirtType",
+  "tshirtSize",
+  "quantity",
+  "totalAmount",
+  "paid",
+  "createdAt",
+];
 
 interface Payment {
   _id: string;
@@ -63,6 +125,11 @@ function DashboardContent() {
     reconciled?: number;
     skipped?: number;
   } | null>(null);
+  const [orderSearch, setOrderSearch] = useState("");
+  const [exportColumns, setExportColumns] = useState<Set<keyof Order>>(
+    new Set(DEFAULT_EXPORT_COLUMN_KEYS),
+  );
+  const [exportPopoverOpen, setExportPopoverOpen] = useState(false);
   const { user } = useUser();
 
   // Fetch data from Convex - now safe to call
@@ -275,6 +342,18 @@ function DashboardContent() {
       setReconcileLoading(false);
     }
   };
+
+  const filteredOrders = (orders ?? []).filter((order: Order) => {
+    if (!orderSearch.trim()) return true;
+    const q = orderSearch.trim().toLowerCase();
+    return [
+      order.orderReference,
+      order.name,
+      order.email,
+      order.phone,
+      order.university,
+    ].some((field) => field?.toLowerCase().includes(q));
+  });
 
   return (
     <div className="min-h-screen bg-secondary py-4 sm:py-6 lg:py-8">
@@ -540,13 +619,79 @@ function DashboardContent() {
               <h2 className="text-xl sm:text-2xl font-bold text-foreground">
                 Order Management
               </h2>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                 <Badge variant="outline">
                   {totalOrders.toLocaleString()} Total Orders
                 </Badge>
                 <Badge variant="outline" className="bg-green-50 text-green-700">
                   {paidOrders.toLocaleString()} Paid
                 </Badge>
+                <Input
+                  placeholder="Search by ref, name, email, phone, university..."
+                  value={orderSearch}
+                  onChange={(e) => setOrderSearch(e.target.value)}
+                  className="sm:w-64"
+                />
+                <Popover open={exportPopoverOpen} onOpenChange={setExportPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      Export CSV
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-64" align="end">
+                    <p className="text-sm font-medium mb-2">Columns to export</p>
+                    <div className="space-y-1 max-h-64 overflow-y-auto">
+                      {ORDER_EXPORT_COLUMNS.map((col) => (
+                        <label
+                          key={col.key}
+                          className="flex items-center gap-2 text-sm"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={exportColumns.has(col.key)}
+                            onChange={(e) => {
+                              const next = new Set(exportColumns);
+                              if (e.target.checked) next.add(col.key);
+                              else next.delete(col.key);
+                              setExportColumns(next);
+                            }}
+                          />
+                          {col.label}
+                        </label>
+                      ))}
+                    </div>
+                    <Button
+                      size="sm"
+                      className="w-full mt-3"
+                      disabled={exportColumns.size === 0}
+                      onClick={() => {
+                        const cols = ORDER_EXPORT_COLUMNS.filter((c) =>
+                          exportColumns.has(c.key),
+                        );
+                        const rows = filteredOrders.map((order: Order) => {
+                          const row: Record<string, CsvValue> = {};
+                          cols.forEach((c) => {
+                            row[c.key as string] = c.format
+                              ? c.format(order)
+                              : ((order[c.key] as CsvValue) ?? "");
+                          });
+                          return row;
+                        });
+                        const csv = toCsv(
+                          rows,
+                          cols.map((c) => ({ key: c.key as string, label: c.label })),
+                        );
+                        downloadCsv(
+                          `orders-export-${new Date().toISOString().slice(0, 10)}.csv`,
+                          csv,
+                        );
+                        setExportPopoverOpen(false);
+                      }}
+                    >
+                      Download CSV ({filteredOrders.length} rows)
+                    </Button>
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
             <Card>
@@ -568,7 +713,7 @@ function DashboardContent() {
                           Amount
                         </th>
                         <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">
-                          Status
+                          University
                         </th>
                         <th className="text-left p-3 sm:p-4 font-semibold text-sm sm:text-base">
                           Date
@@ -579,8 +724,7 @@ function DashboardContent() {
                       </tr>
                     </thead>
                     <tbody>
-                      {orders &&
-                        orders.map((order: Order) => (
+                      {filteredOrders.map((order: Order) => (
                           <tr key={order._id} className="border-t">
                             <td className="p-3 sm:p-4">
                               <code className="text-xs bg-gray-100 px-2 py-1 rounded">
@@ -617,16 +761,9 @@ function DashboardContent() {
                               </span>
                             </td>
                             <td className="p-3 sm:p-4">
-                              <Badge
-                                variant={order.paid ? "default" : "outline"}
-                                className={
-                                  order.paid
-                                    ? "bg-green-600 text-white"
-                                    : "bg-yellow-100 text-yellow-800"
-                                }
-                              >
-                                {order.paid ? "Paid" : "Pending"}
-                              </Badge>
+                              <span className="text-sm">
+                                {order.university || "-"}
+                              </span>
                             </td>
                             <td className="p-3 sm:p-4">
                               <p className="text-sm">
@@ -653,6 +790,14 @@ function DashboardContent() {
                       <p>No orders found</p>
                     </div>
                   )}
+                  {orders &&
+                    orders.length > 0 &&
+                    filteredOrders.length === 0 && (
+                      <div className="p-8 text-center text-slate-500">
+                        <Package className="w-12 h-12 mx-auto mb-4 text-slate-300" />
+                        <p>No orders match your search</p>
+                      </div>
+                    )}
                 </div>
               </CardContent>
             </Card>
